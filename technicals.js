@@ -1,22 +1,6 @@
 var Queue = require('./queue');
 var Ema = require('./ema');
 
-var buyOrSell = function(stockPrice) {
-  var ret = 1;
-
-  if (this.analize(stockPrice)) {
-    this.daysOver += 1;
-  } else {
-    this.daysOver = 0;
-  }
-
-  if (this.daysOver > this.contDays) {
-    ret = - 1;
-  }
-
-  return ret;
-};
-
 var reset = function() {
   if (this.daysOver) {
     this.daysOver = 0;
@@ -32,18 +16,11 @@ var reset = function() {
   }
 };
 
-var BuyAndHold = module.exports.BuyAndHold = function() {};
-BuyAndHold.prototype.buyOrSell = function(stockPrice) {
-  return 1;
-};
-BuyAndHold.prototype.reset = function() {};
-
 var SMA = module.exports.SMA = function(n, contDays, ratio) {
   this.contDays = contDays;
   this.ratio = ratio;
   this.q = new Queue(n);
 };
-SMA.prototype.buyOrSell = buyOrSell;
 SMA.prototype.reset = reset;
 SMA.prototype.analize = function(stockPrice) {
   var q = this.q;
@@ -60,7 +37,6 @@ var NSMA = module.exports.NSMA = function(n, contDays, ratio) {
   this.ratio = ratio;
   this.q = new Queue(n);
 };
-NSMA.prototype.buyOrSell = buyOrSell;
 NSMA.prototype.reset = reset;
 NSMA.prototype.analize = function(stockPrice) {
   var q = this.q;
@@ -79,7 +55,6 @@ var LSS = module.exports.LSS = function(n, contDays, ratio) {
     return this[i];
   });
 };
-LSS.prototype.buyOrSell = buyOrSell;
 LSS.prototype.reset = reset;
 LSS.prototype.analize = function(stockPrice) {
   var q = this.q;
@@ -102,7 +77,6 @@ var ALSS = module.exports.ALSS = function(n, contDays, ratio, t) {
   },
   2 * t);
 };
-ALSS.prototype.buyOrSell = buyOrSell;
 ALSS.prototype.reset = reset;
 ALSS.prototype.analize = function(stockPrice) {
   var t = this.t;
@@ -120,7 +94,6 @@ var EMA = module.exports.EMA = function(n, contDays, ratio) {
   this.ratio = ratio;
   this.e = new Ema(n);
 };
-EMA.prototype.buyOrSell = buyOrSell;
 EMA.prototype.reset = reset;
 EMA.prototype.analize = function(stockPrice) {
   var e = this.e;
@@ -137,7 +110,6 @@ var NEMA = module.exports.NEMA = function(n, contDays, ratio) {
   this.ratio = ratio;
   this.e = new Ema(n);
 };
-NEMA.prototype.buyOrSell = buyOrSell;
 NEMA.prototype.reset = reset;
 NEMA.prototype.analize = function(stockPrice) {
   var e = this.e;
@@ -155,7 +127,6 @@ var DEMA = module.exports.DEMA = function(n, contDays, ratio, t) {
   this.e = new Ema(n);
   this.e2 = new Ema(t);
 };
-DEMA.prototype.buyOrSell = buyOrSell;
 DEMA.prototype.reset = reset;
 DEMA.prototype.analize = function(stockPrice) {
   var e = this.e;
@@ -175,7 +146,6 @@ var EMAS = module.exports.EMAS = function(n, contDays, ratio, t) {
   this.q = new Queue(2 * t + 1);
   this.e = new Ema(n);
 };
-EMAS.prototype.buyOrSell = buyOrSell;
 EMAS.prototype.reset = reset;
 EMAS.prototype.analize = function(stockPrice) {
   var t = this.t;
@@ -201,7 +171,6 @@ var BOIL = module.exports.BOIL = function(n, contDays, ratio) {
   this.ratio = ratio;
   this.q = new Queue(n);
 };
-BOIL.prototype.buyOrSell = buyOrSell;
 BOIL.prototype.reset = reset;
 BOIL.prototype.analize = function(stockPrice) {
   var q = this.q;
