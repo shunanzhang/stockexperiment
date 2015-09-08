@@ -1,0 +1,9 @@
+{
+    "name": "application-name"
+  , "version": "0.0.1"
+  , "private": true
+  , "dependencies": {
+    , "restler" : ">= 2.0.0"
+  }
+  , "engine": "node >= 0.12.7"
+}
