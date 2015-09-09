@@ -33,7 +33,7 @@ var ave = function() {
   return this.sum / this.length;
 };
 
-var llss = function() {
+var llss = function() { // slope of least square method
   var start = this.start + this.oldestId;
   var n = this.n;
   var sum_x = this.sum_x;

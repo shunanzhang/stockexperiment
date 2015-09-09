@@ -1,74 +1,60 @@
+// TODO use ES6 class
 var Queue = require('./queue');
 var Ema = require('./ema');
 
-var reset = function() {
-  if (this.daysOver) {
-    this.daysOver = 0;
+var Technical = function() {
+  if (! (this instanceof Technical)) { // enforcing new
+    return new Technical();
   }
-  if (this.q) {
-    this.q.reset();
+};
+Technical.prototype.reset = function() {
+  for (var prop in this) {
+    if (this.hasOwnProperty(prop) && this[prop].reset) {
+      this[prop].reset();
+    }
   }
-  if (this.e) {
-    this.e.reset();
-  }
-  if (this.e2) {
-    this.e2.reset();
-  }
+};
+Technical.prototype.analize = function() {
+  throw new Error('Technical.prototype.analize not impelemented');
 };
 
-var SMA = module.exports.SMA = function(n, contDays, ratio) {
-  this.contDays = contDays;
-  this.ratio = ratio;
+var SMA = module.exports.SMA = function(n) {
+  if (! (this instanceof SMA)) { // enforcing new
+    return new SMA(n);
+  }
+  Technical.call(this);
   this.q = new Queue(n);
 };
-SMA.prototype.reset = reset;
+SMA.prototype = Object.create(Technical.prototype);
 SMA.prototype.analize = function(stockPrice) {
   var q = this.q;
   if (q.enq(stockPrice)) {
-    if (this.ratio * q.ave() < stockPrice) {
-      return true;
-    }
+    return q.ave();
   }
-  return false;
 };
 
-var NSMA = module.exports.NSMA = function(n, contDays, ratio) {
-  this.contDays = contDays;
-  this.ratio = ratio;
-  this.q = new Queue(n);
-};
-NSMA.prototype.reset = reset;
-NSMA.prototype.analize = function(stockPrice) {
-  var q = this.q;
-  if (q.enq(stockPrice)) {
-    if (this.ratio * q.ave() < stockPrice) {
-      return false;
-    }
+var LSS = module.exports.LSS = function(n) {
+  if (! (this instanceof LSS)) { // enforcing new
+    return new LSS(n);
   }
-  return true;
-};
-
-var LSS = module.exports.LSS = function(n, contDays, ratio) {
-  this.contDays = contDays;
-  this.ratio = ratio;
+  Technical.call(this);
   this.q = new Queue(n, function(i) {
     return this[i];
   });
 };
-LSS.prototype.reset = reset;
+LSS.prototype = Object.create(Technical.prototype);
 LSS.prototype.analize = function(stockPrice) {
   var q = this.q;
   if (q.enq(stockPrice)) {
-    if (q.llss() > this.ratio) {
-      return true;
-    }
+    return q.llss();
   }
-  return false;
 };
 
-var ALSS = module.exports.ALSS = function(n, contDays, ratio, t) {
-  this.contDays = contDays;
-  this.ratio = ratio;
+var ALSS = module.exports.ALSS = function(n, t) {
+  if (! (this instanceof ALSS)) { // enforcing new
+    return new ALSS(n, t);
+  }
+  Technical.call(this);
   this.t = t;
   this.q = new Queue(n, function(i) {
     //var cit = this[i - t];
@@ -77,66 +63,46 @@ var ALSS = module.exports.ALSS = function(n, contDays, ratio, t) {
   },
   2 * t);
 };
-ALSS.prototype.reset = reset;
+ALSS.prototype = Object.create(Technical.prototype);
 ALSS.prototype.analize = function(stockPrice) {
-  var t = this.t;
   var q = this.q;
   if (q.enq(stockPrice)) {
-    if (q.llss() > this.ratio) {
-      return true;
-    }
+    return q.llss();
   }
-  return false;
 };
 
-var EMA = module.exports.EMA = function(n, contDays, ratio) {
-  this.contDays = contDays;
-  this.ratio = ratio;
+var EMA = module.exports.EMA = function(n) {
+  if (! (this instanceof EMA)) { // enforcing new
+    return new EMA(n);
+  }
+  Technical.call(this);
   this.e = new Ema(n);
 };
-EMA.prototype.reset = reset;
+EMA.prototype = Object.create(Technical.prototype);
 EMA.prototype.analize = function(stockPrice) {
   var e = this.e;
   if (e.add(stockPrice)) {
-    if (this.ratio * e.ema < stockPrice) {
-      return true;
-    }
+    return e.ema;
   }
-  return false;
 };
 
-var NEMA = module.exports.NEMA = function(n, contDays, ratio) {
-  this.contDays = contDays;
-  this.ratio = ratio;
-  this.e = new Ema(n);
-};
-NEMA.prototype.reset = reset;
-NEMA.prototype.analize = function(stockPrice) {
-  var e = this.e;
-  if (e.add(stockPrice)) {
-    if (this.ratio * stockPrice < e.ema) {
-      return false;
-    }
+var DEMA = module.exports.DEMA = function(n, t) {
+  if (! (this instanceof DEMA)) { // enforcing new
+    return new DEMA(n, t);
   }
-  return true;
-};
-
-var DEMA = module.exports.DEMA = function(n, contDays, ratio, t) {
-  this.contDays = contDays;
-  this.ratio = ratio;
+  Technical.call(this);
   this.e = new Ema(n);
   this.e2 = new Ema(t);
 };
-DEMA.prototype.reset = reset;
+DEMA.prototype = Object.create(Technical.prototype);
 DEMA.prototype.analize = function(stockPrice) {
+  // http://www.metatrader5.com/en/terminal/help/analytics/indicators/trend_indicators/dema
   var e = this.e;
   var e2 = this.e2;
-  if (e.add(stockPrice) && e2.add(stockPrice)) {
-    if (this.ratio * e.ema < e2.ema) {
-      return true;
-    }
+  e.add(stockPrice);
+  if (e2.add(stockPrice - e.ema)) {
+    return e.ema + e2.ema;
   }
-  return false;
 };
 
 var EMAS = module.exports.EMAS = function(n, contDays, ratio, t) {
@@ -249,14 +215,4 @@ MACD.prototype.buyOrSell = function(stockPrice) {
   }
   return ret;
 };
-MACD.prototype.reset = function() {
-  if (this.eFast) {
-    this.eFast.reset();
-  }
-  if (this.eSlow) {
-    this.eSlow.reset();
-  }
-  if (this.eSignal) {
-    this.eSignal.reset();
-  }
-};
+MACD.prototype.reset = reset;
