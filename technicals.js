@@ -105,14 +105,16 @@ DEMA.prototype.analize = function(stockPrice) {
   }
 };
 
-var EMAS = module.exports.EMAS = function(n, contDays, ratio, t) {
-  this.contDays = contDays;
-  this.ratio = ratio;
+var EMAS = module.exports.EMAS = function(n, t) {
+  if (! (this instanceof EMAS)) { // enforcing new
+    return new EMAS(n, t);
+  }
+  Technical.call(this);
   this.t = t;
   this.q = new Queue(2 * t + 1);
   this.e = new Ema(n);
 };
-EMAS.prototype.reset = reset;
+EMAs.prototype = Object.create(Technical.prototype);
 EMAS.prototype.analize = function(stockPrice) {
   var t = this.t;
   var q = this.q;
@@ -124,12 +126,33 @@ EMAS.prototype.analize = function(stockPrice) {
       var qt = q[t + oldestId];
       var slope = (q[2 * t + oldestId] - qt) - (qt - q[oldestId]);
 
-      if (this.ratio < slope) {
-        return true;
-      }
+      return slope;
     }
   }
-  return false;
+};
+
+var PVALUE = module.exports.PVALUE = function(n) {
+  if (! (this instanceof PVALUE)) { // enforcing new
+    return new PVALUE(n);
+  }
+  Technical.call(this);
+  this.q = new Queue(n);
+};
+PVALUE.prototype = Object.create(Technical.prototype);
+PVALUE.prototype.analize = function(stockPrice) {
+  var q = this.q;
+  if (q.enq(stockPrice)) {
+    var oldestId = q.oldestId;
+    var n = q.length;
+    var ave = q.ave();
+    var plusSigma = 0;
+
+    for (var i = oldestId, l = oldestId + n; i < l; i++) {
+      var diff = q[i] - ave;
+      plusSigma += diff * diff;
+    }
+    plusSigma = Math.sqrt(plusSigma / n) * 2 + ave;
+  }
 };
 
 var BOIL = module.exports.BOIL = function(n, contDays, ratio) {
