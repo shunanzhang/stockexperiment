@@ -131,36 +131,38 @@ EMAS.prototype.analize = function(stockPrice) {
   }
 };
 
-var PVALUE = module.exports.PVALUE = function(n) {
-  if (! (this instanceof PVALUE)) { // enforcing new
-    return new PVALUE(n);
+//var PVALUE = module.exports.PVALUE = function(n) {
+//  if (! (this instanceof PVALUE)) { // enforcing new
+//    return new PVALUE(n);
+//  }
+//  Technical.call(this);
+//  this.q = new Queue(n);
+//};
+//PVALUE.prototype = Object.create(Technical.prototype);
+//PVALUE.prototype.analize = function(stockPrice) {
+//  var q = this.q;
+//  if (q.enq(stockPrice)) {
+//    var oldestId = q.oldestId;
+//    var n = q.length;
+//    var ave = q.ave();
+//    var plusSigma = 0;
+//
+//    for (var i = oldestId, l = oldestId + n; i < l; i++) {
+//      var diff = q[i] - ave;
+//      plusSigma += diff * diff;
+//    }
+//    plusSigma = Math.sqrt(plusSigma / n) * 2 + ave;
+//  }
+//};
+
+var BOIL = module.exports.BOIL = function(n) {
+  if (! (this instanceof BOIL)) { // enforcing new
+    return new BOIL(n);
   }
   Technical.call(this);
   this.q = new Queue(n);
 };
-PVALUE.prototype = Object.create(Technical.prototype);
-PVALUE.prototype.analize = function(stockPrice) {
-  var q = this.q;
-  if (q.enq(stockPrice)) {
-    var oldestId = q.oldestId;
-    var n = q.length;
-    var ave = q.ave();
-    var plusSigma = 0;
-
-    for (var i = oldestId, l = oldestId + n; i < l; i++) {
-      var diff = q[i] - ave;
-      plusSigma += diff * diff;
-    }
-    plusSigma = Math.sqrt(plusSigma / n) * 2 + ave;
-  }
-};
-
-var BOIL = module.exports.BOIL = function(n, contDays, ratio) {
-  this.contDays = contDays;
-  this.ratio = ratio;
-  this.q = new Queue(n);
-};
-BOIL.prototype.reset = reset;
+BOIL.prototype = Object.create(Technical.prototype);
 BOIL.prototype.analize = function(stockPrice) {
   var q = this.q;
   if (q.enq(stockPrice)) {
@@ -174,54 +176,53 @@ BOIL.prototype.analize = function(stockPrice) {
       plusSigma += diff * diff;
     }
     plusSigma = Math.sqrt(plusSigma / n) * 2 + ave;
-
-    if (this.ratio * plusSigma < stockPrice) {
-      return true;
-    }
+    return plusSigma;
   }
-  return false;
 };
 
-var CCIMA = module.exports.CCIMA = function(nCCI, nEMA) {
-  this.nCCI = nCCI;
-  this.q = new Queue(this.nCCI);
-  this.e = new Ema(nEMA);
-};
-CCIMA.prototype.reset = reset;
-CCIMA.prototype.buyOrSell = function(stockPrice) {
-  var ret = 1;
-  var nCCI = this.nCCI;
-  var q = this.q;
-  var e = this.e;
-  if (q.enq(stockPrice)) {
-    var tp = stockPrice; // has to be (high, low, close)/3
-    var ma = q.ave();
-    var md = 0;
-    for (var i = 0; i < nCCI; i++) {
-      md = (ma - q[i + q.oldestId]);
-    }
-    md /= nCCI;
-
-    var cci = (tp - ma) / (0.015 * md);
-
-    if (e.add(stockPrice)) {
-      if (cci < e.ema) {
-        ret = - 1;
-      }
-    }
-  }
-
-  return ret;
-};
+//var CCIMA = module.exports.CCIMA = function(nCCI, nEMA) {
+//  this.nCCI = nCCI;
+//  this.q = new Queue(this.nCCI);
+//  this.e = new Ema(nEMA);
+//};
+//CCIMA.prototype.reset = reset;
+//CCIMA.prototype.buyOrSell = function(stockPrice) {
+//  var ret = 1;
+//  var nCCI = this.nCCI;
+//  var q = this.q;
+//  var e = this.e;
+//  if (q.enq(stockPrice)) {
+//    var tp = stockPrice; // has to be (high, low, close)/3
+//    var ma = q.ave();
+//    var md = 0;
+//    for (var i = 0; i < nCCI; i++) {
+//      md = (ma - q[i + q.oldestId]);
+//    }
+//    md /= nCCI;
+//
+//    var cci = (tp - ma) / (0.015 * md);
+//
+//    if (e.add(stockPrice)) {
+//      if (cci < e.ema) {
+//        ret = - 1;
+//      }
+//    }
+//  }
+//
+//  return ret;
+//};
 
 var MACD = module.exports.MACD = function(nFast, nSlow, nSignal) {
+  if (! (this instanceof MACD)) { // enforcing new
+    return new MACD(nFast, nSlow, nSignal);
+  }
+  Technical.call(this);
   this.eFast = new Ema(nFast);
-  this.eSlow = new Ema(nSlowA);
+  this.eSlow = new Ema(nSlow);
   this.eSignal = new Ema(nSignal);
 };
-MACD.prototype.buyOrSell = function(stockPrice) {
-  var ret = 1;
-
+MACD.prototype = Object.create(Technical.prototype);
+MACD.prototype.analize = function(stockPrice) {
   var eFast = this.eFast;
   var eSlow = this.eSlow;
   var eSignal = this.eSignal;
@@ -232,10 +233,37 @@ MACD.prototype.buyOrSell = function(stockPrice) {
   }
 
   if (eSignal.add(stockPrice) && macd) {
-    if (macd < eSignal.ema) {
-      ret = - 1;
+    return macd - eSignal.ema;
+  }
+};
+
+var STOCHASTIC = module.exports.STOCHASTIC = function(n, m, o) {
+  if (! (this instanceof STOCHASTIC)) { // enforcing new
+    return new STOCHASTIC(n);
+  }
+  Technical.call(this);
+  this.qh = new Queue(n);
+  this.ql = new Queue(n);
+  this.qk = new Queue(m);
+  this.qd = new Queue(o);
+};
+STOCHASTIC.prototype = Object.create(Technical.prototype);
+STOCHASTIC.prototype.analize = function(stockPrice, high, low) {
+  var qh = this.qh;
+  var ql = this.ql;
+  var qk = this.qk;
+  var qd = this.qd;
+  if (qh.enq(high) && qh.enq(low)) {
+    var h = qh.high; // TODO implement
+    var l = ql.low; // TODO implement
+    var k = 100 * (stockPrice - l) / (h - l);
+    if (qk.enq(k)) {
+      if (qd.enq(qk.ave())) {
+        return qd.ave(); // %D
+      }
     }
   }
-  return ret;
 };
-MACD.prototype.reset = reset;
+
+// TODO
+// RSI
