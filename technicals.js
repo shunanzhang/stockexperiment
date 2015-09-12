@@ -265,5 +265,25 @@ STOCHASTIC.prototype.analize = function(stockPrice, high, low) {
   }
 };
 
-// TODO
-// RSI
+var RSI = module.exports.RSI = function(n) {
+  if (! (this instanceof RSI)) { // enforcing new
+    return new RSI(n);
+  }
+  Technical.call(this);
+  this.n = n;
+  this.aveGain = 0.0;
+  this.aveLoss = 0.0;
+  this.prevPrice = 0;
+};
+RSI.prototype = Object.create(Technical.prototype);
+RSI.prototype.analize = function(stockPrice) {
+  var n = this.n;
+  var prevPrice = this.prevPrice;
+  if (prevPrice) {
+    var aveGain = this.aveGain = this.aveGain * (n - 1) + (stockPrice > prevPrice? stockPrice - prevPrice : 0);
+    var aveLoss = this.aveLoss = this.aveLoss * (n - 1) + (stockPrice < prevPrice? prevPrice - stockPrice : 0);
+    this.prevPrice = stockPrice;
+    return 100 - 100 / (1 + aveGain / aveLoss);
+  }
+  this.prevPrice = stockPrice;
+};
