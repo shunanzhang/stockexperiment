@@ -1,6 +1,7 @@
 // TODO use ES6 class
 var Queue = require('./queue');
 var Ema = require('./ema');
+var pValues = require('./normalDistributionTable').pValues;
 
 var Technical = function() {
   if (! (this instanceof Technical)) { // enforcing new
@@ -131,29 +132,38 @@ EMAS.prototype.analize = function(stockPrice) {
   }
 };
 
-//var PVALUE = module.exports.PVALUE = function(n) {
-//  if (! (this instanceof PVALUE)) { // enforcing new
-//    return new PVALUE(n);
-//  }
-//  Technical.call(this);
-//  this.q = new Queue(n);
-//};
-//PVALUE.prototype = Object.create(Technical.prototype);
-//PVALUE.prototype.analize = function(stockPrice) {
-//  var q = this.q;
-//  if (q.enq(stockPrice)) {
-//    var oldestId = q.oldestId;
-//    var n = q.length;
-//    var ave = q.ave();
-//    var plusSigma = 0;
-//
-//    for (var i = oldestId, l = oldestId + n; i < l; i++) {
-//      var diff = q[i] - ave;
-//      plusSigma += diff * diff;
-//    }
-//    plusSigma = Math.sqrt(plusSigma / n) * 2 + ave;
-//  }
-//};
+var PVALUE = module.exports.PVALUE = function(n) {
+  if (! (this instanceof PVALUE)) { // enforcing new
+    return new PVALUE(n);
+  }
+  Technical.call(this);
+  this.q = new Queue(n);
+};
+PVALUE.prototype = Object.create(Technical.prototype);
+PVALUE.prototype.analize = function(stockPrice) {
+  var q = this.q;
+  if (q.enq(stockPrice)) {
+    var oldestId = q.oldestId;
+    var n = q.length;
+    var ave = q.ave();
+    var sigma = 0;
+
+    for (var i = oldestId, l = oldestId + n; i < l; i++) {
+      var diff = q[i] - ave;
+      sigma += diff * diff;
+    }
+    sigma = Math.sqrt(sigma / n);
+    var zScore100 = (100 * (stockPrice - ave) / sigma) | 0;
+    var sign = -1;
+    if (zScore100 < 0) {
+      zScore100 = -zScore100;
+      sign = 1;
+    }
+    // The lower stock price, the closer to +1 is returned.
+    // The higher stock price, the closer to -1 is returned.
+    return (zScore100 < pValues.length ? pValues[zScore100] : 1.0) * sign; // -1.0 ~ -0.5 or 0.5 ~ 1.0
+  }
+};
 
 var BOIL = module.exports.BOIL = function(n) {
   if (! (this instanceof BOIL)) { // enforcing new
@@ -175,7 +185,7 @@ BOIL.prototype.analize = function(stockPrice) {
       var diff = q[i] - ave;
       plusSigma += diff * diff;
     }
-    plusSigma = Math.sqrt(plusSigma / n) * 2 + ave;
+    plusSigma = Math.sqrt(plusSigma / n) * 2 + ave; // 2sigma
     return plusSigma;
   }
 };
