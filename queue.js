@@ -1,15 +1,43 @@
+var MAX_INT = 0x7FFFFFFF; // max 31 bit
+var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
+var max = Math.max;
+var min = Math.min;
+
 var _enq1 = function(item) {
   var oldestId = this.oldestId;
   var newestId = oldestId + this.length;
+  var high = this.high;
+  var low = this.low;
   this[newestId] = item;
   if (newestId >= this.limit) {
     this.sum += item - this[oldestId];
     this.oldestId += 1;
+    var i = this.oldestId;
+    if (high <= item) {
+      this.high = item;
+    } else {
+      high = MIN_INT;
+      for (i = oldestId; i <= newestId; i++) {
+        high = max(high, this[i]);
+      }
+      this.high = high;
+    }
+    if (low >= item) {
+      this.low = item;
+    } else {
+      low = MAX_INT;
+      for (i = oldestId; i <= newestId; i++) {
+        low = min(low, this[i]);
+      }
+      this.low = low;
+    }
     return true;
   }
   else {
     this.sum += item;
     this.length += 1;
+    this.high = max(high, item);
+    this.low = min(low, item);
     return false;
   }
 };
@@ -51,7 +79,7 @@ var llss = function() { // slope of least square method
 
 var Queue = module.exports = function(limit, func_y, start) {
   start = this.start = start || 0;
-  limit = this.limit = limit + start || Number.MAX_VALUE;
+  limit = this.limit = limit + start || MAX_INT;
   this.oldestId = 0;
   this.length = 0;
   if (func_y) {
@@ -67,6 +95,8 @@ var Queue = module.exports = function(limit, func_y, start) {
     this.sum = 0;
     this.enq = _enq1;
     this.ave = ave;
+    this.high = MIN_INT;
+    this.low = MAX_INT;
   }
 };
 

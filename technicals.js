@@ -254,8 +254,8 @@ STOCHASTIC.prototype.analize = function(stockPrice, high, low) {
   var qk = this.qk;
   var qd = this.qd;
   if (qh.enq(high) && qh.enq(low)) {
-    var h = qh.high; // TODO implement
-    var l = ql.low; // TODO implement
+    var h = qh.high;
+    var l = ql.low;
     var k = 100 * (stockPrice - l) / (h - l);
     if (qk.enq(k)) {
       if (qd.enq(qk.ave())) {
