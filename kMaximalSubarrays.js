@@ -30,7 +30,7 @@ KMaximalSubarrays.prototype.getRanges = function(k) {
         if (result === undefined) {
           results[j] = newSubarray;
           break;
-        } else if (result.start == newSubarray.start) {
+        } else if (result.start === newSubarray.start) {
           if (result.sum < newSubarray.sum) {
             results.splice(j, 1, newSubarray); // replace the current subarray
           }
