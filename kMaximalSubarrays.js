@@ -37,6 +37,12 @@ KMaximalSubarrays.prototype.getRanges = function(k) {
           break;
         } else if (result.sum < newSubarray.sum) {
           results.splice(j, 0, newSubarray); // insert the new subarray
+          for (var m = j + 1, ml = results.length; m < ml; m++) { // find subsequent element that has the same start
+            if (results[m].start === newSubarray.start) {
+              results.splice(m, 1); // remove 1 element at m
+              break;
+            }
+          }
           results.splice(k, 1); // remove 1 element if results.length is longer than k
           break;
         }

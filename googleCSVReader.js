@@ -17,6 +17,12 @@ var GoogleCSVReader = module.exports = function() {
   this.interval = 0;
   this.basetime = 0;
 };
+GoogleCSVReader.DATE_COLUMN = DATE_COLUMN;
+GoogleCSVReader.CLOSE_COLUMN = CLOSE_COLUMN;
+GoogleCSVReader.HIGH_COLUMN = HIGH_COLUMN;
+GoogleCSVReader.LOW_COLUMN = LOW_COLUMN;
+GoogleCSVReader.OPEN_COLUMN = OPEN_COLUMN;
+GoogleCSVReader.VOLUME_COLUMN = VOLUME_COLUMN;
 
 GoogleCSVReader.prototype.parseLine = function(line) {
   if (!line) {
