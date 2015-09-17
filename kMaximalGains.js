@@ -65,35 +65,85 @@ KMaximalGains.prototype.getRanges = function(k) {
 
   var i = 0;
   var j = 0;
+  var end = 0;
+  var start = 0;
+  var sum = 0;
   var dp = []; // dynamic programming table
-  for (i = 2; i--;) {
-    dp[i] = [];
-    for (j = len; j--;) {
-      dp[i][j] = 0;
+  var balances = [];
+  var contiguousGainCounts = [];
+  for (i = k + 1; i--;) { // 0 <= i <= k
+    dp[i] = 0;
+    balances[i] = -prices[0];
+    contiguousGainCounts[i] = 0;
+  }
+
+  for (j = 1; j < len; j++) {
+    var price = prices[j];
+    var carried = false;
+    for (i = k + 1; --i;) { // 0 < i <= k
+      if ((carried || i === k) && contiguousGainCounts[i] > 0) {
+        end = j - 1;
+        start = end - contiguousGainCounts[i]; // off by one intentionally
+        sum = prices[end] - prices[start];
+        results[i - 1] = new Subarray(start, end, sum);
+      }
+
+      var prevBalance = balances[i];
+      var nextBalance = dp[i - 1] - price;
+      var prevGain = dp[i];
+      var nextGain = price + prevBalance;
+      if (prevGain < nextGain) { // whether to sell at price
+        dp[i] = nextGain;
+        contiguousGainCounts[i] += 1;
+      } else {
+        dp[i] = prevGain;
+        contiguousGainCounts[i] = 0;
+      }
+      if (prevBalance < nextBalance) { // whether to buy at price
+        balances[i] = nextBalance;
+        carried = true;
+      } else {
+        balances[i] = prevBalance;
+        carried = false;
+      }
+      if (j + 1 < len && dp[i] >= prices[j + 1] + balances[i]) {
+        carried = false;
+      }
     }
   }
 
-  for (i = 1; i <= k; i++) {
-    var temp = -prices[0];
-    var contiguousGainCount = 0;
-    for (j = 1; j < len; j++) {
-      var currGain = dp[i & 1][j - 1];
-      var nextGain = prices[j] + temp;
-      if (currGain < nextGain) {
-        dp[i & 1][j] = nextGain;
-        contiguousGainCount += 1;
-        if (i === k) {
-          var start = j - contiguousGainCount; // off by one intentionally
-          var end = j;
-          //var sum = ;
-        }
-      } else {
-        dp[i & 1][j] = currGain;
-        contiguousGainCount = 0;
-      }
-      // dp[i & 1][j] = Math.max(dp[i & 1][j - 1], prices[j] + temp);
-      temp =  Math.max(temp, dp[~i & 1][j - 1] - prices[j]);
-    }
+  if (contiguousGainCounts[k] > 0) {
+    end = len - 1;
+    start = end - contiguousGainCounts[k]; // off by one intentionally
+    sum = prices[end] - prices[start];
+    results[k - 1] = new Subarray(start, end, sum);
   }
-  return dp[k & 1][len - 1];
+
+  //return dp[k];
+  return results;
 };
+
+var main = function() {
+  var test = [1, 5, 1, 2, 1, 3];
+  var kMaximalSubarrays = new KMaximalGains(test);
+  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":0,"end":1,"sum":4},{"start":4,"end":5,"sum":2}]');
+  test = [1, 2, 3, 2, 3, 4];
+  kMaximalSubarrays = new KMaximalGains(test);
+  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":0,"end":2,"sum":2},{"start":3,"end":5,"sum":2}]');
+  test = [1, 2, 1, 5, 1, 3];
+  kMaximalSubarrays = new KMaximalGains(test);
+  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":2,"end":3,"sum":4},{"start":4,"end":5,"sum":2}]');
+  test = [1, 2, 3, 4, 5, 6];
+  kMaximalSubarrays = new KMaximalGains(test);
+  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[null,{"start":0,"end":5,"sum":5}]');
+  test = [6, 5, 4, 3, 2, 1];
+  kMaximalSubarrays = new KMaximalGains(test);
+  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[]');
+  test = [1, 3, 1, 5, 1, 2];
+  kMaximalSubarrays = new KMaximalGains(test);
+  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":0,"end":1,"sum":2},{"start":2,"end":3,"sum":4}]');
+};
+
+if (require.main === module) {
+  main();
+}
