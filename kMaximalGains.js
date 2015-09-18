@@ -1,3 +1,5 @@
+var assert = require('assert');
+
 var Subarray = function(start, end, sum) {
   if (! (this instanceof Subarray)) { // enforcing new
     return new Subarray(start, end, sum);
@@ -126,22 +128,25 @@ KMaximalGains.prototype.getRanges = function(k) {
 var main = function() {
   var test = [1, 5, 1, 2, 1, 3];
   var kMaximalSubarrays = new KMaximalGains(test);
-  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":0,"end":1,"sum":4},{"start":4,"end":5,"sum":2}]');
+  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 0, end: 1, sum: 4}, {start: 4, end: 5, sum: 2}]);
   test = [1, 2, 3, 2, 3, 4];
   kMaximalSubarrays = new KMaximalGains(test);
-  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":0,"end":2,"sum":2},{"start":3,"end":5,"sum":2}]');
+  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 0, end: 2, sum: 2}, {start: 3, end: 5, sum: 2}]);
   test = [1, 2, 1, 5, 1, 3];
   kMaximalSubarrays = new KMaximalGains(test);
-  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":2,"end":3,"sum":4},{"start":4,"end":5,"sum":2}]');
+  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 2, end: 3, sum: 4}, {start: 4, end: 5, sum: 2}]);
   test = [1, 2, 3, 4, 5, 6];
   kMaximalSubarrays = new KMaximalGains(test);
-  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[null,{"start":0,"end":5,"sum":5}]');
+  assert.deepEqual(kMaximalSubarrays.getRanges(2), [, {start: 0, end: 5, sum: 5}]);
   test = [6, 5, 4, 3, 2, 1];
   kMaximalSubarrays = new KMaximalGains(test);
-  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[]');
+  assert.deepEqual(kMaximalSubarrays.getRanges(2), []);
   test = [1, 3, 1, 5, 1, 2];
   kMaximalSubarrays = new KMaximalGains(test);
-  console.log(JSON.stringify(kMaximalSubarrays.getRanges(2)) === '[{"start":0,"end":1,"sum":2},{"start":2,"end":3,"sum":4}]');
+  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 0, end: 1, sum: 2}, {start: 2, end: 3, sum: 4}]);
+  test = [1, 3, 1, 5, 1, 2, 1, 4];
+  kMaximalSubarrays = new KMaximalGains(test);
+  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 2,end: 3, sum: 4}, {start: 6, end: 7, sum: 3}]);
 };
 
 if (require.main === module) {
