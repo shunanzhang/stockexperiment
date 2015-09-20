@@ -18,12 +18,10 @@ var train = function() {
 };
 
 request(url).pipe(new ByLineStream()).on('readable', function() {
-  googleCSVReader.parseLine(this.read());
-  var data = googleCSVReader.data;
-  var len = data.length;
-  if (len > 0) {
+  var lineData = googleCSVReader.parseLine(this.read());
+  if (lineData) {
     var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
-    var close = data[len - 1][closeColumnIndex];
+    var close = lineData[closeColumnIndex];
     //console.error(close);
     kMaximalGains.prices.push(close);
   }

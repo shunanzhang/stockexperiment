@@ -297,3 +297,11 @@ RSI.prototype.analize = function(stockPrice) {
   }
   this.prevPrice = stockPrice;
 };
+
+
+// Day of the week
+// Monday -0.10%
+// Thuesday -0.13%
+// Wednesday +0.12%
+// Thursday +0.20%
+// Friday -0.17%
