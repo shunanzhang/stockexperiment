@@ -110,4 +110,5 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
   for (var i = 0, l = gains.length; i < l; i++) {
     featureVector['gain' + (l - i)] = gains[i];
   }
+  return featureVector;
 };
