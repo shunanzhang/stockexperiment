@@ -34,7 +34,7 @@ SMA.prototype.analize = function(stockPrice) {
   }
 };
 
-var GAINS = module.exports.GAINS - function(n) {
+var GAINS = module.exports.GAINS = function(n) {
   if (! (this instanceof GAINS)) { // enforcing new
     return new GAINS(n);
   }
@@ -138,7 +138,7 @@ var EMAS = module.exports.EMAS = function(n, t) {
   this.q = new Queue(2 * t + 1);
   this.e = new Ema(n);
 };
-EMAs.prototype = Object.create(Technical.prototype);
+EMAS.prototype = Object.create(Technical.prototype);
 EMAS.prototype.analize = function(stockPrice) {
   var t = this.t;
   var q = this.q;

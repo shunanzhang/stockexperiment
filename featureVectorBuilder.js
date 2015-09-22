@@ -1,4 +1,4 @@
-var Technicals = require('./techicals');
+var Technicals = require('./technicals');
 var SMA = Technicals.SMA;
 var GAINS = Technicals.GAINS;
 var LSS = Technicals.LSS;
@@ -63,11 +63,11 @@ var FeatureVectorBuilder = module.exports = function() {
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
   var featureVector = {
-    sma10       : this.sma10.analize(close),
-    sma20       : this.sma20.analize(close),
-    sma50       : this.sma50.analize(close),
-    sma100      : this.sma100.analize(close),
-    sma200      : this.sma200.analize(close),
+    sma10       : close - this.sma10.analize(close),
+    sma20       : close - this.sma20.analize(close),
+    sma50       : close - this.sma50.analize(close),
+    sma100      : close - this.sma100.analize(close),
+    sma200      : close - this.sma200.analize(close),
     lss10       : this.lss10.analize(close),
     lss20       : this.lss20.analize(close),
     lss50       : this.lss50.analize(close),
@@ -78,16 +78,16 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     alss50      : this.alss50.analize(close),
     alss100     : this.alss100.analize(close),
     alss200     : this.alss200.analize(close),
-    ema10       : this.ema10.analize(close),
-    ema20       : this.ema20.analize(close),
-    ema50       : this.ema50.analize(close),
-    ema100      : this.ema100.analize(close),
-    ema200      : this.ema200.analize(close),
-    dema10      : this.dema10.analize(close),
-    dema20      : this.dema20.analize(close),
-    dema50      : this.dema50.analize(close),
-    dema100     : this.dema100.analize(close),
-    dema200     : this.dema200.analize(close),
+    ema10       : close - this.ema10.analize(close),
+    ema20       : close - this.ema20.analize(close),
+    ema50       : close - this.ema50.analize(close),
+    ema100      : close - this.ema100.analize(close),
+    ema200      : close - this.ema200.analize(close),
+    dema10      : close - this.dema10.analize(close),
+    dema20      : close - this.dema20.analize(close),
+    dema50      : close - this.dema50.analize(close),
+    dema100     : close - this.dema100.analize(close),
+    dema200     : close - this.dema200.analize(close),
     emas10      : this.emas10.analize(close),
     emas20      : this.emas20.analize(close),
     emas50      : this.emas50.analize(close),
@@ -104,11 +104,13 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     STOCHASTIC14: this.STOCHASTIC14.analize(close, high, low),
     STOCHASTIC5 : this.STOCHASTIC5.analize(close, high, low),
     RSI         : this.RSI.analize(close),
-    volume10    : this.volume10.analize(volume)
+    volume10    : volume - this.volume10.analize(volume)
   }; // key: feature, val:scalar
   var gains = this.gains.analize(close);
-  for (var i = 0, l = gains.length; i < l; i++) {
-    featureVector['gain' + (l - i)] = gains[i];
+  if (gains) {
+    for (var i = 0, l = gains.length; i < l; i++) {
+      featureVector['gain' + (l - i)] = gains[i];
+    }
   }
   return featureVector;
 };
