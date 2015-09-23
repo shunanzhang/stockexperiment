@@ -51,7 +51,7 @@ GAINS.prototype.analize = function(stockPrice) {
     var n = q.length;
     var results = [];
     for (var i = oldestId, l = oldestId + n; i < l; i++) {
-      results.push(this[i]);
+      results.push(q[i]);
     }
     return results;
   }
@@ -110,13 +110,13 @@ EMA.prototype.analize = function(stockPrice) {
   }
 };
 
-var DEMA = module.exports.DEMA = function(n, t) {
+var DEMA = module.exports.DEMA = function(n) {
   if (! (this instanceof DEMA)) { // enforcing new
-    return new DEMA(n, t);
+    return new DEMA(n);
   }
   Technical.call(this);
   this.e = new Ema(n);
-  this.e2 = new Ema(t);
+  this.e2 = new Ema(n);
 };
 DEMA.prototype = Object.create(Technical.prototype);
 DEMA.prototype.analize = function(stockPrice) {

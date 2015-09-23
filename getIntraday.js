@@ -14,15 +14,25 @@ var INTERVAL = 60; // sec
 var PERIOD = 10; // days
 var TICKER = 'GOOG';
 
+var BUY = 'buy';
+var SELL = 'sell';
+
+var SCW_PARAMS = {
+  ETA: 10.0,
+  // 100.0
+  C: 1.0,
+  MODE: 2 // 0, 1, or 2
+};
+
 var kMaximalGains = new KMaximalGains([]);
 var googleCSVReader = new GoogleCSVReader();
 var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', TICKER.toUpperCase()].join('');
-var scw = new SCW();
+var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
 
 var isInRange = function(i, subarrays) {
   for (var j = subarrays.length; j--;) {
     var subarray = subarrays[j];
-    if (i >= subarrays.start || i <= subarrays.end) {
+    if (i >= subarray.start && i <= subarray.end) {
       return true;
     }
   }
@@ -31,7 +41,7 @@ var isInRange = function(i, subarrays) {
 
 var train = function() {
   //console.log(googleCSVReader);
-  var optimalGains = kMaximalGains.getRanges(10);
+  var optimalGains = kMaximalGains.getRanges(PERIOD * 2);
   console.log(optimalGains);
 
   var featureVectorBuilder = new FeatureVectorBuilder();
@@ -42,15 +52,31 @@ var train = function() {
   var volumeColumnIndex = googleCSVReader.columns[VOLUME_COLUMN];
   var data = googleCSVReader.data;
   scw.train(function(trainCallback) {
-    for (var i = 0, l = data.length; i < l; i++) {
+    for (var i = 0, l = (data.length >> 1); i < l; i++) {
       var datum = data[i];
       var trainingDatum = {
         featureVector: featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]),
-        category: (isInRange(i, optimalGains) ? 'buy' : 'sell')
+        category: (isInRange(i, optimalGains) ? BUY : SELL)
       };
       trainCallback(trainingDatum);
     }
   });
+
+  var success = 0;
+  var testSize = 0;
+  for (var i = (data.length >> 1), l = data.length; i < l; i++) {
+    testSize += 1;
+    var datum = data[i];
+    var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
+    if (testSize < 2) {
+      console.log(featureVector);
+    }
+    console.log(scw.test(featureVector));
+    if (scw.test(featureVector) === (isInRange(i, optimalGains) ? BUY: SELL)) {
+      success += 1;
+    }
+  }
+  console.log('accuracy:', success, '/', testSize, '=', 100.0 * success / testSize, '%');
 };
 
 request(url).pipe(new ByLineStream()).on('readable', function() {
