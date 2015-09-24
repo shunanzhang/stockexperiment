@@ -68,15 +68,16 @@ var train = function() {
     testSize += 1;
     var datum = data[i];
     var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
-    if (testSize < 2) {
-      console.log(featureVector);
-    }
-    console.log(scw.test(featureVector));
+    //if (testSize < 2) {
+    //  console.log(featureVector);
+    //}
+    //console.log(scw.test(featureVector));
     if (scw.test(featureVector) === (isInRange(i, optimalGains) ? BUY: SELL)) {
       success += 1;
     }
   }
   console.log('accuracy:', success, '/', testSize, '=', 100.0 * success / testSize, '%');
+  console.log('buy and hold:', data[data.length >> 1][closeColumnIndex] - data[data.length - 1][closeColumnIndex]);
 };
 
 request(url).pipe(new ByLineStream()).on('readable', function() {

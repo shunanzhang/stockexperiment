@@ -106,10 +106,23 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     RSI         : this.RSI.analize(close),
     volume10    : volume - this.volume10.analize(volume)
   }; // key: feature, val:scalar
+  var i = 0;
+  var isNaN = isNaN;
   var gains = this.gains.analize(close);
   if (gains) {
-    for (var i = 0, l = gains.length; i < l; i++) {
+    for (i = 0, l = gains.length; i < l; i++) {
       featureVector['gain' + (l - i)] = gains[i];
+    }
+  }
+  if (Number.isNaN) {
+    isNaN = Number.isNaN; // ES6 better version of isNaN
+  }
+  var keys = Object.keys(featureVector || {});
+  for (i = keys.length; i--;) {
+    key = keys[i];
+    var feature = featureVector[key];
+    if (feature === undefined || isNaN(feature)) {
+      delete featureVector[key];
     }
   }
   return featureVector;
