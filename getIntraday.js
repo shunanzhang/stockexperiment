@@ -77,7 +77,7 @@ var train = function() {
     }
   }
   console.log('accuracy:', success, '/', testSize, '=', 100.0 * success / testSize, '%');
-  console.log('buy and hold:', data[data.length >> 1][closeColumnIndex] - data[data.length - 1][closeColumnIndex]);
+  console.log('buy and hold:', data[data.length - 1][closeColumnIndex] - data[data.length >> 1][closeColumnIndex]);
 };
 
 request(url).pipe(new ByLineStream()).on('readable', function() {

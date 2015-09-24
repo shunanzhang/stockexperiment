@@ -286,7 +286,7 @@ STOCHASTIC.prototype.analize = function(stockPrice, high, low) {
   var ql = this.ql;
   var qk = this.qk;
   var qd = this.qd;
-  if (qh.enq(high) && qh.enq(low)) {
+  if (qh.enq(high) && ql.enq(low)) {
     var h = qh.high;
     var l = ql.low;
     var k = 100 * (stockPrice - l) / (h - l);
