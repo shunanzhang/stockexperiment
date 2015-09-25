@@ -11,8 +11,8 @@ var FeatureVectorBuilder = require('./featureVectorBuilder');
 var SCW = require('./scw');
 
 var INTERVAL = 60; // sec
-var PERIOD = 10; // days
-var TICKER = 'GOOG';
+var PERIOD = 20; // days
+var TICKER = 'AAPL';
 
 var BUY = 'buy';
 var SELL = 'sell';
@@ -64,19 +64,43 @@ var train = function() {
 
   var success = 0;
   var testSize = 0;
+  var tp = 0;
+  var fp = 0;
+  var fn = 0;
+  var bought = 0;
+  var gain = 0 ;
   for (var i = (data.length >> 1), l = data.length; i < l; i++) {
     testSize += 1;
     var datum = data[i];
     var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
-    //if (testSize < 2) {
-    //  console.log(featureVector);
-    //}
-    //console.log(scw.test(featureVector));
-    if (scw.test(featureVector) === (isInRange(i, optimalGains) ? BUY: SELL)) {
+    var result = scw.test(featureVector);
+    var correctResult = (isInRange(i, optimalGains) ? BUY: SELL);
+    if (result === correctResult) {
       success += 1;
+      if (result === BUY) {
+        tp += 1;
+      }
+    } else {
+      if (result === BUY) {
+        fp += 1;
+      } else if (result === SELL) {
+        fn += 1;
+      }
+    }
+    if (result === BUY && bought === 0) {
+      bought = datum[closeColumnIndex];
+    } else if (result === SELL && bought > 0) {
+      gain += datum[closeColumnIndex] - bought;
+      bought = 0;
     }
   }
+  var precision = tp / (tp + fp);
+  var recall = tp / (tp + fn);
   console.log('accuracy:', success, '/', testSize, '=', 100.0 * success / testSize, '%');
+  console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
+  console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
+  console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
+  console.log('gain:', gain);
   console.log('buy and hold:', data[data.length - 1][closeColumnIndex] - data[data.length >> 1][closeColumnIndex]);
 };
 

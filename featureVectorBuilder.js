@@ -63,57 +63,57 @@ var FeatureVectorBuilder = module.exports = function() {
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
   var featureVector = {
-    sma10       : close - this.sma10.analize(close),
-    sma20       : close - this.sma20.analize(close),
-    sma50       : close - this.sma50.analize(close),
-    sma100      : close - this.sma100.analize(close),
+    //sma10       : close - this.sma10.analize(close),
+    //sma20       : close - this.sma20.analize(close),
+    //sma50       : close - this.sma50.analize(close),
+    //sma100      : close - this.sma100.analize(close),
     sma200      : close - this.sma200.analize(close),
-    lss10       : this.lss10.analize(close),
-    lss20       : this.lss20.analize(close),
-    lss50       : this.lss50.analize(close),
-    lss100      : this.lss100.analize(close),
-    lss200      : this.lss200.analize(close),
-    alss10      : this.alss10.analize(close),
-    alss20      : this.alss20.analize(close),
-    alss50      : this.alss50.analize(close),
-    alss100     : this.alss100.analize(close),
-    alss200     : this.alss200.analize(close),
-    ema10       : close - this.ema10.analize(close),
-    ema20       : close - this.ema20.analize(close),
-    ema50       : close - this.ema50.analize(close),
-    ema100      : close - this.ema100.analize(close),
-    ema200      : close - this.ema200.analize(close),
-    dema10      : close - this.dema10.analize(close),
-    dema20      : close - this.dema20.analize(close),
-    dema50      : close - this.dema50.analize(close),
-    dema100     : close - this.dema100.analize(close),
-    dema200     : close - this.dema200.analize(close),
-    emas10      : this.emas10.analize(close),
-    emas20      : this.emas20.analize(close),
-    emas50      : this.emas50.analize(close),
-    emas100     : this.emas100.analize(close),
-    emas200     : this.emas200.analize(close),
-    PVALUE10    : this.PVALUE10.analize(close),
-    PVALUE20    : this.PVALUE20.analize(close),
-    PVALUE50    : this.PVALUE50.analize(close),
-    PVALUE100   : this.PVALUE100.analize(close),
-    PVALUE200   : this.PVALUE200.analize(close),
-    BOIL        : this.BOIL.analize(close),
-    MACD12      : this.MACD12.analize(close),
-    MACD5       : this.MACD5.analize(close),
-    STOCHASTIC14: this.STOCHASTIC14.analize(close, high, low),
-    STOCHASTIC5 : this.STOCHASTIC5.analize(close, high, low),
-    RSI         : this.RSI.analize(close),
-    volume10    : volume - this.volume10.analize(volume)
+    //lss10       : this.lss10.analize(close),
+    //lss20       : this.lss20.analize(close),
+    //lss50       : this.lss50.analize(close),
+    //lss100      : this.lss100.analize(close),
+    //lss200      : this.lss200.analize(close),
+    //alss10      : this.alss10.analize(close),
+    //alss20      : this.alss20.analize(close),
+    //alss50      : this.alss50.analize(close),
+    //alss100     : this.alss100.analize(close),
+    //alss200     : this.alss200.analize(close),
+    //ema10       : close - this.ema10.analize(close),
+    //ema20       : close - this.ema20.analize(close),
+    //ema50       : close - this.ema50.analize(close),
+    //ema100      : close - this.ema100.analize(close),
+    //ema200      : close - this.ema200.analize(close),
+    //dema10      : close - this.dema10.analize(close),
+    //dema20      : close - this.dema20.analize(close),
+    //dema50      : close - this.dema50.analize(close),
+    //dema100     : close - this.dema100.analize(close),
+    //dema200     : close - this.dema200.analize(close),
+    //emas10      : this.emas10.analize(close),
+    //emas20      : this.emas20.analize(close),
+    //emas50      : this.emas50.analize(close),
+    //emas100     : this.emas100.analize(close),
+    //emas200     : this.emas200.analize(close),
+    //PVALUE10    : this.PVALUE10.analize(close),
+    //PVALUE20    : this.PVALUE20.analize(close),
+    //PVALUE50    : this.PVALUE50.analize(close),
+    //PVALUE100   : this.PVALUE100.analize(close),
+    //PVALUE200   : this.PVALUE200.analize(close),
+    //BOIL        : this.BOIL.analize(close),
+    //MACD12      : this.MACD12.analize(close),
+    //MACD5       : this.MACD5.analize(close),
+    //STOCHASTIC14: this.STOCHASTIC14.analize(close, high, low) / 50 - 1,
+    //STOCHASTIC5 : this.STOCHASTIC5.analize(close, high, low) / 50 -1,
+    //RSI         : this.RSI.analize(close),
+    //volume10    : volume - this.volume10.analize(volume)
   }; // key: feature, val:scalar
   var i = 0;
   var isNaN = isNaN;
-  var gains = this.gains.analize(close);
-  if (gains) {
-    for (i = 0, l = gains.length; i < l; i++) {
-      featureVector['gain' + (l - i)] = gains[i];
-    }
-  }
+  //var gains = this.gains.analize(close);
+  //if (gains) {
+  //  for (i = 0, l = gains.length; i < l; i++) {
+  //    featureVector['gain' + (l - i)] = gains[i];
+  //  }
+  //}
   if (Number.isNaN) {
     isNaN = Number.isNaN; // ES6 better version of isNaN
   }

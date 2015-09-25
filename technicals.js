@@ -51,7 +51,7 @@ GAINS.prototype.analize = function(stockPrice) {
     var n = q.length;
     var results = [];
     for (var i = oldestId, l = oldestId + n; i < l; i++) {
-      results.push(q[i]);
+      results.push(q.yq[i]);
     }
     return results;
   }
