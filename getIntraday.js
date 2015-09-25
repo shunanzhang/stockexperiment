@@ -32,7 +32,7 @@ var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
 var isInRange = function(i, subarrays) {
   for (var j = subarrays.length; j--;) {
     var subarray = subarrays[j];
-    if (i >= subarray.start && i <= subarray.end) {
+    if (i >= subarray.start && i < subarray.end) {
       return true;
     }
   }
@@ -93,6 +93,13 @@ var train = function() {
       gain += datum[closeColumnIndex] - bought;
       bought = 0;
     }
+    //scw.train(function(trainCallback) {
+    //  var trainingDatum = {
+    //    featureVector: featureVector,
+    //    category: correctResult
+    //  };
+    //  trainCallback(trainingDatum);
+    //});
   }
   var precision = tp / (tp + fp);
   var recall = tp / (tp + fn);

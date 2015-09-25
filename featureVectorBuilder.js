@@ -103,7 +103,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //MACD5       : this.MACD5.analize(close),
     //STOCHASTIC14: this.STOCHASTIC14.analize(close, high, low) / 50 - 1,
     //STOCHASTIC5 : this.STOCHASTIC5.analize(close, high, low) / 50 -1,
-    //RSI         : this.RSI.analize(close),
+    //RSI         : this.RSI.analize(close) / 50 - 1,
     //volume10    : volume - this.volume10.analize(volume)
   }; // key: feature, val:scalar
   var i = 0;
