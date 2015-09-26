@@ -44,6 +44,13 @@ var train = function() {
   var optimalGains = kMaximalGains.getRanges(PERIOD * 2);
   console.log(optimalGains);
 
+  var success = 0;
+  var testSize = 0;
+  var tp = 0;
+  var fp = 0;
+  var fn = 0;
+  var bought = 0;
+  var gain = 0 ;
   var featureVectorBuilder = new FeatureVectorBuilder();
   var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
   var highColumnIndex = googleCSVReader.columns[HIGH_COLUMN];
@@ -52,53 +59,37 @@ var train = function() {
   var volumeColumnIndex = googleCSVReader.columns[VOLUME_COLUMN];
   var data = googleCSVReader.data;
   scw.train(function(trainCallback) {
-    for (var i = 0, l = (data.length >> 1); i < l; i++) {
-      var datum = data[i];
-      var trainingDatum = {
-        featureVector: featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]),
-        category: (isInRange(i, optimalGains) ? BUY : SELL)
-      };
-      trainCallback(trainingDatum);
-    }
-  });
-
-  var success = 0;
-  var testSize = 0;
-  var tp = 0;
-  var fp = 0;
-  var fn = 0;
-  var bought = 0;
-  var gain = 0 ;
-  scw.train(function(trainCallback) {
-    for (var i = (data.length >> 1), l = data.length; i < l; i++) {
-      testSize += 1;
+    for (var i = 0, l = data.length; i < l; i++) {
       var datum = data[i];
       var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
-      var result = scw.test(featureVector);
       var correctResult = (isInRange(i, optimalGains) ? BUY: SELL);
-      if (result === correctResult) {
-        success += 1;
-        if (result === BUY) {
-          tp += 1;
+      if (i >= (l >> 1)) {
+        testSize += 1;
+        var result = scw.test(featureVector);
+        if (result === correctResult) {
+          success += 1;
+          if (result === BUY) {
+            tp += 1;
+          }
+        } else {
+          if (result === BUY) {
+            fp += 1;
+          } else if (result === SELL) {
+            fn += 1;
+          }
         }
-      } else {
-        if (result === BUY) {
-          fp += 1;
-        } else if (result === SELL) {
-          fn += 1;
+        if (result === BUY && bought === 0) {
+          bought = datum[closeColumnIndex];
+        } else if (result === SELL && bought > 0) {
+          gain += datum[closeColumnIndex] - bought;
+          bought = 0;
         }
       }
-      if (result === BUY && bought === 0) {
-        bought = datum[closeColumnIndex];
-      } else if (result === SELL && bought > 0) {
-        gain += datum[closeColumnIndex] - bought;
-        bought = 0;
-      }
-        var trainingDatum = {
-          featureVector: featureVector,
-          category: correctResult
-        };
-        trainCallback(trainingDatum);
+      var trainingDatum = {
+        featureVector: featureVector,
+        category: correctResult
+      };
+      trainCallback(trainingDatum);
     }
   });
   var precision = tp / (tp + fp);
