@@ -22,22 +22,7 @@ var FeatureVectorBuilder = module.exports = function() {
   this.sma50        = new SMA(50);
   this.sma60        = new SMA(60);
   this.sma100       = new SMA(100);
-  this.sma200a      = new SMA(200);
-  this.sma200b      = new SMA(200);
-  this.sma200c      = new SMA(200);
-  this.sma200d      = new SMA(200);
-  this.sma200e      = new SMA(200);
-  this.sma200f      = new SMA(200);
-  this.sma200g      = new SMA(200);
-  this.sma200h      = new SMA(200);
-  this.sma200i      = new SMA(200);
-  this.sma200j      = new SMA(200);
-  this.sma200k      = new SMA(200);
-  this.sma200l      = new SMA(200);
-  this.sma200m      = new SMA(200);
-  this.sma200n      = new SMA(200);
-  this.sma200o      = new SMA(200);
-  this.sma200p      = new SMA(200);
+  this.sma200       = new SMA(200);
   this.lss10        = new LSS(10);
   this.lss20        = new LSS(20);
   this.lss50        = new LSS(50);
@@ -67,62 +52,50 @@ var FeatureVectorBuilder = module.exports = function() {
   this.PVALUE20     = new PVALUE(20);
   this.PVALUE50     = new PVALUE(50);
   this.PVALUE100    = new PVALUE(100);
-  this.PVALUE200a   = new PVALUE(200);
-  this.PVALUE200b   = new PVALUE(200);
-  this.PVALUE200c   = new PVALUE(200);
-  this.PVALUE200d   = new PVALUE(200);
-  this.PVALUE200e   = new PVALUE(200);
-  this.PVALUE200f   = new PVALUE(200);
-  this.PVALUE200g   = new PVALUE(200);
-  this.PVALUE200h   = new PVALUE(200);
-  this.PVALUE200i   = new PVALUE(200);
-  this.PVALUE200j   = new PVALUE(200);
-  this.PVALUE200k   = new PVALUE(200);
-  this.PVALUE200l   = new PVALUE(200);
-  this.PVALUE200m   = new PVALUE(200);
-  this.PVALUE200n   = new PVALUE(200);
-  this.PVALUE200o   = new PVALUE(200);
-  this.PVALUE200p   = new PVALUE(200);
+  this.pvalue200    = new PVALUE(200);
   this.BOIL         = new BOIL(20);
   this.MACD12       = new MACD(12, 26, 9);
   this.MACD5        = new MACD(5, 35, 5);
-  this.STOCHASTIC14 = new STOCHASTIC(14, 3, 3);
-  this.STOCHASTIC5  = new STOCHASTIC(5, 3, 3);
+  this.stochastic14 = new STOCHASTIC(14, 3, 3);
+  this.stochastic5  = new STOCHASTIC(5, 3, 3);
   this.RSI          = new RSI(14);
   this.volume10     = new SMA(10);
   this.gains        = new GAINS(5);
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
+  var SMA200 = close - this.sma200.analize(close);
+  var PVALUE200 = this.pvalue200.analize(close);
+  var LSS200 = this.lss200.analize(close);
+  var STOCHASTIC14 = this.stochastic14.analize(close, high, low) / 50 - 1;
   var featureVector = {
     //sma10       : close - this.sma10.analize(close),
     //sma20       : close - this.sma20.analize(close),
     //sma30       : close - this.sma30.analize(close),
     //sma50       : close - this.sma50.analize(close),
-    //sma51       : close - this.sma50.analize(close),
     //sma60       : close - this.sma60.analize(close),
     //sma100      : close - this.sma100.analize(close),
-    sma200a     : close - this.sma200a.analize(close),
-    sma200b     : close - this.sma200b.analize(close),
-    sma200c     : close - this.sma200c.analize(close),
-    sma200d     : close - this.sma200d.analize(close),
-    sma200e     : close - this.sma200e.analize(close),
-    sma200f     : close - this.sma200f.analize(close),
-    sma200g     : close - this.sma200g.analize(close),
-    sma200h     : close - this.sma200h.analize(close),
-    sma200i     : close - this.sma200i.analize(close),
-    sma200j     : close - this.sma200j.analize(close),
-    sma200k     : close - this.sma200k.analize(close),
-    sma200l     : close - this.sma200l.analize(close),
-    sma200m     : close - this.sma200m.analize(close),
-    sma200n     : close - this.sma200n.analize(close),
-    sma200o     : close - this.sma200o.analize(close),
-    sma200p     : close - this.sma200p.analize(close),
+    sma200a     : SMA200,
+    sma200b     : SMA200,
+    sma200c     : SMA200,
+    sma200d     : SMA200,
+    sma200e     : SMA200,
+    sma200f     : SMA200,
+    sma200g     : SMA200,
+    sma200h     : SMA200,
+    sma200i     : SMA200,
+    sma200j     : SMA200,
+    sma200k     : SMA200,
+    sma200l     : SMA200,
+    sma200m     : SMA200,
+    sma200n     : SMA200,
+    sma200o     : SMA200,
+    sma200p     : SMA200,
     //lss10       : this.lss10.analize(close),
     //lss20       : this.lss20.analize(close),
     //lss50       : this.lss50.analize(close),
     //lss100      : this.lss100.analize(close),
-    //lss200      : this.lss200.analize(close),
+    //lss200a     : LSS200,
     //alss10      : this.alss10.analize(close),
     //alss20      : this.alss20.analize(close),
     //alss50      : this.alss50.analize(close),
@@ -147,27 +120,27 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //PVALUE20    : this.PVALUE20.analize(close),
     //PVALUE50    : this.PVALUE50.analize(close),
     //PVALUE100   : this.PVALUE100.analize(close),
-    //PVALUE200a  : this.PVALUE200a.analize(close),
-    //PVALUE200b  : this.PVALUE200b.analize(close),
-    //PVALUE200c  : this.PVALUE200c.analize(close),
-    //PVALUE200d  : this.PVALUE200d.analize(close),
-    //PVALUE200e  : this.PVALUE200e.analize(close),
-    //PVALUE200f  : this.PVALUE200f.analize(close),
-    //PVALUE200g  : this.PVALUE200g.analize(close),
-    //PVALUE200h  : this.PVALUE200h.analize(close),
-    //PVALUE200i  : this.PVALUE200i.analize(close),
-    //PVALUE200j  : this.PVALUE200j.analize(close),
-    //PVALUE200k  : this.PVALUE200k.analize(close),
-    //PVALUE200l  : this.PVALUE200l.analize(close),
-    //PVALUE200m  : this.PVALUE200m.analize(close),
-    //PVALUE200n  : this.PVALUE200n.analize(close),
-    //PVALUE200o  : this.PVALUE200o.analize(close),
-    //PVALUE200p  : this.PVALUE200p.analize(close),
+    //PVALUE200a  : PVALUE200,
+    //PVALUE200b  : PVALUE200,
+    //PVALUE200c  : PVALUE200,
+    //PVALUE200d  : PVALUE200,
+    //PVALUE200e  : PVALUE200,
+    //PVALUE200f  : PVALUE200,
+    //PVALUE200g  : PVALUE200,
+    //PVALUE200h  : PVALUE200,
+    //PVALUE200i  : PVALUE200,
+    //PVALUE200j  : PVALUE200,
+    //PVALUE200k  : PVALUE200,
+    //PVALUE200l  : PVALUE200,
+    //PVALUE200m  : PVALUE200,
+    //PVALUE200n  : PVALUE200,
+    //PVALUE200o  : PVALUE200,
+    //PVALUE200p  : PVALUE200,
     //BOIL        : this.BOIL.analize(close),
     //MACD12      : this.MACD12.analize(close),
     //MACD5       : this.MACD5.analize(close),
-    //STOCHASTIC14: this.STOCHASTIC14.analize(close, high, low) / 50 - 1,
-    //STOCHASTIC5 : this.STOCHASTIC5.analize(close, high, low) / 50 -1,
+    //STOCHASTIC14: STOCHASTIC14,
+    //STOCHASTIC5 : this.stochastic5.analize(close, high, low) / 50 -1,
     //RSI         : this.RSI.analize(close) / 50 - 1,
     //volume10    : volume - this.volume10.analize(volume)
   }; // key: feature, val:scalar

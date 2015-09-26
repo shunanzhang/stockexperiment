@@ -12,7 +12,7 @@ var SCW = require('./scw');
 
 var INTERVAL = 60; // sec
 var PERIOD = 20; // days
-var TICKER = 'AMZN';
+var TICKER = 'NFLX';
 
 var BUY = 'buy';
 var SELL = 'sell';
