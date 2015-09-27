@@ -3,7 +3,9 @@
   , "version": "0.0.1"
   , "private": true
   , "dependencies": {
-      "request" : ">= 2.61.0"
+      "hiredis": ">= 0.4.1"
+    , "request" : ">= 2.61.0"
+    , "redis" : ">= 2.0.1"
   }
   , "engine": "node >= 0.12.7"
 }
