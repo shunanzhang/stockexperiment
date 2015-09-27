@@ -229,7 +229,8 @@ SCW.prototype.getMarginNonCorrectPredict = function(scores, correct) {
   if (nonCorrectScore !== NON_CATEGORY_SCORE) {
     m -= nonCorrectScore;
   }
-  return [max(m, 0.0), nonCorrectPredict]; // max(m, 0.0) somehow improves the result. overfitting?
+  //return [max(m, 0.0), nonCorrectPredict]; // max(m, 0.0) somehow improves the result. overfitting?
+  return [m, nonCorrectPredict];
 };
 
 SCW.prototype.update = function(datum) {
