@@ -16,6 +16,7 @@ var TICKER = 'NFLX';
 
 var BUY = 'buy';
 var SELL = 'sell';
+var DAILY_MIN = 390; // 390 minutes per day
 
 var SCW_PARAMS = {
   ETA: 10.0,
@@ -40,8 +41,10 @@ var isInRange = function(i, subarrays) {
 };
 
 var train = function() {
-  //console.log(googleCSVReader);
-  var optimalGains = kMaximalGains.getRanges(PERIOD * 2);
+  var data = googleCSVReader.data;
+  var dataLen = data.length;
+  var dataLenTraining = dataLen >> 1;
+  var optimalGains = kMaximalGains.getRanges((3 * dataLenTraining / DAILY_MIN) | 0, 0, dataLenTraining - 1 + 390);
   console.log(optimalGains);
 
   var success = 0;
@@ -57,14 +60,16 @@ var train = function() {
   var lowColumnIndex = googleCSVReader.columns[LOW_COLUMN];
   var openColumnIndex = googleCSVReader.columns[OPEN_COLUMN];
   var volumeColumnIndex = googleCSVReader.columns[VOLUME_COLUMN];
-  var data = googleCSVReader.data;
   scw.train(function(trainCallback) {
-    for (var i = 0, l = data.length; i < l; i++) {
+    for (var i = 0; i < dataLen; i++) {
       var datum = data[i];
       var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
       var correctResult = (isInRange(i, optimalGains) ? BUY: SELL);
-      if (i >= (l >> 1)) {
+      if (i >= dataLenTraining) {
         testSize += 1;
+        optimalGains = kMaximalGains.getRanges((3 * dataLenTraining / DAILY_MIN) | 0, i - dataLenTraining + 1, i + 390);
+        correctResult = (isInRange(i, optimalGains) ? BUY: SELL);
+        //console.log(i, optimalGains);
         var result = scw.test(featureVector);
         if (result === correctResult) {
           success += 1;

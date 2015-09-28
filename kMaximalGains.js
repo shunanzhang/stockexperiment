@@ -16,29 +16,37 @@ var KMaximalGains = module.exports = function(prices) {
   this.prices = prices;
 };
 
-KMaximalGains.prototype.getRanges = function(k) {
+KMaximalGains.prototype.getRanges = function(k, start, end) { // start and end are inclusive
   // This is O(n * k) computation, O(k) memory
   // https://leetcode.com/discuss/25603/a-concise-dp-solution-in-java
 
   var results = [];
   var prices = this.prices;
   var len = prices.length;
-  if (len <= 1 || k >= (len / 2)) { // k >= (len / 2) means we buy/sell at every price gap, which is not the focus
+
+  if (!end || end > len) {
+    end = len - 1;
+  }
+  if (!start) {
+    start = 0;
+  }
+
+  if (end - start <= 0 || k >= ((end - start + 1) / 2)) { // k >= (len / 2) means we buy/sell at every price gap, which is not the focus
     return results;
   }
 
   var i = 0;
-  var j = 0;
+  var j = start;
   var buy = 0;
   var sell = 0;
   var dp = []; // dynamic programming table
   var balances = [];
   for (i = k + 1; i--;) { // 0 <= i <= k
     dp[i] = 0;
-    balances[i] = -prices[0];
+    balances[i] = -prices[start];
   }
 
-  for (j = 1; j < len; j++) {
+  for (j = start + 1; j <= end; j++) {
     var price = prices[j];
     for (i = k + 1; --i;) { // 0 < i <= k
       var prevBalance = balances[i];
@@ -62,6 +70,7 @@ KMaximalGains.prototype.getRanges = function(k) {
         var sum = prices[sell] - prices[buy];
         var newSubarray = new Subarray(buy, sell, sum);
         // for loop to keep the sorted results
+        // TODO change it to binary search
         for (var m = 0; m < k; m++) {
           var result = results[m];
           if (result === undefined) {
