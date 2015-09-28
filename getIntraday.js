@@ -1,3 +1,4 @@
+var fs = require('fs');
 var request = require('request');
 var ByLineStream = require('./byLineStream');
 var GoogleCSVReader = require('./googleCSVReader');
@@ -106,7 +107,9 @@ var train = function() {
   console.log('buy and hold:', data[data.length - 1][closeColumnIndex] - data[data.length >> 1][closeColumnIndex]);
 };
 
-request(url).pipe(new ByLineStream()).on('readable', function() {
+//request(url)
+fs.createReadStream(__dirname + '/nflx20150927.txt')
+.pipe(new ByLineStream()).on('readable', function() {
   var lineData = googleCSVReader.parseLine(this.read());
   if (lineData) {
     var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
