@@ -18,8 +18,7 @@ var TICKER = 'NFLX';
 var BUY = 'buy';
 var SELL = 'sell';
 
-var DAILY_MIN = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
-var DELAY_TRAIN = DAILY_MIN; // minutes to wait before training
+var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 
 var SCW_PARAMS = {
   ETA: 10.0,
@@ -37,17 +36,19 @@ var isInRange = function(i, subarrays) {
   for (var j = subarrays.length; j--;) {
     var subarray = subarrays[j];
     if (i >= subarray.start && i < subarray.end) {
-      return true;
+      return BUY;
     }
   }
-  return false;
+  return SELL;
 };
 
 var train = function() {
   var data = googleCSVReader.data;
   var dataLen = data.length;
-  var minTrainLen = Math.max(dataLen >> 1, DELAY_TRAIN);
-  var optimalGains = kMaximalGains.getRanges((3 * minTrainLen / DAILY_MIN) | 0, 0, minTrainLen - 1);
+  var initialTrainingDays = 7;
+  var trainLen = MINUTES_DAY * initialTrainingDays;
+  var kMaximal = 3 * initialTrainingDays;
+  var optimalGains = kMaximalGains.getRanges(kMaximal, 0, trainLen - 1);
   console.log(optimalGains);
 
   var success = 0;
@@ -68,9 +69,11 @@ var train = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
+    var eod = (i % MINUTES_DAY === MINUTES_DAY - 1);
+    var result = '';
     featureVectorHistory.push(featureVector);
-    if (i >= minTrainLen) {
-      var result = scw.test(featureVector);
+    if (i >= trainLen) {
+      result = scw.test(featureVector);
       resultHistory.push(result);
       if (result === BUY && bought === 0) {
         bought = datum[closeColumnIndex];
@@ -78,31 +81,35 @@ var train = function() {
         gain += datum[closeColumnIndex] - bought;
         bought = 0;
       }
-      optimalGains = kMaximalGains.getRanges((3 * minTrainLen / DAILY_MIN) | 0, i - minTrainLen + 1, i);
+      if (eod) {
+        optimalGains = kMaximalGains.getRanges(kMaximal, i - trainLen + 1, i);
+        console.log(i - trainLen + 1, i, optimalGains);
+      }
     }
-    if (i >= DELAY_TRAIN) {
-      var delayedCorrectResult = (isInRange(i - DELAY_TRAIN, optimalGains) ? BUY: SELL);
-      if (i >= minTrainLen + DELAY_TRAIN) {
-        testSize += 1;
-        var delayedResult = resultHistory.shift();
-        if (delayedResult === delayedCorrectResult) {
-          success += 1;
-          if (delayedResult === BUY) {
-            tp += 1;
-          }
-        } else {
-          if (delayedResult === BUY) {
-            fp += 1;
-          } else if (delayedResult === SELL) {
-            fn += 1;
+    if (eod) {
+      for (var j = MINUTES_DAY; j--;) {
+        var correctResult = isInRange(i - j, optimalGains);
+        result = resultHistory.shift();
+        if (result) {
+          testSize += 1;
+          if (result === correctResult) {
+            success += 1;
+            if (result === BUY) {
+              tp += 1;
+            }
+          } else {
+            if (result === BUY) {
+              fp += 1;
+            } else if (result === SELL) {
+              fn += 1;
+            }
           }
         }
+        scw.update({
+          featureVector: featureVectorHistory.shift(),
+          category: correctResult
+        });
       }
-      var delayedFeatureVector = featureVectorHistory.shift();
-      scw.update({
-        featureVector: delayedFeatureVector,
-        category: delayedCorrectResult
-      });
     }
   }
   var precision = tp / (tp + fp);
@@ -113,7 +120,7 @@ var train = function() {
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
   console.log('gain:', gain, '=', 100.0 * gain / data[data.length - 1][closeColumnIndex], '%');
-  console.log('buy and hold:', data[dataLen - 1][closeColumnIndex] - data[minTrainLen][closeColumnIndex]);
+  console.log('buy and hold:', data[dataLen - 1][closeColumnIndex] - data[trainLen][closeColumnIndex]);
 };
 
 //request(url)
