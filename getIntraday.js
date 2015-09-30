@@ -45,11 +45,12 @@ var isInRange = function(i, subarrays) {
 var train = function() {
   var data = googleCSVReader.data;
   var dataLen = data.length;
-  var initialTrainingDays = 7;
+  var initialTrainingDays = 12;
   var trainLen = MINUTES_DAY * initialTrainingDays;
   var kMaximal = 3 * initialTrainingDays;
   var optimalGains = kMaximalGains.getRanges(kMaximal, 0, trainLen - 1);
   console.log(optimalGains);
+  var trainInterval = 390;//10;
 
   var success = 0;
   var testSize = 0;
@@ -57,7 +58,7 @@ var train = function() {
   var fp = 0;
   var fn = 0;
   var bought = 0;
-  var gain = 0 ;
+  var gain = 0;
   var featureVectorBuilder = new FeatureVectorBuilder();
   var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
   var highColumnIndex = googleCSVReader.columns[HIGH_COLUMN];
@@ -69,7 +70,7 @@ var train = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
-    var eod = (i % MINUTES_DAY === MINUTES_DAY - 1);
+    var isTraining = (i % trainInterval === trainInterval - 1);
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= trainLen) {
@@ -81,13 +82,13 @@ var train = function() {
         gain += datum[closeColumnIndex] - bought;
         bought = 0;
       }
-      if (eod) {
+      if (isTraining) {
         optimalGains = kMaximalGains.getRanges(kMaximal, i - trainLen + 1, i);
-        console.log(i - trainLen + 1, i, optimalGains);
+        //console.log(i - trainLen + 1, i, optimalGains);
       }
     }
-    if (eod) {
-      for (var j = MINUTES_DAY; j--;) {
+    if (isTraining) {
+      for (var j = trainInterval; j--;) {
         var correctResult = isInRange(i - j, optimalGains);
         result = resultHistory.shift();
         if (result) {
@@ -119,7 +120,7 @@ var train = function() {
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
-  console.log('gain:', gain, '=', 100.0 * gain / data[data.length - 1][closeColumnIndex], '%');
+  console.log('gain per day:', gain, '=', 100.0 * gain / data[data.length - 1][closeColumnIndex] / (dataLen - trainLen) * MINUTES_DAY, '%');
   console.log('buy and hold:', data[dataLen - 1][closeColumnIndex] - data[trainLen][closeColumnIndex]);
 };
 

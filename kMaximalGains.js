@@ -37,8 +37,8 @@ KMaximalGains.prototype.getRanges = function(k, start, end) { // start and end a
 
   var i = 0;
   var j = start;
-  var buy = 0;
-  var sell = 0;
+  var buy = start;
+  var sell = start;
   var dp = []; // dynamic programming table
   var balances = [];
   for (i = k + 1; i--;) { // 0 <= i <= k
