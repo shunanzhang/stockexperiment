@@ -45,12 +45,12 @@ var isInRange = function(i, subarrays) {
 var train = function() {
   var data = googleCSVReader.data;
   var dataLen = data.length;
-  var initialTrainingDays = 12;
+  var initialTrainingDays = 7;
   var trainLen = MINUTES_DAY * initialTrainingDays;
   var kMaximal = 3 * initialTrainingDays;
   var optimalGains = kMaximalGains.getRanges(kMaximal, 0, trainLen - 1);
   console.log(optimalGains);
-  var trainInterval = 390;//10;
+  var trainInterval = 390;
 
   var success = 0;
   var testSize = 0;
@@ -120,12 +120,13 @@ var train = function() {
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
-  console.log('gain per day:', gain, '=', 100.0 * gain / data[data.length - 1][closeColumnIndex] / (dataLen - trainLen) * MINUTES_DAY, '%');
+  console.log('gain:', gain, ', per day =', 100.0 * gain / data[data.length - 1][closeColumnIndex] / (dataLen - trainLen) * MINUTES_DAY, '%');
   console.log('buy and hold:', data[dataLen - 1][closeColumnIndex] - data[trainLen][closeColumnIndex]);
 };
 
 //request(url)
 fs.createReadStream(__dirname + '/nflx20150927.txt')
+//fs.createReadStream(__dirname + '/nflx20151001.txt')
 .pipe(new ByLineStream()).on('readable', function() {
   var lineData = googleCSVReader.parseLine(this.read());
   if (lineData) {

@@ -61,12 +61,14 @@ var FeatureVectorBuilder = module.exports = function() {
   this.RSI          = new RSI(14);
   this.volume10     = new SMA(10);
   this.gains        = new GAINS(5);
+  //this.count = 0;
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
   var SMA200 = close - this.sma200.analize(close);
   var PVALUE200 = this.pvalue200.analize(close);
   var LSS200 = this.lss200.analize(close);
+  var ALSS200 = this.alss200.analize(close);
   var STOCHASTIC14 = this.stochastic14.analize(close, high, low) / 50 - 1;
   var featureVector = {
     //sma10       : close - this.sma10.analize(close),
@@ -91,20 +93,58 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     sma200n     : SMA200,
     sma200o     : SMA200,
     sma200p     : SMA200,
+    sma200q     : SMA200,
     sma200r     : SMA200,
     sma200s     : SMA200,
     sma200t     : SMA200,
-    sma200u     : SMA200,
     //lss10       : this.lss10.analize(close),
     //lss20       : this.lss20.analize(close),
     //lss50       : this.lss50.analize(close),
     //lss100      : this.lss100.analize(close),
-    //lss200a     : LSS200,
+    lss200a     : LSS200,
+    lss200b     : LSS200,
+    lss200c     : LSS200,
+    lss200d     : LSS200,
+    lss200e     : LSS200,
+    lss200f     : LSS200,
+    lss200g     : LSS200,
+    lss200h     : LSS200,
+    lss200i     : LSS200,
+    lss200j     : LSS200,
+    lss200k     : LSS200,
+    lss200l     : LSS200,
+    lss200m     : LSS200,
+    lss200n     : LSS200,
+    lss200o     : LSS200,
+    lss200p     : LSS200,
+    lss200q     : LSS200,
+    lss200r     : LSS200,
+    lss200s     : LSS200,
+    lss200t     : LSS200,
     //alss10      : this.alss10.analize(close),
     //alss20      : this.alss20.analize(close),
     //alss50      : this.alss50.analize(close),
     //alss100     : this.alss100.analize(close),
-    //alss200     : this.alss200.analize(close),
+    //alss200a     : ALSS200,
+    //alss200b     : ALSS200,
+    //alss200c     : ALSS200,
+    //alss200d     : ALSS200,
+    //alss200e     : ALSS200,
+    //alss200f     : ALSS200,
+    //alss200g     : ALSS200,
+    //alss200h     : ALSS200,
+    //alss200i     : ALSS200,
+    //alss200j     : ALSS200,
+    //alss200k     : ALSS200,
+    //alss200l     : ALSS200,
+    //alss200m     : ALSS200,
+    //alss200n     : ALSS200,
+    //alss200o     : ALSS200,
+    //alss200p     : ALSS200,
+    //alss200q     : ALSS200,
+    //alss200r     : ALSS200,
+    //alss200s     : ALSS200,
+    //alss200t     : ALSS200,
     //ema10       : close - this.ema10.analize(close),
     //ema20       : close - this.ema20.analize(close),
     //ema50       : close - this.ema50.analize(close),
@@ -148,6 +188,39 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //RSI         : this.RSI.analize(close) / 50 - 1,
     //volume10    : volume - this.volume10.analize(volume)
   }; // key: feature, val:scalar
+  //if (SMA200 > 0) {
+  //  if (this.count >= 0) {
+  //    this.count += 1;
+  //  } else {
+  //    this.count = 1;
+  //  }
+  //} else if (SMA200 < 0) {
+  //  if (this.count <= 0) {
+  //    this.count -= 1;
+  //  } else {
+  //    this.count = -1;
+  //  }
+  //}
+  //featureVector['counta'] = this.count;
+  //featureVector['countb'] = this.count;
+  //featureVector['countc'] = this.count;
+  //featureVector['countd'] = this.count;
+  //featureVector['counte'] = this.count;
+  //featureVector['countf'] = this.count;
+  //featureVector['countg'] = this.count;
+  //featureVector['counth'] = this.count;
+  //featureVector['counti'] = this.count;
+  //featureVector['countj'] = this.count;
+  //featureVector['countk'] = this.count;
+  //featureVector['countl'] = this.count;
+  //featureVector['countm'] = this.count;
+  //featureVector['countn'] = this.count;
+  //featureVector['counto'] = this.count;
+  //featureVector['countp'] = this.count;
+  //featureVector['countq'] = this.count;
+  //featureVector['countr'] = this.count;
+  //featureVector['counts'] = this.count;
+  //featureVector['countt'] = this.count;
   var i = 0;
   var isNaN = isNaN;
   //var gains = this.gains.analize(close);
