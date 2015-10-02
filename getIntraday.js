@@ -27,8 +27,9 @@ var SCW_PARAMS = {
   MODE: 2 // 0, 1, or 2
 };
 
-var kMaximalGains = new KMaximalGains([]);
 var googleCSVReader = new GoogleCSVReader();
+googleCSVReader.load(TICKER);
+var kMaximalGains = new KMaximalGains(googleCSVReader.getColumnData(CLOSE_COLUMN));
 var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', TICKER.toUpperCase()].join('');
 var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
 
@@ -122,19 +123,29 @@ var train = function() {
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
   console.log('gain:', gain, ', per day =', 100.0 * gain / data[data.length - 1][closeColumnIndex] / (dataLen - trainLen) * MINUTES_DAY, '%');
   console.log('buy and hold:', data[dataLen - 1][closeColumnIndex] - data[trainLen][closeColumnIndex]);
+
+  googleCSVReader.shutdown();
 };
 
-//request(url)
-fs.createReadStream(__dirname + '/nflx20150927.txt')
-//fs.createReadStream(__dirname + '/nflx20151001.txt')
-.pipe(new ByLineStream()).on('readable', function() {
-  var lineData = googleCSVReader.parseLine(this.read());
-  if (lineData) {
-    var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
-    var close = lineData[closeColumnIndex];
-    //console.error(close);
-    kMaximalGains.prices.push(close);
-  }
-}).on('end', train).on('error', function(data) {
-  console.error(data);
-});
+var readNewData = process.argv[2];
+if (readNewData) {
+  //request(url)
+  fs.createReadStream(__dirname + '/nflx20150927.txt')
+  //fs.createReadStream(__dirname + '/nflx20151001.txt')
+  .pipe(new ByLineStream()).on('readable', function() {
+    var lineData = googleCSVReader.parseLine(this.read());
+    if (lineData) {
+      var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
+      var close = lineData[closeColumnIndex];
+      kMaximalGains.prices.push(close);
+    }
+  }).on('end', function() {
+    googleCSVReader.save(TICKER);
+    train();
+  }).on('error', function(data) {
+    googleCSVReader.shutdown();
+    console.error(data);
+  });
+} else {
+  train();
+}

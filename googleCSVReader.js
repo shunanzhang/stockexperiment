@@ -1,4 +1,5 @@
 var toCent = require('./utils').toCent;
+var redis = require('./redis');
 
 var DATE_COLUMN = 'DATE';
 var CLOSE_COLUMN = 'CLOSE';
@@ -51,6 +52,7 @@ GoogleCSVReader.prototype.parseLine = function(line) {
     this.basetime = parseInt(line.replace(basetimeLine, '').split(',')[0], 10);
   } else if (/^\d/.test(line)) {
     if (!this.basetime || !Object.keys(columns).length || !this.interval) {
+      this.shutdown();
       throw new Error('missing basetime or columns ' + line);
     }
     pieces = line.split(',');
@@ -64,3 +66,36 @@ GoogleCSVReader.prototype.parseLine = function(line) {
     return pieces;
   }
 };
+
+GoogleCSVReader.prototype.getColumnData = function(column) {
+  var result = [];
+  var columnIndex = this.columns[column];
+
+  if (columnIndex) {
+    var data = this.data;
+    for (var i = 0, l = data.length; i < l; i++) {
+      result.push(data[i][columnIndex]);
+    }
+  }
+  return result;
+};
+
+GoogleCSVReader.prototype.save = function(tickerId) {
+  redis.saveIntraday(tickerId, DATE_COLUMN, COLUMNS, this.data);
+};
+
+GoogleCSVReader.prototype.load = function(tickerId) {
+  var loading = true;
+  redis.loadIntraday(tickerId, COLUMNS, (function(err, lines) {
+    if (err) {
+      this.shutdown();
+      throw new Error('Redis load error ' + err);
+    }
+    this.data = lines;
+    loading = false;
+  }).bind(this));
+  while (loading) { // XXX
+  }
+};
+
+GoogleCSVReader.shutdown = redis.quit.bind(redis);

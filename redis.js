@@ -1,5 +1,3 @@
-var DATE_COLUMN = require('./googleCSVReader').DATE_COLUMN;
-
 var INTRADAY_DB = 2; // http://www.rediscookbook.org/multiple_databases.html
 var options = {
   return_buffers: true
@@ -107,22 +105,22 @@ redis.loadMatricies = function(tickerId, categories, callback) {
   });
 };
 
-redis.saveIntraday = function(tickerId, columns, lines, callback) {
+redis.saveIntraday = function(tickerId, date_column, columns, lines, callback) {
   var kv = {};
+  var columnsLen = columns.length;
   for (var i = lines.length; i--;) {
     var line = lines[i];
-    var columnsLen = columns.length;
     var data = new Uint32Array(columnsLen);
     for (var j = 0; j < columnsLen; j++) {
       var column = columns[j];
       data[j] = line[column];
     }
-    kv[line[DATE_COLUMN]] = data.toBuffer();
+    kv[line[date_column]] = data.toBuffer();
   }
   this.hmset(tickerId, kv, callback);
 };
 
-redis.loadMatricies = function(tickerId, columns, callback) {
+redis.loadIntraday = function(tickerId, columns, callback) {
   this.hgetall(tickerId, function(err, kv) {
     if (err) {
       callback(err);
