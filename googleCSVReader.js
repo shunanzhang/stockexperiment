@@ -80,8 +80,8 @@ GoogleCSVReader.prototype.getColumnData = function(column) {
 
   if (columnIndex) {
     var data = this.data;
-    for (var i = 0, l = data.length; i < l; i++) {
-      result.push(data[i][columnIndex]);
+    for (var i = data.length; i--;) {
+      result[i] = data[i][columnIndex];
     }
   }
   return result;
