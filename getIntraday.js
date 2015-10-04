@@ -13,14 +13,13 @@ var SCW = require('./scw');
 
 var INTERVAL = 60; // sec
 var PERIOD = 20; // days
-var TICKER = 'NFLX';
 
 var BUY = 'buy';
 var SELL = 'sell';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var TRAIN_INTERVAL = 390;
-var TRAINING_DAYS = 7;
+var TRAINING_DAYS = 8;
 
 var SCW_PARAMS = {
   ETA: 10.0,
@@ -29,8 +28,14 @@ var SCW_PARAMS = {
   MODE: 2 // 0, 1, or 2
 };
 
-var googleCSVReader = new GoogleCSVReader(TICKER);
-var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', TICKER.toUpperCase()].join('');
+/**
+ * argument parsing
+ */
+var tickerId = process.argv[2] || 'NFLX';
+var readNewData = process.argv[3];
+
+var googleCSVReader = new GoogleCSVReader(tickerId);
+var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', tickerId.toUpperCase()].join('');
 
 var simulate = function() {
   var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
@@ -72,7 +77,7 @@ var simulate = function() {
         bought = datum[closeColumnIndex];
       } else if (result === SELL && bought > 0) {
         gain += datum[closeColumnIndex] - bought;
-        console.log(gain);
+        //console.log(gain);
         bought = 0;
       }
       if (isTraining) {
@@ -108,7 +113,7 @@ var simulate = function() {
   }
   var precision = tp / (tp + fp);
   var recall = tp / (tp + fn);
-  console.log(TICKER);
+  console.log(tickerId);
   console.log('accuracy:', success, '/', testSize, '=', 100.0 * success / testSize, '%');
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
@@ -123,10 +128,9 @@ var loadAndSimulate = function() {
   googleCSVReader.load(simulate);
 };
 
-var readNewData = process.argv[2];
 if (readNewData) {
-  //request(url)
-  fs.createReadStream(__dirname + '/nflx20150927.txt')
+  request(url)
+  //fs.createReadStream(__dirname + '/nflx20150927.txt')
   //fs.createReadStream(__dirname + '/nflx20151001.txt')
   .pipe(new ByLineStream()).on('readable', function() {
     googleCSVReader.parseLine(this.read());
