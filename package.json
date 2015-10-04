@@ -4,8 +4,8 @@
   , "private": true
   , "dependencies": {
       "hiredis": ">= 0.4.1"
-    , "request" : ">= 2.61.0"
-    , "redis" : ">= 2.0.1"
+    , "request": ">= 2.61.0"
+    , "redis": ">= 2.0.1"
   }
   , "engine": "node >= 0.12.7"
 }

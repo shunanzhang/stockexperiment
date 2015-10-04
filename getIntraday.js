@@ -19,6 +19,8 @@ var BUY = 'buy';
 var SELL = 'sell';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
+var TRAIN_INTERVAL = 390;
+var TRAINING_DAYS = 7;
 
 var SCW_PARAMS = {
   ETA: 10.0,
@@ -27,31 +29,20 @@ var SCW_PARAMS = {
   MODE: 2 // 0, 1, or 2
 };
 
-var googleCSVReader = new GoogleCSVReader();
-googleCSVReader.load(TICKER);
-var kMaximalGains = new KMaximalGains(googleCSVReader.getColumnData(CLOSE_COLUMN));
+var googleCSVReader = new GoogleCSVReader(TICKER);
 var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', TICKER.toUpperCase()].join('');
-var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
 
-var isInRange = function(i, subarrays) {
-  for (var j = subarrays.length; j--;) {
-    var subarray = subarrays[j];
-    if (i >= subarray.start && i < subarray.end) {
-      return BUY;
-    }
-  }
-  return SELL;
-};
-
-var train = function() {
+var simulate = function() {
+  var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
   var data = googleCSVReader.data;
   var dataLen = data.length;
-  var initialTrainingDays = 7;
-  var trainLen = MINUTES_DAY * initialTrainingDays;
-  var kMaximal = 3 * initialTrainingDays;
+  var trainLen = MINUTES_DAY * TRAINING_DAYS;
+  var kMaximal = 3 * TRAINING_DAYS;
+  var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
+  var kMaximalGains = new KMaximalGains(closes);
   var optimalGains = kMaximalGains.getRanges(kMaximal, 0, trainLen - 1);
   console.log(optimalGains);
-  var trainInterval = 390;
+  var isInRange = KMaximalGains.isInRange;
 
   var success = 0;
   var testSize = 0;
@@ -71,7 +62,7 @@ var train = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
-    var isTraining = (i % trainInterval === trainInterval - 1);
+    var isTraining = (i % TRAIN_INTERVAL === TRAIN_INTERVAL - 1);
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= trainLen) {
@@ -81,6 +72,7 @@ var train = function() {
         bought = datum[closeColumnIndex];
       } else if (result === SELL && bought > 0) {
         gain += datum[closeColumnIndex] - bought;
+        console.log(gain);
         bought = 0;
       }
       if (isTraining) {
@@ -89,8 +81,8 @@ var train = function() {
       }
     }
     if (isTraining) {
-      for (var j = trainInterval; j--;) {
-        var correctResult = isInRange(i - j, optimalGains);
+      for (var j = TRAIN_INTERVAL; j--;) {
+        var correctResult = isInRange(i - j, optimalGains, BUY, SELL);
         result = resultHistory.shift();
         if (result) {
           testSize += 1;
@@ -121,10 +113,14 @@ var train = function() {
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
-  console.log('gain:', gain, ', per day =', 100.0 * gain / data[data.length - 1][closeColumnIndex] / (dataLen - trainLen) * MINUTES_DAY, '%');
-  console.log('buy and hold:', data[dataLen - 1][closeColumnIndex] - data[trainLen][closeColumnIndex]);
+  console.log('gain:', gain, ', per day =', 100.0 * gain / closes[data.length - 1] / (dataLen - trainLen) * MINUTES_DAY, '%');
+  console.log('buy and hold:', closes[dataLen - 1] - closes[trainLen]);
 
   googleCSVReader.shutdown();
+};
+
+var loadAndSimulate = function() {
+  googleCSVReader.load(simulate);
 };
 
 var readNewData = process.argv[2];
@@ -133,19 +129,14 @@ if (readNewData) {
   fs.createReadStream(__dirname + '/nflx20150927.txt')
   //fs.createReadStream(__dirname + '/nflx20151001.txt')
   .pipe(new ByLineStream()).on('readable', function() {
-    var lineData = googleCSVReader.parseLine(this.read());
-    if (lineData) {
-      var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
-      var close = lineData[closeColumnIndex];
-      kMaximalGains.prices.push(close);
-    }
+    googleCSVReader.parseLine(this.read());
   }).on('end', function() {
-    googleCSVReader.save(TICKER);
-    train();
+    googleCSVReader.save();
+    loadAndSimulate();
   }).on('error', function(data) {
     googleCSVReader.shutdown();
     console.error(data);
   });
 } else {
-  train();
+  loadAndSimulate();
 }

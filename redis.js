@@ -36,18 +36,11 @@ Buffer.prototype.toFloat64Array = function() {
 };
 
 Uint32Array.prototype.toBuffer = function() {
-  var arrayBuffer = this.buffer;
-  arrayBuffer.length = this.length * 4;
-  return new Buffer(arrayBuffer);
+  return new Buffer(new Uint8Array(this.buffer, this.byteOffset, this.byteLength));
 };
 Buffer.prototype.toUint32Array = function() {
-  var length = this.length;
-  var ab = new ArrayBuffer(length);
-  var view = new Uint8Array(ab);
-  for (var i = 0; i < length; ++i) {
-    view[i] = this[i];
-  }
-  return new Uint32Array(ab);
+  var view = new Uint8Array(this);
+  return new Uint32Array(view.buffer, view.byteOffset);
 };
 
 redis.saveMatricies = function(tickerId, categories, fields, covarianceMatrix, weightMatrix, callback) {
@@ -105,35 +98,32 @@ redis.loadMatricies = function(tickerId, categories, callback) {
   });
 };
 
-redis.saveIntraday = function(tickerId, date_column, columns, lines, callback) {
+redis.saveIntraday = function(tickerId, dateColumnIndex, lines, callback) {
   var kv = {};
-  var columnsLen = columns.length;
   for (var i = lines.length; i--;) {
     var line = lines[i];
-    var data = new Uint32Array(columnsLen);
-    for (var j = 0; j < columnsLen; j++) {
-      var column = columns[j];
-      data[j] = line[column];
+    var lineLen = line.length;
+    var data = new Uint32Array(lineLen);
+    for (var j = lineLen; j--;) {
+      data[j] = line[j];
     }
-    kv[line[date_column]] = data.toBuffer();
+    kv[line[dateColumnIndex]] = data.toBuffer();
   }
   this.hmset(tickerId, kv, callback);
 };
 
-redis.loadIntraday = function(tickerId, columns, callback) {
+redis.loadIntraday = function(tickerId, callback) {
   this.hgetall(tickerId, function(err, kv) {
     if (err) {
       callback(err);
     } else {
       var lines = [];
       var dates = Object.keys(kv || {});
-      for (var i = 0, l = dates.length; i < l; i++) {
-        var data = kv[dates[i]].toUint32Array();
-        var line = {};
-        for (var j = columns.length; j--;) {
-          line[columns[j]] = data[j];
-        }
-        lines.push(line); //TODO do we need to sort?
+      dates.sort(function(a, b) {
+        return parseInt(a, 10) - parseInt(b, 10);
+      });
+      for (var i = dates.length; i--;) {
+        lines[i] = kv[dates[i]].toUint32Array();
       }
       callback(null, lines);
     }

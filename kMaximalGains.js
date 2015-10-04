@@ -9,12 +9,23 @@ var Subarray = function(start, end, sum) {
   this.sum = sum;
 };
 
+var isInRange = function(i, subarrays, buy, sell) {
+  for (var j = subarrays.length; j--;) {
+    var subarray = subarrays[j];
+    if (i >= subarray.start && i < subarray.end) {
+      return buy;
+    }
+  }
+  return sell;
+};
+
 var KMaximalGains = module.exports = function(prices) {
   if (! (this instanceof KMaximalGains)) { // enforcing new
     return new KMaximalGains(prices);
   }
   this.prices = prices;
 };
+KMaximalGains.isInRange = isInRange;
 
 KMaximalGains.prototype.getRanges = function(k, start, end) { // start and end are inclusive
   // This is O(n * k) computation, O(k) memory
