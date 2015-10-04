@@ -19,7 +19,7 @@ var SELL = 'sell';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var TRAIN_INTERVAL = 390;
-var TRAINING_DAYS = 8;
+var TRAINING_DAYS = 17;
 
 var SCW_PARAMS = {
   ETA: 10.0,
@@ -118,7 +118,7 @@ var simulate = function() {
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
-  console.log('gain:', gain, ', per day =', 100.0 * gain / closes[data.length - 1] / (dataLen - trainLen) * MINUTES_DAY, '%');
+  console.log('gain:', gain, ', per day =', 100.0 * gain / closes[trainLen] / (dataLen - trainLen) * MINUTES_DAY, '%');
   console.log('buy and hold:', closes[dataLen - 1] - closes[trainLen]);
 
   googleCSVReader.shutdown();
