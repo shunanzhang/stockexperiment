@@ -4,6 +4,7 @@
   , "private": true
   , "dependencies": {
       "hiredis": ">= 0.4.1"
+    , "ibapi": ">= 2.3.3"
     , "request": ">= 2.61.0"
     , "redis": ">= 2.0.1"
   }
