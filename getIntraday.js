@@ -72,6 +72,9 @@ var simulate = function() {
     featureVectorHistory.push(featureVector);
     if (i >= trainLen) {
       result = scw.test(featureVector);
+      if (isTraining) {
+        result = SELL; // always sell a the end of the day
+      }
       resultHistory.push(result);
       if (result === BUY && bought === 0) {
         bought = datum[closeColumnIndex];
