@@ -67,9 +67,9 @@ var FeatureVectorBuilder = module.exports = function() {
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
-  var SMA200 = close - this.sma200.analize(close);
-  var SMA200H = close - this.sma200h.analize(high);
-  var SMA200L = close - this.sma200l.analize(low);
+  var SMA200 = close / this.sma200.analize(close);
+  var SMA200H = close / this.sma200h.analize(high);
+  var SMA200L = close / this.sma200l.analize(low);
   //var PVALUE200 = this.pvalue200.analize(close);
   var LSS200 = this.lss200.analize(close);
   //var ALSS200 = this.alss200.analize(close);

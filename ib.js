@@ -7,13 +7,13 @@ var api = new addon.NodeIbapi();
 var orderId = -1;
 
 var addTicker = function (tickerId, exchange) {
-  var msftContract = contract.createContract();
-  msftContract.symbol = tickerId;
-  msftContract.secType = 'STK';
-  msftContract.exchange = 'SMART';
-  msftContract.primaryExchange = exchange;
-  msftContract.currency = 'USD';
-  api.reqRealtimeBars(1, msftContract, 5, "TRADES", false);
+  var _contract = contract.createContract();
+  _contract.symbol = tickerId;
+  _contract.secType = 'STK';
+  _contract.exchange = 'SMART';
+  _contract.primaryExchange = exchange;
+  _contract.currency = 'USD';
+  api.reqRealtimeBars(1, _contract, 5, "TRADES", true); // only 5 sec is supported, only regular trading ours == true
 };
 
 var handleValidOrderId = function (message) {
