@@ -37,7 +37,7 @@ var readNewData = process.argv[3];
 var googleCSVReader = new GoogleCSVReader(tickerId);
 var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', tickerId.toUpperCase()].join('');
 
-var simulate = function() {
+var backtest = function() {
   var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
   var data = googleCSVReader.data;
   var dataLen = data.length;
@@ -127,8 +127,8 @@ var simulate = function() {
   googleCSVReader.shutdown();
 };
 
-var loadAndSimulate = function() {
-  googleCSVReader.load(simulate);
+var loadAndBacktest = function() {
+  googleCSVReader.load(backtest);
 };
 
 if (readNewData) {
@@ -139,11 +139,11 @@ if (readNewData) {
     googleCSVReader.parseLine(this.read());
   }).on('end', function() {
     googleCSVReader.save();
-    loadAndSimulate();
+    loadAndBacktest();
   }).on('error', function(data) {
     googleCSVReader.shutdown();
     console.error(data);
   });
 } else {
-  loadAndSimulate();
+  loadAndBacktest();
 }
