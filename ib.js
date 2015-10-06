@@ -8,28 +8,34 @@ var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours
 var api = new ibapi.NodeIbapi();
 var orderId = -1;
 
-var addTicker = function(tickerId, exchange, cancelId) {
+var buildContract = function(tickerId, exchange) {
   var _contract = contract.createContract();
   _contract.symbol = tickerId;
   _contract.secType = 'STK';
   _contract.exchange = 'SMART';
   _contract.primaryExchange = exchange;
   _contract.currency = 'USD';
-  api.reqRealtimeBars(cancelId, _contract, REALTIME_INTERVAL, "TRADES", true);
+  return _contract;
+};
+
+var addTicker = function(_contract, cancelId) {
+  api.reqRealtimeBars(cancelId, _contract, REALTIME_INTERVAL, 'TRADES', true);
+};
+
+var placeThatOrder = function(_contract, quantity) {
+  console.log('Next valid order Id: %d', orderId);
+  console.log('Placing order for', _contract.symbol);
+  var oldId = orderId;
+  orderId = orderId + 1;
+  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, 'BUY', quantity, 'LMT', 0.11, 0.11));
 };
 
 var handleValidOrderId = function(message) {
   orderId = message.orderId;
   console.log('next order Id is', orderId);
-  addTicker('NFLX', 'NASDAQ', 1);
-};
-
-var placeThatOrder = function() {
-  console.log('Next valid order Id: %d', orderId);
-  console.log("Placing order for MSFT");
-  var oldId = orderId;
-  orderId = orderId + 1;
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, msftContract, "BUY", 1000, "LMT", 0.11, 0.11));
+  var _contract = buildContract('NFLX', 'NASDAQ');
+  addTicker(_contract, 1);
+  placeThatOrder(_contract, 1000);
 };
 
 var cancelPrevOrder = function(prevOrderId) {
@@ -52,14 +58,15 @@ var handleDisconnected = function(message) {
 };
 
 var handleRealTimeBar = function(realtimeBar) {
-  console.log( "RealtimeBar:", realtimeBar.reqId.toString(), realtimeBar.time.toString(), realtimeBar.open.toString(), realtimeBar.high.toString(), realtimeBar.low.toString(), realtimeBar.close.toString(), realtimeBar.volume.toString(), realtimeBar.wap.toString(), realtimeBar.count.toString());
+  console.log( 'RealtimeBar:', realtimeBar.reqId.toString(), realtimeBar.time.toString(), realtimeBar.open.toString(), realtimeBar.high.toString(), realtimeBar.low.toString(), realtimeBar.close.toString(), realtimeBar.volume.toString(), realtimeBar.wap.toString(), realtimeBar.count.toString());
 };
 
 var handleOrderStatus = function(message) {
   console.log('OrderStatus: ');
   console.log(JSON.stringify(message));
-  if (message.status === "PreSubmitted") {
+  if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
+    setTimeout(placeThatOrder, 1000);
   }
 };
 

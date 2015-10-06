@@ -121,6 +121,7 @@ var backtest = function() {
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
+  console.log('days:', (dataLen - trainLen) / MINUTES_DAY);
   console.log('gain:', gain, ', per day =', 100.0 * gain / closes[trainLen] / (dataLen - trainLen) * MINUTES_DAY, '%');
   console.log('buy and hold:', closes[dataLen - 1] - closes[trainLen]);
 
