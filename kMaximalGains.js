@@ -9,29 +9,34 @@ var Subarray = function(start, end, sum) {
   this.sum = sum;
 };
 
-var isInRange = function(i, subarrays, buy, sell) {
+var KMaximalGains = module.exports = function(prices) {
+  if (! (this instanceof KMaximalGains)) { // enforcing new
+    return new KMaximalGains(prices);
+  }
+  this.prices = prices;
+  this.results = [];
+};
+
+KMaximalGains.prototype.isInRange = function(i, buy, sell) {
+  var subarrays = this.results;
   for (var j = subarrays.length; j--;) {
     var subarray = subarrays[j];
-    if (i >= subarray.start && i < subarray.end) {
+    //if (i >= subarray.start && i < subarray.end) {
+    if (i >= subarray.end) {
+      return sell; // optimization; subarrays is sorted by the end property
+    } else if (i >= subarray.start) {
       return buy;
     }
   }
   return sell;
 };
 
-var KMaximalGains = module.exports = function(prices) {
-  if (! (this instanceof KMaximalGains)) { // enforcing new
-    return new KMaximalGains(prices);
-  }
-  this.prices = prices;
-};
-KMaximalGains.isInRange = isInRange;
-
 KMaximalGains.prototype.getRanges = function(k, start, end) { // start and end are inclusive
   // This is O(n * k) computation, O(k) memory
   // https://leetcode.com/discuss/25603/a-concise-dp-solution-in-java
 
-  var results = [];
+  this.results = [];
+  var results = this.results;
   var prices = this.prices;
   var len = prices.length;
 
@@ -107,8 +112,11 @@ KMaximalGains.prototype.getRanges = function(k, start, end) { // start and end a
       }
     }
   }
-
   //return dp[k];
+
+  results.sort(function(a, b) {
+    return a.end - b.end;
+  });
   return results;
 };
 

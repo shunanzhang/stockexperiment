@@ -47,7 +47,6 @@ var backtest = function() {
   var kMaximalGains = new KMaximalGains(closes);
   var optimalGains = kMaximalGains.getRanges(kMaximal, 0, trainLen - 1);
   console.log(optimalGains);
-  var isInRange = KMaximalGains.isInRange;
 
   var success = 0;
   var testSize = 0;
@@ -78,19 +77,19 @@ var backtest = function() {
       resultHistory.push(result);
       if (result === BUY && bought === 0) {
         bought = datum[closeColumnIndex];
+        console.log(BUY, i, bought);
       } else if (result === SELL && bought > 0) {
         gain += datum[closeColumnIndex] - bought;
-        //console.log(gain);
+        console.log(SELL, i, datum[closeColumnIndex], datum[closeColumnIndex] - bought);
         bought = 0;
       }
       if (isTraining) {
-        optimalGains = kMaximalGains.getRanges(kMaximal, i - trainLen + 1, i);
-        //console.log(i - trainLen + 1, i, optimalGains);
+        kMaximalGains.getRanges(kMaximal, i - trainLen + 1, i);
       }
     }
     if (isTraining) {
       for (var j = TRAIN_INTERVAL; j--;) {
-        var correctResult = isInRange(i - j, optimalGains, BUY, SELL);
+        var correctResult = kMaximalGains.isInRange(i - j, BUY, SELL);
         result = resultHistory.shift();
         if (result) {
           testSize += 1;
