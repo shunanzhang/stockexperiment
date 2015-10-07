@@ -14,6 +14,8 @@ var SELL = 'sell';
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var TRAIN_INTERVAL = 390;
 var TRAINING_DAYS = 17;
+var TRAIN_LEN = MINUTES_DAY * TRAINING_DAYS;
+var K = 3 * TRAINING_DAYS;
 
 var SCW_PARAMS = {
   ETA: 10.0,
@@ -24,39 +26,37 @@ var SCW_PARAMS = {
 
 var TradeController = module.exports = function(columns, closes) {
   if (! (this instanceof TradeController)) { // enforcing new
-    return new TradeController();
+    return new TradeController(columns, closes);
   }
   this.scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
-  this.columns = columns;
-  this.trainLen = MINUTES_DAY * TRAINING_DAYS;
-  this.kMaximal = 3 * TRAINING_DAYS;
   this.kMaximalGains = new KMaximalGains(closes);
   this.featureVectorBuilder = new FeatureVectorBuilder();
+  this.closeColumnIndex = columns[CLOSE_COLUMN];
+  this.highColumnIndex = columns[HIGH_COLUMN];
+  this.lowColumnIndex = columns[LOW_COLUMN];
+  this.openColumnIndex = columns[OPEN_COLUMN];
+  this.volumeColumnIndex = columns[VOLUME_COLUMN];
 };
 TradeController.BUY = BUY;
 TradeController.SELL = SELL;
+TradeController.MINUTES_DAY = MINUTES_DAY;
+TradeController.TRAIN_INTERVAL = TRAIN_INTERVAL;
+TradeController.TRAIN_LEN = TRAIN_LEN;
 
-TradeController.prototype.trade = function(datum) {
-  var columns = this.columns;
-  var closeColumnIndex = columns[CLOSE_COLUMN];
-  var highColumnIndex = columns[HIGH_COLUMN];
-  var lowColumnIndex = columns[LOW_COLUMN];
-  var openColumnIndex = columns[OPEN_COLUMN];
-  var volumeColumnIndex = columns[VOLUME_COLUMN];
-  var featureVector = this.featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
-  var result = this.scw.test(featureVector);
-  return {
-    featureVector: featureVector,
-    result: result
-  };
+TradeController.prototype.getFeatureVector = function(datum) {
+  return this.featureVectorBuilder.build(datum[this.closeColumnIndex], datum[this.highColumnIndex], datum[this.lowColumnIndex], datum[this.openColumnIndex], datum[this.volumeColumnIndex]);
+};
+
+TradeController.prototype.trade = function(featureVector, forceSell) {
+  return forceSell ? SELL : this.scw.test(featureVector);
 };
 
 TradeController.prototype.supervise = function(i) {
-  this.kMaximalGains.getOptimal(this.kMaximal, i - this.trainLen + 1, i);
+  this.kMaximalGains.getOptimal(K, i - TRAIN_LEN + 1, i);
 };
 
-TradeController.prototype.train = function(i, featureVector) {
-  var correctResult = this.kMaximalGains.isInRange(i, BUY, SELL);
+TradeController.prototype.train = function(i_j, featureVector) {
+  var correctResult = this.kMaximalGains.isInRange(i_j, BUY, SELL);
   this.scw.update({
     featureVector: featureVector,
     category: correctResult

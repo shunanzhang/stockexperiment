@@ -3,13 +3,6 @@ var request = require('request');
 var ByLineStream = require('./byLineStream');
 var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
-var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
-var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
-var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
-var VOLUME_COLUMN = GoogleCSVReader.VOLUME_COLUMN;
-var KMaximalGains = require('./kMaximalGains');
-var FeatureVectorBuilder = require('./featureVectorBuilder');
-var SCW = require('./scw');
 var TradeController = require('./tradeController');
 
 var INTERVAL = 60; // sec
@@ -17,17 +10,9 @@ var PERIOD = 20; // days
 
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
-
-var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
-var TRAIN_INTERVAL = 390;
-var TRAINING_DAYS = 17;
-
-var SCW_PARAMS = {
-  ETA: 10.0,
-  // 100.0
-  C: 1.0,
-  MODE: 2 // 0, 1, or 2
-};
+var MINUTES_DAY = TradeController.MINUTES_DAY;
+var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
+var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 /**
  * argument parsing
@@ -39,15 +24,11 @@ var googleCSVReader = new GoogleCSVReader(tickerId);
 var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', tickerId.toUpperCase()].join('');
 
 var backtest = function() {
-  var scw = new SCW(SCW_PARAMS.ETA, SCW_PARAMS.C, SCW_PARAMS.MODE);
   var data = googleCSVReader.data;
   var dataLen = data.length;
-  var trainLen = MINUTES_DAY * TRAINING_DAYS;
-  var kMaximal = 3 * TRAINING_DAYS;
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
-  var kMaximalGains = new KMaximalGains(closes);
-  var optimalGains = kMaximalGains.getOptimal(kMaximal, 0, trainLen - 1);
-  console.log(optimalGains);
+  var tradeController = new TradeController(googleCSVReader.columns, closes);
+  tradeController.supervise(TRAIN_LEN - 1);
 
   var success = 0;
   var testSize = 0;
@@ -56,41 +37,32 @@ var backtest = function() {
   var fn = 0;
   var bought = 0;
   var gain = 0;
-  var featureVectorBuilder = new FeatureVectorBuilder();
-  var closeColumnIndex = googleCSVReader.columns[CLOSE_COLUMN];
-  var highColumnIndex = googleCSVReader.columns[HIGH_COLUMN];
-  var lowColumnIndex = googleCSVReader.columns[LOW_COLUMN];
-  var openColumnIndex = googleCSVReader.columns[OPEN_COLUMN];
-  var volumeColumnIndex = googleCSVReader.columns[VOLUME_COLUMN];
   var featureVectorHistory = [];
   var resultHistory = [];
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
-    var featureVector = featureVectorBuilder.build(datum[closeColumnIndex], datum[highColumnIndex], datum[lowColumnIndex], datum[openColumnIndex], datum[volumeColumnIndex]);
+    var featureVector = tradeController.getFeatureVector(datum);
     var isTraining = (i % TRAIN_INTERVAL === TRAIN_INTERVAL - 1) || (i === dataLen - 1);
     var result = '';
     featureVectorHistory.push(featureVector);
-    if (i >= trainLen) {
-      result = scw.test(featureVector);
-      if (isTraining) {
-        result = SELL; // always sell a the end of the day
-      }
+    if (i >= TRAIN_LEN) {
+      result = tradeController.trade(featureVector, isTraining); // always sell a the end of the day
       resultHistory.push(result);
       if (result === BUY && bought === 0) {
-        bought = datum[closeColumnIndex];
+        bought = closes[i];
         console.log(BUY, i, bought);
       } else if (result === SELL && bought > 0) {
-        gain += datum[closeColumnIndex] - bought;
-        console.log(SELL, i, datum[closeColumnIndex], datum[closeColumnIndex] - bought);
+        gain += closes[i] - bought;
+        console.log(SELL, i, closes[i], closes[i] - bought);
         bought = 0;
       }
       if (isTraining) {
-        kMaximalGains.getOptimal(kMaximal, i - trainLen + 1, i);
+        tradeController.supervise(i);
       }
     }
     if (isTraining) {
       for (var j = TRAIN_INTERVAL; j--;) {
-        var correctResult = kMaximalGains.isInRange(i - j, BUY, SELL);
+        var correctResult = tradeController.train(i - j, featureVectorHistory.shift());
         result = resultHistory.shift();
         if (result) {
           testSize += 1;
@@ -107,10 +79,6 @@ var backtest = function() {
             }
           }
         }
-        scw.update({
-          featureVector: featureVectorHistory.shift(),
-          category: correctResult
-        });
       }
     }
   }
@@ -121,9 +89,9 @@ var backtest = function() {
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
   console.log('recall:', tp, '/(', tp, '+', fn, ') =', 100.0 * recall, '%');
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
-  console.log('days:', (dataLen - trainLen) / MINUTES_DAY);
-  console.log('gain:', gain, ', per day =', 100.0 * gain / closes[trainLen] / (dataLen - trainLen) * MINUTES_DAY, '%');
-  console.log('buy and hold:', closes[dataLen - 1] - closes[trainLen]);
+  console.log('days:', (dataLen - TRAIN_LEN) / MINUTES_DAY);
+  console.log('gain:', gain, ', per day =', 100.0 * gain / closes[TRAIN_LEN] / (dataLen - TRAIN_LEN) * MINUTES_DAY, '%');
+  console.log('buy and hold:', closes[dataLen - 1] - closes[TRAIN_LEN]);
 
   googleCSVReader.shutdown();
 };
