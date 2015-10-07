@@ -31,7 +31,7 @@ KMaximalGains.prototype.isInRange = function(i, buy, sell) {
   return sell;
 };
 
-KMaximalGains.prototype.getRanges = function(k, start, end) { // start and end are inclusive
+KMaximalGains.prototype.getOptimal = function(k, start, end) { // start and end are inclusive
   // This is O(n * k) computation, O(k) memory
   // https://leetcode.com/discuss/25603/a-concise-dp-solution-in-java
 
@@ -123,28 +123,28 @@ KMaximalGains.prototype.getRanges = function(k, start, end) { // start and end a
 var main = function() {
   var test = [1, 5, 1, 2, 1, 3];
   var kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 0, end: 1, sum: 4}, {start: 4, end: 5, sum: 2}]);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(2), [{start: 0, end: 1, sum: 4}, {start: 4, end: 5, sum: 2}]);
   test = [1, 2, 3, 2, 3, 4];
   kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 0, end: 2, sum: 2}, {start: 3, end: 5, sum: 2}]);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(2), [{start: 0, end: 2, sum: 2}, {start: 3, end: 5, sum: 2}]);
   test = [1, 2, 1, 5, 1, 3];
   kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 2, end: 3, sum: 4}, {start: 4, end: 5, sum: 2}]);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(2), [{start: 2, end: 3, sum: 4}, {start: 4, end: 5, sum: 2}]);
   test = [1, 2, 3, 4, 5, 6];
   kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 0, end: 5, sum: 5}]);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(2), [{start: 0, end: 5, sum: 5}]);
   test = [6, 5, 4, 3, 2, 1];
   kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(2), []);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(2), []);
   test = [1, 3, 1, 5, 1, 2];
   kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 2, end: 3, sum: 4}, {start: 0, end: 1, sum: 2}]);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(2), [{start: 0, end: 1, sum: 2}, {start: 2, end: 3, sum: 4}]);
   test = [1, 3, 1, 5, 1, 2, 1, 4];
   kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(2), [{start: 2, end: 3, sum: 4}, {start: 6, end: 7, sum: 3}]);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(2), [{start: 2, end: 3, sum: 4}, {start: 6, end: 7, sum: 3}]);
   test = [1, 2, 3, 4, 3, 2, 3, 5];
   kMaximalSubarrays = new KMaximalGains(test);
-  assert.deepEqual(kMaximalSubarrays.getRanges(1), [{start: 0, end: 7, sum: 4}]);
+  assert.deepEqual(kMaximalSubarrays.getOptimal(1), [{start: 0, end: 7, sum: 4}]);
   console.log('done');
 };
 

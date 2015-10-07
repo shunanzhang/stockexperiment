@@ -10,12 +10,13 @@ var VOLUME_COLUMN = GoogleCSVReader.VOLUME_COLUMN;
 var KMaximalGains = require('./kMaximalGains');
 var FeatureVectorBuilder = require('./featureVectorBuilder');
 var SCW = require('./scw');
+var TradeController = require('./tradeController');
 
 var INTERVAL = 60; // sec
 var PERIOD = 20; // days
 
-var BUY = 'buy';
-var SELL = 'sell';
+var BUY = TradeController.BUY;
+var SELL = TradeController.SELL;
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var TRAIN_INTERVAL = 390;
@@ -45,7 +46,7 @@ var backtest = function() {
   var kMaximal = 3 * TRAINING_DAYS;
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
   var kMaximalGains = new KMaximalGains(closes);
-  var optimalGains = kMaximalGains.getRanges(kMaximal, 0, trainLen - 1);
+  var optimalGains = kMaximalGains.getOptimal(kMaximal, 0, trainLen - 1);
   console.log(optimalGains);
 
   var success = 0;
@@ -84,7 +85,7 @@ var backtest = function() {
         bought = 0;
       }
       if (isTraining) {
-        kMaximalGains.getRanges(kMaximal, i - trainLen + 1, i);
+        kMaximalGains.getOptimal(kMaximal, i - trainLen + 1, i);
       }
     }
     if (isTraining) {
