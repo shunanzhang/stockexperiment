@@ -29,7 +29,7 @@ var FeatureVectorBuilder = module.exports = function() {
   //this.lss20        = new LSS(20);
   //this.lss50        = new LSS(50);
   //this.lss100       = new LSS(100);
-  this.lss200       = new LSS(200);
+  this.lss200       = new LSS(230);
   //this.alss10       = new ALSS(10, 4);
   //this.alss20       = new ALSS(20, 4);
   //this.alss50       = new ALSS(50, 4);
