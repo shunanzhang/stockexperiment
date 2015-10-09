@@ -75,6 +75,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
   //var ALSS200 = this.alss200.analize(close);
   //var MACD12 = this.MACD12.analize(close);
   //var STOCHASTIC14 = this.stochastic14.analize(close, high, low) / 50 - 1;
+  var VOLUME10 = volume / this.volume10.analize(volume);
   var featureVector = {
     //sma10       : close - this.sma10.analize(close),
     //sma20       : close - this.sma20.analize(close),
@@ -250,7 +251,26 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //stochastic14t: STOCHASTIC14,
     //STOCHASTIC5 : this.stochastic5.analize(close, high, low) / 50 -1,
     //RSI         : this.RSI.analize(close) / 50 - 1,
-    //volume10    : volume - this.volume10.analize(volume)
+    //volume10a    : VOLUME10,
+    //volume10b    : VOLUME10,
+    //volume10c    : VOLUME10,
+    //volume10d    : VOLUME10,
+    //volume10e    : VOLUME10,
+    //volume10f    : VOLUME10,
+    //volume10g    : VOLUME10,
+    //volume10h    : VOLUME10,
+    //volume10i    : VOLUME10,
+    //volume10j    : VOLUME10,
+    //volume10k    : VOLUME10,
+    //volume10l    : VOLUME10,
+    //volume10m    : VOLUME10,
+    //volume10n    : VOLUME10,
+    //volume10o    : VOLUME10,
+    //volume10p    : VOLUME10,
+    //volume10q    : VOLUME10,
+    //volume10r    : VOLUME10,
+    //volume10s    : VOLUME10,
+    //volume10t    : VOLUME10,
   }; // key: feature, val:scalar
   //if (SMA200 > 0) {
   //  if (this.count >= 0) {

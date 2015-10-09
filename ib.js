@@ -2,8 +2,22 @@ var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
 var contract = ibapi.contract;
 var order = ibapi.order;
+var GoogleCSVReader = require('./googleCSVReader');
+var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
+var TradeController = require('./tradeController');
+var BUY = TradeController.BUY;
+var SELL = TradeController.SELL;
+var MINUTES_DAY = TradeController.MINUTES_DAY;
+var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
+var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
+
+/**
+ * argument parsing
+ */
+var symbol = process.argv[2] || 'NFLX';
+var googleCSVReader = new GoogleCSVReader(symbol);
 
 var api = new ibapi.NodeIbapi();
 
@@ -65,6 +79,9 @@ var handleDisconnected = function(message) {
 
 var handleRealTimeBar = function(realtimeBar) {
   console.log( 'RealtimeBar:', realtimeBar.reqId.toString(), realtimeBar.time.toString(), realtimeBar.open.toString(), realtimeBar.high.toString(), realtimeBar.low.toString(), realtimeBar.close.toString(), realtimeBar.volume.toString(), realtimeBar.wap.toString(), realtimeBar.count.toString());
+
+
+  // wrte trade logic here
   placeLimitOrder(NFLXcontract, 100, 100);
 };
 
@@ -73,7 +90,7 @@ var handleOrderStatus = function(message) {
   console.log(JSON.stringify(message));
   if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
-    setTimeout(placeThatOrder, 1000);
+    setTimeout(placeLimitOrderi, NFLXcontract, 100, 100);
   }
 };
 
@@ -102,7 +119,34 @@ api.handlers[messageIds.openOrderEnd] = handleOpenOrderEnd;
 // Connect to the TWS client or IB Gateway
 var connected = api.connect('127.0.0.1', 7496, 0);
 
-// Once connected, start processing incoming and outgoing messages
-if (connected) {
-  api.beginProcessing();
-}
+var warmupTrain = function () {
+  var data = googleCSVReader.data;
+  var dataLen = data.length;
+  var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
+  var tradeController = new TradeController(googleCSVReader.columns, closes);
+  tradeController.supervise(TRAIN_LEN - 1);
+
+  for (var i = 0; i < dataLen; i++) {
+    var datum = data[i];
+    var featureVector = tradeController.getFeatureVector(datum);
+    var isTraining = (i % TRAIN_INTERVAL === TRAIN_INTERVAL - 1) || (i === dataLen - 1);
+    if (i >= TRAIN_LEN && isTraining) {
+      tradeController.supervise(i);
+    }
+    tradeController.train(i, featureVector);
+  }
+
+  googleCSVReader.shutdown();
+};
+
+var setup = function() {
+  warmupTrain();
+  // Once connected, start processing incoming and outgoing messages
+  if (connected) {
+    api.beginProcessing();
+  } else {
+    throw new Error('Failed connecting to localhost TWS/IB Gateway');
+ }
+};
+
+googleCSVReader.load(setup);
