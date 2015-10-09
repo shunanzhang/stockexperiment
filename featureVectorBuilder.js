@@ -75,7 +75,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
   //var ALSS200 = this.alss200.analize(close);
   //var MACD12 = this.MACD12.analize(close);
   //var STOCHASTIC14 = this.stochastic14.analize(close, high, low) / 50 - 1;
-  var VOLUME10 = volume / this.volume10.analize(volume);
+  //var VOLUME10 = volume / this.volume10.analize(volume);
   var featureVector = {
     //sma10       : close - this.sma10.analize(close),
     //sma20       : close - this.sma20.analize(close),
