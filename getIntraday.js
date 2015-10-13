@@ -42,7 +42,7 @@ var backtest = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = tradeController.getFeatureVector(datum);
-    var isTraining = (i % TRAIN_INTERVAL === TRAIN_INTERVAL - 1) || (i === dataLen - 1);
+    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10) || (i === dataLen - 1);
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {

@@ -47,6 +47,16 @@ TradeController.prototype.getFeatureVector = function(datum) {
   return this.featureVectorBuilder.build(datum[this.closeColumnIndex], datum[this.highColumnIndex], datum[this.lowColumnIndex], datum[this.openColumnIndex], datum[this.volumeColumnIndex]);
 };
 
+TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar) {
+  var datum = [];
+  datum[this.closeColumnIndex] = realtimeBar.close;
+  datum[this.highColumnIndex] = realtimeBar.high;
+  datum[this.lowColumnIndex] = realtimeBar.low;
+  datum[this.openColumnIndex] = realtimeBar.open;
+  datum[this.volumeColumnIndex] = realtimeBar.volume;
+  return this.getFeatureVector(datum);
+};
+
 TradeController.prototype.trade = function(featureVector, forceSell) {
   return forceSell ? SELL : this.scw.test(featureVector);
 };

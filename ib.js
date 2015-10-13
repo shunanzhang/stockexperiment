@@ -20,6 +20,7 @@ var symbol = process.argv[2] || 'NFLX';
 var googleCSVReader = new GoogleCSVReader(symbol);
 
 var api = new ibapi.NodeIbapi();
+var tradeController;
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -80,6 +81,14 @@ var handleDisconnected = function(message) {
 var handleRealTimeBar = function(realtimeBar) {
   console.log( 'RealtimeBar:', realtimeBar.reqId.toString(), realtimeBar.time.toString(), realtimeBar.open.toString(), realtimeBar.high.toString(), realtimeBar.low.toString(), realtimeBar.close.toString(), realtimeBar.volume.toString(), realtimeBar.wap.toString(), realtimeBar.count.toString());
 
+  var second = realtimeBar.time % 60;
+  if (second <= 57 && second > 3) {
+    return; // skip if it is not the end of minutes
+  }
+  var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
+  var minute = (realtimeBar.time / 60 | 0);
+  var forceSell = (minute % MINUTES_DAY >= MINUTES_DAY - 10);
+  result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
 
   // wrte trade logic here
   placeLimitOrder(NFLXcontract, 100, 100);
@@ -123,7 +132,7 @@ var warmupTrain = function () {
   var data = googleCSVReader.data;
   var dataLen = data.length;
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
-  var tradeController = new TradeController(googleCSVReader.columns, closes);
+  tradeController = new TradeController(googleCSVReader.columns, closes);
   tradeController.supervise(TRAIN_LEN - 1);
 
   for (var i = 0; i < dataLen; i++) {

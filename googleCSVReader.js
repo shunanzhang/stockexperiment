@@ -97,6 +97,16 @@ GoogleCSVReader.prototype.load = function(callback) {
       this.shutdown();
       throw new Error('Redis load error ' + err);
     }
+    var columnIndex = this.columns[DATE_COLUMN];
+    var i = 0;
+    for (var l = lines.length; i < l; i++) {
+      var date = new Date(parseInt(lines[i][columnIndex], 10) * 1000);
+      if (date.getUTCHours() === 13 && date.getUTCMinutes() === 31) {
+        break;
+      }
+    }
+    lines.splice(i, i);
+    console.log(i);
     this.data = lines;
     callback();
   }).bind(this));
