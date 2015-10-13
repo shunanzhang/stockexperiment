@@ -17,6 +17,7 @@ var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours
  * argument parsing
  */
 var symbol = process.argv[2] || 'NFLX';
+var exchange = process.argv[3] || 'NASDAQ';
 var googleCSVReader = new GoogleCSVReader(symbol);
 
 var api = new ibapi.NodeIbapi();
@@ -36,17 +37,17 @@ var buildContract = function(symbol, exchange) {
   _contract.currency = 'USD';
   return _contract;
 };
-var NFLXcontract = buildContract('NFLX', 'NASDAQ');
+var builtContract = buildContract(symbol, exchange);
 
 var getRealtimeBars = function(_contract, cancelId) {
   api.reqRealtimeBars(cancelId, _contract, REALTIME_INTERVAL, 'TRADES', true);
 };
 
-var placeLimitOrder = function(_contract, quantity, price) {
+var placeLimitOrder = function(_contract, action, quantity, price) {
   console.log('Next valid order Id: %d', orderId);
   console.log('Placing order for', _contract.symbol);
   var oldId = orderId++;
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, 'BUY', quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
+  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
 };
 
 // Here we specify the event handlers.
@@ -56,7 +57,7 @@ var placeLimitOrder = function(_contract, quantity, price) {
 var handleValidOrderId = function(message) {
   orderId = message.orderId;
   console.log('next order Id is', orderId);
-  getRealtimeBars(NFLXcontract, 1);
+  getRealtimeBars(builtContract, 1);
 };
 
 var cancelPrevOrder = function(prevOrderId) {
@@ -90,8 +91,10 @@ var handleRealTimeBar = function(realtimeBar) {
   var forceSell = (minute % MINUTES_DAY >= MINUTES_DAY - 10);
   result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
 
-  // wrte trade logic here
-  placeLimitOrder(NFLXcontract, 100, 100);
+  // check if there are shares to sell / money to buy fisrt
+  if (result === BUY || result === SELL) {
+    placeLimitOrder(builtContract, result.toUpperCase(), 100, realtimeBar.close);
+  }
 };
 
 var handleOrderStatus = function(message) {
@@ -99,7 +102,6 @@ var handleOrderStatus = function(message) {
   console.log(JSON.stringify(message));
   if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
-    setTimeout(placeLimitOrderi, NFLXcontract, 100, 100);
   }
 };
 
