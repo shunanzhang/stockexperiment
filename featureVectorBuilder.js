@@ -22,19 +22,19 @@ var FeatureVectorBuilder = module.exports = function() {
   //this.sma50        = new SMA(50);
   //this.sma60        = new SMA(60);
   //this.sma100       = new SMA(100);
-  this.sma200       = new SMA(200);
-  this.sma200h      = new SMA(200);
-  this.sma200l      = new SMA(200);
+  //this.sma200       = new SMA(200);
+  //this.sma200h      = new SMA(200);
+  //this.sma200l      = new SMA(200);
   //this.lss10        = new LSS(10);
   //this.lss20        = new LSS(20);
   //this.lss50        = new LSS(50);
   //this.lss100       = new LSS(100);
-  this.lss200       = new LSS(200);
+  this.lss200       = new LSS(101);
   //this.alss10       = new ALSS(10, 4);
   //this.alss20       = new ALSS(20, 4);
   //this.alss50       = new ALSS(50, 4);
   //this.alss100      = new ALSS(100, 4);
-  //this.alss200      = new ALSS(200, 4);
+  this.alss200      = new ALSS(33, 20);
   //this.ema10        = new EMA(10);
   //this.ema20        = new EMA(20);
   //this.ema50        = new EMA(50);
@@ -67,12 +67,12 @@ var FeatureVectorBuilder = module.exports = function() {
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
-  var SMA200 = close / this.sma200.analize(close);
-  var SMA200H = high / this.sma200h.analize(high);
-  var SMA200L = low / this.sma200l.analize(low);
+  //var SMA200 = close / this.sma200.analize(close);
+  //var SMA200H = high / this.sma200h.analize(high);
+  //var SMA200L = low / this.sma200l.analize(low);
   //var PVALUE200 = this.pvalue200.analize(close);
   var LSS200 = this.lss200.analize(close);
-  //var ALSS200 = this.alss200.analize(close);
+  var ALSS200 = this.alss200.analize(close);
   //var MACD12 = this.MACD12.analize(close);
   //var STOCHASTIC14 = this.stochastic14.analize(close, high, low) / 50 - 1;
   //var VOLUME10 = volume / this.volume10.analize(volume);
@@ -171,7 +171,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //alss20      : this.alss20.analize(close),
     //alss50      : this.alss50.analize(close),
     //alss100     : this.alss100.analize(close),
-    //alss200a     : ALSS200,
+    alss200a     : ALSS200,
     //alss200b     : ALSS200,
     //alss200c     : ALSS200,
     //alss200d     : ALSS200,
