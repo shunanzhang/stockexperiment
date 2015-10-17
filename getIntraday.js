@@ -46,7 +46,7 @@ var backtest = function() {
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
-      result = tradeController.trade(featureVector, isTraining); // always sell a the end of the day
+      result = tradeController.trade(featureVector, isTraining || ((closes[i] / closes[i - 1]) < 0.9966)); // always sell a the end of the day
       resultHistory.push(result);
       if (result === BUY && bought === 0) {
         bought = closes[i];
