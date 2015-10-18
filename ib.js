@@ -22,15 +22,16 @@ var googleCSVReader = new GoogleCSVReader(symbol);
 
 var api = new ibapi.NodeIbapi();
 var tradeController;
+var position = 0;
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
 //  Make sure you keep track of this.
 var orderId = -1;
 
-var buildContract = function(symbol, exchange) {
+var buildContract = function(symbl, exchange) {
   var _contract = contract.createContract();
-  _contract.symbol = symbol;
+  _contract.symbol = symbl;
   _contract.secType = 'STK';
   _contract.exchange = 'SMART';
   _contract.primaryExchange = exchange;
@@ -41,6 +42,10 @@ var builtContract = buildContract(symbol, exchange);
 
 var getRealtimeBars = function(_contract, cancelId) {
   api.reqRealtimeBars(cancelId, _contract, REALTIME_INTERVAL, 'TRADES', true);
+};
+
+var getPositions = function() {
+  api.reqPositions();
 };
 
 var placeLimitOrder = function(_contract, action, quantity, price) {
@@ -89,9 +94,13 @@ var handleRealTimeBar = function(realtimeBar) {
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   var minute = (realtimeBar.time / 60 | 0);
   var forceSell = (minute % MINUTES_DAY >= MINUTES_DAY - 10);
-  result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
+  var result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
 
   // check if there are shares to sell / money to buy fisrt
+  if ((result === BUY && position > 0) || (result === SELL && position === 0)) {
+    result = '';
+  }
+
   if (result === BUY || result === SELL) {
     placeLimitOrder(builtContract, result.toUpperCase(), 100, realtimeBar.close);
   }
@@ -115,6 +124,13 @@ var handleOpenOrderEnd = function(message) {
   console.log(JSON.stringify(message));
 };
 
+var handlePosition = function(message) {
+  console.log('Position: ');
+  console.log(JSON.stringify(message));
+  if (message.contract && message.contract.symbol === symbol) {
+    position = message.position;
+  }
+};
 
 // After that, you must register the event handler with a messageId
 //  For list of valid messageIds, see messageIds.js file.
@@ -126,6 +142,7 @@ api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
 api.handlers[messageIds.orderStatus] = handleOrderStatus;
 api.handlers[messageIds.openOrder] = handleOpenOrder;
 api.handlers[messageIds.openOrderEnd] = handleOpenOrderEnd;
+api.handlers[messageIds.position] = handlePosition;
 
 // Connect to the TWS client or IB Gateway
 var connected = api.connect('127.0.0.1', 7496, 0);
