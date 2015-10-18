@@ -7,7 +7,6 @@ var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
-var MINUTES_DAY = TradeController.MINUTES_DAY;
 var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
@@ -84,21 +83,25 @@ var handleDisconnected = function(message) {
   process.exit(1);
 };
 
+var lastClose = 0.0;
 var handleRealTimeBar = function(realtimeBar) {
   console.log( 'RealtimeBar:', realtimeBar.reqId.toString(), realtimeBar.time.toString(), realtimeBar.open.toString(), realtimeBar.high.toString(), realtimeBar.low.toString(), realtimeBar.close.toString(), realtimeBar.volume.toString(), realtimeBar.wap.toString(), realtimeBar.count.toString());
 
-  var second = realtimeBar.time % 60;
+  var date = new Date(realtimeBar.time * 1000);
+  var second = date.getUTCSeconds();
   if (second <= 57 && second > 3) {
     return; // skip if it is not the end of minutes
   }
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
-  var minute = (realtimeBar.time / 60 | 0);
-  var forceSell = (minute % MINUTES_DAY >= MINUTES_DAY - 10);
+  var minute = date.getUTCMinutes();
+  var hour = date.getUTCHours();
+  var forceSell = ((realtimeBar.close / lastClose) < 0.9969 && position > 0) || (minute < 35 && hour === 13) || (minute >= 56 && hour >= 19);
   var result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
+  lastClose = realtimeBar.close;
 
   // check if there are shares to sell / money to buy fisrt
   if ((result === BUY && position > 0) || (result === SELL && position === 0)) {
-    result = '';
+    return;
   }
 
   if (result === BUY || result === SELL) {

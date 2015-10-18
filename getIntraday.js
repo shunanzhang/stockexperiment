@@ -42,11 +42,11 @@ var backtest = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = tradeController.getFeatureVector(datum);
-    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10) || (i === dataLen - 1);
+    var isTraining = (i % TRAIN_INTERVAL === TRAIN_INTERVAL - 1) || (i === dataLen - 1);
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
-      result = tradeController.trade(featureVector, isTraining || ((closes[i] / closes[i - 1]) < 0.9976 && bought > 0) || (i % MINUTES_DAY < 4)); // always sell a the end of the day
+      result = tradeController.trade(featureVector, isTraining || ((closes[i] / closes[i - 1]) < 0.9969 && bought > 0) || (i % MINUTES_DAY < 4) || (i % MINUTES_DAY >= MINUTES_DAY - 4)); // always sell a the end of the day
       resultHistory.push(result);
       if (result === BUY && bought === 0) {
         bought = closes[i];
