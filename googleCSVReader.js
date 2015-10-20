@@ -99,14 +99,29 @@ GoogleCSVReader.prototype.load = function(callback) {
     }
     var columnIndex = this.columns[DATE_COLUMN];
     var i = 0;
+    var date;
     for (var l = lines.length; i < l; i++) {
-      var date = new Date(parseInt(lines[i][columnIndex], 10) * 1000);
+      date = new Date(parseInt(lines[i][columnIndex], 10) * 1000);
       if (date.getUTCHours() === 13 && date.getUTCMinutes() === 31) {
         break;
       }
     }
-    lines.splice(i, i);
+    lines.splice(0, i);
     console.log(i);
+    var baseTime = 0;
+    for (i = 0; i < lines.length; i++) {
+      var currTime = parseInt(lines[i][columnIndex], 10);
+      date = new Date(currTime * 1000);
+      if (date.getUTCHours() === 13 && date.getUTCMinutes() === 31) {
+        baseTime = currTime;
+        continue;
+      }
+      baseTime += 60; // TODO parameterize 60
+      if (baseTime !== currTime) {
+        lines.splice(i, 0, lines[i - 1]); // interpolate
+        lines[i][columnIndex] = baseTime;
+      }
+    }
     this.data = lines;
     callback();
   }).bind(this));
