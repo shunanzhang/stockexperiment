@@ -53,7 +53,7 @@ var backtest = function() {
         console.log(BUY, i, bought);
       } else if (result === SELL && bought > 0) {
         gain += closes[i] - bought;
-        console.log(SELL, i, closes[i], closes[i] - bought);
+        console.log(SELL, i, closes[i], closes[i] - bought, gain);
         bought = 0;
       }
       if (isTraining) {
