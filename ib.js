@@ -51,7 +51,7 @@ var placeLimitOrder = function(_contract, action, quantity, price) {
   console.log('Next valid order Id: %d', orderId);
   console.log('Placing order for', _contract.symbol);
   var oldId = orderId++;
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
+  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
 };
 
 // Here we specify the event handlers.
@@ -105,7 +105,7 @@ var handleRealTimeBar = function(realtimeBar) {
   }
 
   if (result === BUY || result === SELL) {
-    placeLimitOrder(builtContract, result.toUpperCase(), 100, realtimeBar.close);
+    //placeLimitOrder(builtContract, result.toUpperCase(), 100, realtimeBar.close);
   }
 };
 

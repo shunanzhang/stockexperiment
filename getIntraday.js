@@ -42,7 +42,7 @@ var backtest = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = tradeController.getFeatureVector(datum);
-    var isTraining = (i % TRAIN_INTERVAL === TRAIN_INTERVAL - 1) || (i === dataLen - 1);
+    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10) || (i === dataLen - 1);
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
@@ -62,7 +62,11 @@ var backtest = function() {
     }
     if (isTraining) {
       for (var j = TRAIN_INTERVAL; j--;) {
-        var correctResult = tradeController.train(i - j, featureVectorHistory.shift());
+        featureVector = featureVectorHistory.shift();
+        if (!featureVector) {
+          break;
+        }
+        var correctResult = tradeController.train(i - j, featureVector);
         result = resultHistory.shift();
         if (result) {
           testSize += 1;
@@ -84,6 +88,7 @@ var backtest = function() {
   }
   var precision = tp / (tp + fp);
   var recall = tp / (tp + fn);
+  console.log('size:', i);
   console.log(tickerId);
   console.log('accuracy:', success, '/', testSize, '=', 100.0 * success / testSize, '%');
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');

@@ -29,7 +29,7 @@ var FeatureVectorBuilder = module.exports = function() {
   //this.lss20        = new LSS(20);
   //this.lss50        = new LSS(50);
   //this.lss100       = new LSS(100);
-  this.lss200       = new LSS(192);
+  this.lss200       = new LSS(101);
   //this.alss10       = new ALSS(10, 4);
   //this.alss20       = new ALSS(20, 4);
   //this.alss50       = new ALSS(50, 4);
@@ -83,8 +83,8 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //sma50       : close - this.sma50.analize(close),
     //sma60       : close - this.sma60.analize(close),
     //sma100      : close - this.sma100.analize(close),
-    sma200a     : 0.5,//SMA200,
-    sma200b     : 0.5,//SMA200,
+    sma200a     : 1,//SMA200,
+    sma200b     : 1,//SMA200,
     sma200c     : 0.5,//SMA200,
     sma200d     : 0.5,//SMA200,
     //sma200e     : SMA200,

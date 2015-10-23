@@ -98,7 +98,7 @@ GoogleCSVReader.prototype.load = function(callback) {
       throw new Error('Redis load error ' + err);
     }
     var columnIndex = this.columns[DATE_COLUMN];
-    var i = 0;
+    var i = 390 * 0;
     var date;
     for (var l = lines.length; i < l; i++) {
       date = new Date(parseInt(lines[i][columnIndex], 10) * 1000);
