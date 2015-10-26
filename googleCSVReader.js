@@ -122,6 +122,8 @@ GoogleCSVReader.prototype.load = function(callback) {
         lines[i][columnIndex] = baseTime;
       }
     }
+    var removeDays = 0;
+    lines.splice(lines.length - 390 * removeDays, 390 * removeDays);
     this.data = lines;
     callback();
   }).bind(this));

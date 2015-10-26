@@ -46,15 +46,27 @@ var backtest = function() {
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
-      result = tradeController.trade(featureVector, isTraining || ((closes[i] / closes[i - 1]) < 0.9969 && bought > 0) || (i % MINUTES_DAY < 4) || (i % MINUTES_DAY >= MINUTES_DAY - 43)); // always sell a the end of the day
-      resultHistory.push(result);
-      if (result === BUY && bought === 0) {
+      var noPosition = isTraining || (i % MINUTES_DAY < 4) || (i % MINUTES_DAY >= MINUTES_DAY - 36);
+      result = tradeController.trade(featureVector, noPosition || ((closes[i] / closes[i - 1]) < 0.9969 && bought > 0)); // always sell a the end of the day
+      resultHistory.push(noPosition? undefined : result);
+      if (result === BUY && bought <= 0) {
+        if (bought < 0) {
+          gain -= bought + closes[i];
+          //console.log(gain);
+          console.log(BUY, i, closes[i], -(bought + closes[i]), gain);
+        }
         bought = closes[i];
-        console.log(BUY, i, bought);
-      } else if (result === SELL && bought > 0) {
-        gain += closes[i] - bought;
-        console.log(SELL, i, closes[i], closes[i] - bought, gain);
-        bought = 0;
+      } else if (result === SELL && bought >= 0) {
+        if (bought > 0) {
+          gain += closes[i] - bought;
+          //console.log(gain);
+          console.log(SELL, i, closes[i], closes[i] - bought, gain);
+        }
+        if (noPosition) {
+          bought = 0;
+        } else {
+          bought = -closes[i];
+        }
       }
       if (isTraining) {
         tradeController.supervise(i);
