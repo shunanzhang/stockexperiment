@@ -95,18 +95,33 @@ var handleRealTimeBar = function(realtimeBar) {
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   var minute = date.getUTCMinutes();
   var hour = date.getUTCHours();
-  var forceSell = ((realtimeBar.close / lastClose) < 0.9969 && position > 0) || (minute < 35 && hour === 13) || (minute >= 56 && hour >= 19);
+  var noPosition = (minute < 35 && hour === 13) || (minute >= 24 && hour >= 19);
+  var forceSell = noPosition || ((realtimeBar.close / lastClose) < 0.9969 && position > 0);
   var result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
   lastClose = realtimeBar.close;
 
   // check if there are shares to sell / money to buy fisrt
-  if ((result === BUY && position > 0) || (result === SELL && position === 0)) {
+  var qty = 0;
+  if (result === BUY) {
+    if (position === 0) {
+      qty = 100;
+    } else if (position < 0) {
+      qty = 200;
+    } else {
+      return;
+    }
+  } else if (result === SELL) {
+    if ((position === 0 && !noPosition) || (noPosition && position > 0)) {
+      qty = 100;
+    } else if (position > 0 && !noPosition) {
+      qty = 200;
+    } else {
+      return;
+    }
+  } else {
     return;
   }
-
-  if (result === BUY || result === SELL) {
-    //placeLimitOrder(builtContract, result.toUpperCase(), 100, realtimeBar.close);
-  }
+  //placeLimitOrder(builtContract, result.toUpperCase(), qty, realtimeBar.close);
 };
 
 var handleOrderStatus = function(message) {
@@ -160,7 +175,7 @@ var warmupTrain = function () {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = tradeController.getFeatureVector(datum);
-    var isTraining = (i % TRAIN_INTERVAL === TRAIN_INTERVAL - 1) || (i === dataLen - 1);
+    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10) || (i === dataLen - 1);
     if (i >= TRAIN_LEN && isTraining) {
       tradeController.supervise(i);
     }
