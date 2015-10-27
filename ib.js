@@ -111,10 +111,13 @@ var handleRealTimeBar = function(realtimeBar) {
       return;
     }
   } else if (result === SELL) {
-    if ((position === 0 && !noPosition) || (noPosition && position > 0)) {
+    if ((position === 0 && !noPosition) || (position > 0 && noPosition)) {
       qty = 100;
     } else if (position > 0 && !noPosition) {
       qty = 200;
+    } else if (position < 0 && noPosition) {
+      qty = 100;
+      result = BUY;
     } else {
       return;
     }
