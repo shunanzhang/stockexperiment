@@ -41,12 +41,16 @@ var backtest = function() {
   var resultHistory = [];
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
+    var i_MINUTES_DAY = i % MINUTES_DAY;
+    //if (i_MINUTES_DAY === 0) {
+    //  tradeController.featureVectorBuilder.reset();
+    //}
     var featureVector = tradeController.getFeatureVector(datum);
     var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10) || (i === dataLen - 1);
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
-      var noPosition = isTraining || (i % MINUTES_DAY < 16) || (i % MINUTES_DAY >= MINUTES_DAY - 41);
+      var noPosition = isTraining || (i_MINUTES_DAY < 16) || (i_MINUTES_DAY >= MINUTES_DAY - 41);
       var forceSell = noPosition || ((closes[i] / closes[i - 1]) < 0.9969 && bought > 0);
       result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
       resultHistory.push(noPosition? undefined : result);

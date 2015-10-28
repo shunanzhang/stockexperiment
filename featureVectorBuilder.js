@@ -326,3 +326,11 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
   }
   return featureVector;
 };
+
+FeatureVectorBuilder.prototype.reset = function() {
+  for (var prop in this) {
+    if (this.hasOwnProperty(prop) && this[prop].reset) {
+      this[prop].reset();
+    }
+  }
+};
