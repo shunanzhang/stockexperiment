@@ -84,7 +84,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //sma60       : close - this.sma60.analize(close),
     //sma100      : close - this.sma100.analize(close),
     sma200a     : 1,//SMA200,
-    sma200b     : 1,//SMA200,
+    sma200b     : 1.01,//SMA200,
     sma200c     : 0.5,//SMA200,
     sma200d     : 0.5,//SMA200,
     //sma200e     : SMA200,

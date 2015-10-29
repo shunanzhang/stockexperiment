@@ -50,7 +50,7 @@ var backtest = function() {
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
-      var noPosition = isTraining || (i_MINUTES_DAY < 16) || (i_MINUTES_DAY >= MINUTES_DAY - 41);
+      var noPosition = isTraining || (i_MINUTES_DAY < 16) || (i_MINUTES_DAY >= MINUTES_DAY - 43);
       var forceSell = noPosition || ((closes[i] / closes[i - 1]) < 0.9969 && bought > 0);
       result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
       resultHistory.push(noPosition? undefined : result);
@@ -68,6 +68,7 @@ var backtest = function() {
           console.log(SELL, i, closes[i], closes[i] - bought, gain);
         } else if (bought < 0 && noPosition) {
           gain -= bought + closes[i];
+          //console.log(gain);
           console.log(BUY, i, closes[i], -(bought + closes[i]), gain);
         }
         if (noPosition) {
