@@ -39,6 +39,7 @@ var backtest = function() {
   var gain = 0;
   var featureVectorHistory = [];
   var resultHistory = [];
+  var gains = [];
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
@@ -51,30 +52,34 @@ var backtest = function() {
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
       var noPosition = isTraining || (i_MINUTES_DAY < 16) || (i_MINUTES_DAY >= MINUTES_DAY - 43);
-      var forceSell = noPosition || ((closes[i] / closes[i - 1]) < 0.9969 && bought > 0);
+      var newClose = closes[i];
+      var forceSell = noPosition || ((newClose / closes[i - 1]) < 0.9969 && bought > 0);
       result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
       resultHistory.push(noPosition? undefined : result);
       if (result === BUY && bought <= 0) {
         if (bought < 0) {
-          gain -= bought + closes[i];
+          gains.push(bought + newClose);
+          gain -= bought + newClose;
           //console.log(gain);
-          console.log(BUY, i, closes[i], -(bought + closes[i]), gain);
+          console.log(BUY, i, newClose, -(bought + newClose), gain);
         }
-        bought = closes[i];
+        bought = newClose;
       } else if (result === SELL && (bought >= 0 || noPosition)) {
         if (bought > 0) {
-          gain += closes[i] - bought;
+          gains.push(newClose - bought);
+          gain += newClose - bought;
           //console.log(gain);
-          console.log(SELL, i, closes[i], closes[i] - bought, gain);
+          console.log(SELL, i, newClose, newClose - bought, gain);
         } else if (bought < 0 && noPosition) {
-          gain -= bought + closes[i];
+          gains.push(bought + newClose);
+          gain -= bought + newClose;
           //console.log(gain);
-          console.log(BUY, i, closes[i], -(bought + closes[i]), gain);
+          console.log(BUY, i, newClose, -(bought + newClose), gain);
         }
         if (noPosition) {
           bought = 0;
         } else {
-          bought = -closes[i];
+          bought = -newClose;
         }
       }
       if (isTraining) {
@@ -109,7 +114,17 @@ var backtest = function() {
   }
   var precision = tp / (tp + fp);
   var recall = tp / (tp + fn);
-  console.log('size:', i);
+  var aveGain = 0;
+  var variance = 0;
+  for (i = gains.length; i--;) {
+    aveGain += gains[i];
+  }
+  aveGain /= gains.length;
+  for (i = gains.length; i--;) {
+    variance += Math.pow(aveGain - gains[i], 2);
+  }
+  variance /= gains.length;
+  console.log('size:', dataLen);
   console.log(tickerId);
   console.log('accuracy:', success, '/', testSize, '=', 100.0 * success / testSize, '%');
   console.log('precision:', tp, '/(', tp, '+', fp, ') =', 100.0 * precision, '%');
@@ -117,6 +132,7 @@ var backtest = function() {
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
   console.log('elapsed:', (dataLen - TRAIN_LEN) / MINUTES_DAY | 0, 'days, ', (dataLen - TRAIN_LEN) % MINUTES_DAY, 'minutes');
   console.log('gain:', gain, ', per day =', 100.0 * gain / closes[TRAIN_LEN] / (dataLen - TRAIN_LEN) * MINUTES_DAY, '%');
+  console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, '# trades: ', gains.length);
   console.log('buy and hold:', closes[dataLen - 1] - closes[TRAIN_LEN]);
 
   googleCSVReader.shutdown();
