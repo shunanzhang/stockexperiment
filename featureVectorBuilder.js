@@ -11,6 +11,7 @@ var BOIL = Technicals.BOIL;
 var MACD = Technicals.MACD;
 var STOCHASTIC = Technicals.STOCHASTIC;
 var RSI = Technicals.RSI;
+//var KF = require('./kf');
 
 var FeatureVectorBuilder = module.exports = function() {
   if (! (this instanceof FeatureVectorBuilder)) { // enforcing new
@@ -64,6 +65,7 @@ var FeatureVectorBuilder = module.exports = function() {
   //this.volume10     = new SMA(10);
   //this.gains        = new GAINS(5);
   //this.count = 0;
+  //this.kf           = new KF();
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
@@ -271,6 +273,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //volume10r    : VOLUME10,
     //volume10s    : VOLUME10,
     //volume10t    : VOLUME10,
+    //kf : close / this.kf.update(1, close)[1],
   }; // key: feature, val:scalar
   //if (SMA200 > 0) {
   //  if (this.count >= 0) {
