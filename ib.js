@@ -7,6 +7,7 @@ var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
+var HOLD = TradeController.HOLD;
 var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
@@ -95,32 +96,22 @@ var handleRealTimeBar = function(realtimeBar) {
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   var minute = date.getUTCMinutes();
   var hour = date.getUTCHours();
-  var noPosition = (minute < 35 && hour === 13) || (minute >= 24 && hour >= 19);
-  var forceSell = noPosition || ((realtimeBar.close / lastClose) < 0.9969 && position > 0);
-  var result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
+  // always sell a the end of the day
+  var noPosition = (minute < 35 && hour === 13) || (minute >= 17 && hour >= 19);
+  var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9969 && position > 0);
+  var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
   lastClose = realtimeBar.close;
 
   // check if there are shares to sell / money to buy fisrt
-  var qty = 0;
-  if (result === BUY) {
-    if (position === 0) {
-      qty = 100;
-    } else if (position < 0) {
-      qty = 200;
-    } else {
-      return;
-    }
-  } else if (result === SELL) {
-    if ((position === 0 && !noPosition) || (position > 0 && noPosition)) {
-      qty = 100;
-    } else if (position > 0 && !noPosition) {
-      qty = 200;
-    } else if (position < 0 && noPosition) {
-      qty = 100;
-      result = BUY;
-    } else {
-      return;
-    }
+  var qty = Math.abs(position);
+  if (result === HOLD && position < 0) {
+    result = BUY;
+  } else if (result === HOLD && position > 0) {
+    result = SELL;
+  } else if ((result === BUY || result == SELL) && position === 0) {
+    qty = 100;
+  } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
+    qty += 100;
   } else {
     return;
   }
