@@ -17,18 +17,18 @@ var KMaximalGains = module.exports = function(prices) {
   this.results = [];
 };
 
-KMaximalGains.prototype.isInRange = function(i, buy, sell) {
+KMaximalGains.prototype.isInRange = function(i, poss, hold) {
   var subarrays = this.results;
   for (var j = subarrays.length; j--;) {
     var subarray = subarrays[j];
     //if (i >= subarray.start && i < subarray.end) {
     if (i >= subarray.end) {
-      return sell; // optimization; subarrays is sorted by the end property
+      return hold; // optimization; subarrays is sorted by the end property
     } else if (i >= subarray.start) {
-      return buy;
+      return poss;
     }
   }
-  return sell;
+  return hold;
 };
 
 KMaximalGains.prototype.getOptimal = function(k, start, end) { // start and end are inclusive

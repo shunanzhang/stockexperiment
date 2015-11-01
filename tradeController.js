@@ -10,6 +10,7 @@ var SCW = require('./scw');
 
 var BUY = 'buy';
 var SELL = 'sell';
+var HOLD = 'hold';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var TRAIN_INTERVAL = 390;
@@ -36,9 +37,15 @@ var TradeController = module.exports = function(columns, closes) {
   this.lowColumnIndex = columns[LOW_COLUMN];
   this.openColumnIndex = columns[OPEN_COLUMN];
   this.volumeColumnIndex = columns[VOLUME_COLUMN];
+  var reverseCloses = [];
+  for (var i = columns.length; i--;) {
+    reverseCloses[i] = 10000000 - closes[i];
+  }
+  this.kMaximalLosses = new KMaximalGains(reverseCloses);
 };
 TradeController.BUY = BUY;
 TradeController.SELL = SELL;
+TradeController.HOLD = HOLD;
 TradeController.MINUTES_DAY = MINUTES_DAY;
 TradeController.TRAIN_INTERVAL = TRAIN_INTERVAL;
 TradeController.TRAIN_LEN = TRAIN_LEN;
@@ -57,16 +64,20 @@ TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar)
   return this.getFeatureVector(datum);
 };
 
-TradeController.prototype.trade = function(featureVector, forceSell) {
-  return forceSell ? SELL : this.scw.test(featureVector);
+TradeController.prototype.trade = function(featureVector, forceHold) {
+  return forceHold ? HOLD : this.scw.test(featureVector);
 };
 
 TradeController.prototype.supervise = function(i) {
   this.kMaximalGains.getOptimal(K, i - TRAIN_LEN + 1, i);
+  this.kMaximalLosses.getOptimal(K, i - TRAIN_LEN + 1, i);
 };
 
 TradeController.prototype.train = function(i_j, featureVector) {
-  var correctResult = this.kMaximalGains.isInRange(i_j, BUY, SELL);
+  var correctResult = this.kMaximalGains.isInRange(i_j, BUY, HOLD);
+  if (correctResult === HOLD) {
+    correctResult = this.kMaximalLosses.isInRange(i_j, SELL, HOLD);
+  }
   this.scw.update({
     featureVector: featureVector,
     category: correctResult

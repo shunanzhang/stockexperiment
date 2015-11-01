@@ -10,6 +10,7 @@ var PERIOD = 20; // days
 
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
+var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
@@ -51,35 +52,35 @@ var backtest = function() {
     var result = '';
     featureVectorHistory.push(featureVector);
     if (i >= TRAIN_LEN) {
-      var noPosition = isTraining || (i_MINUTES_DAY < 16) || (i_MINUTES_DAY >= MINUTES_DAY - 43);
+      // always sell a the end of the day
+      var noPosition = isTraining || (i_MINUTES_DAY < 4) || (i_MINUTES_DAY >= MINUTES_DAY - 43);
       var newClose = closes[i];
-      var forceSell = noPosition || ((newClose / closes[i - 1]) < 0.9969 && bought > 0);
-      result = tradeController.trade(featureVector, forceSell); // always sell a the end of the day
-      resultHistory.push(noPosition? undefined : result);
-      if (result === BUY && bought <= 0) {
+      var forceSell = !noPosition && ((newClose / closes[i - 1]) < 0.9969 && bought > 0);
+      result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
+      resultHistory.push(result);
+      if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
         if (bought < 0) {
           gains.push(bought + newClose);
           gain -= bought + newClose;
           //console.log(gain);
           console.log(BUY, i, newClose, -(bought + newClose), gain);
         }
-        bought = newClose;
-      } else if (result === SELL && (bought >= 0 || noPosition)) {
+        if (result === BUY) {
+          bought = newClose;
+        } else {
+          bought = 0;
+        }
+      } else if ((result === SELL && bought >= 0) || (result === HOLD && bought > 0)) {
         if (bought > 0) {
           gains.push(newClose - bought);
           gain += newClose - bought;
           //console.log(gain);
           console.log(SELL, i, newClose, newClose - bought, gain);
-        } else if (bought < 0 && noPosition) {
-          gains.push(bought + newClose);
-          gain -= bought + newClose;
-          //console.log(gain);
-          console.log(BUY, i, newClose, -(bought + newClose), gain);
         }
-        if (noPosition) {
-          bought = 0;
-        } else {
+        if (result === SELL) {
           bought = -newClose;
+        } else {
+          bought = 0;
         }
       }
       if (isTraining) {
