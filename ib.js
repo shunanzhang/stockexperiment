@@ -86,9 +86,9 @@ var handleDisconnected = function(message) {
 
 var lastClose = 0.0;
 var handleRealTimeBar = function(realtimeBar) {
-  console.log( 'RealtimeBar:', realtimeBar.reqId.toString(), realtimeBar.time.toString(), realtimeBar.open.toString(), realtimeBar.high.toString(), realtimeBar.low.toString(), realtimeBar.close.toString(), realtimeBar.volume.toString(), realtimeBar.wap.toString(), realtimeBar.count.toString());
+  //console.log( 'RealtimeBar:', realtimeBar);
 
-  var date = new Date(realtimeBar.time * 1000);
+  var date = new Date(realtimeBar.timeLong * 1000);
   var second = date.getUTCSeconds();
   if (second <= 57 && second > 3) {
     return; // skip if it is not the end of minutes
@@ -101,6 +101,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9969 && position > 0);
   var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
   lastClose = realtimeBar.close;
+  console.log(result, realtimeBar);
 
   // check if there are shares to sell / money to buy fisrt
   var qty = Math.abs(position);
