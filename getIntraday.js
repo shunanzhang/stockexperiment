@@ -55,7 +55,7 @@ var backtest = function() {
       // always sell a the end of the day
       var noPosition = isTraining || (i_MINUTES_DAY < 4) || (i_MINUTES_DAY >= MINUTES_DAY - 43);
       var newClose = closes[i];
-      var forceSell = !noPosition && ((newClose / closes[i - 1]) < 0.9969 && bought > 0);
+      var forceSell = !noPosition && ((newClose / closes[i - 1]) < 0.9973 && bought > 0);
       result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
       resultHistory.push(result);
       if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {

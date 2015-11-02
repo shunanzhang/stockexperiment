@@ -7,6 +7,7 @@ var VOLUME_COLUMN = GoogleCSVReader.VOLUME_COLUMN;
 var KMaximalGains = require('./kMaximalGains');
 var FeatureVectorBuilder = require('./featureVectorBuilder');
 var SCW = require('./scw');
+var toCent = require('./utils').toCent;
 
 var BUY = 'buy';
 var SELL = 'sell';
@@ -56,11 +57,12 @@ TradeController.prototype.getFeatureVector = function(datum) {
 
 TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar) {
   var datum = [];
-  datum[this.closeColumnIndex] = realtimeBar.close;
-  datum[this.highColumnIndex] = realtimeBar.high;
-  datum[this.lowColumnIndex] = realtimeBar.low;
-  datum[this.openColumnIndex] = realtimeBar.open;
-  datum[this.volumeColumnIndex] = realtimeBar.volume;
+  datum[this.closeColumnIndex] = toCent(realtimeBar.close);
+  datum[this.highColumnIndex] = toCent(realtimeBar.high);
+  datum[this.lowColumnIndex] = toCent(realtimeBar.low);
+  datum[this.openColumnIndex] = toCent(realtimeBar.open);
+  datum[this.volumeColumnIndex] = toCent(realtimeBar.volume);
+  console.log(datum);
   return this.getFeatureVector(datum);
 };
 

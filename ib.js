@@ -1,3 +1,4 @@
+var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
 var contract = ibapi.contract;
@@ -88,16 +89,16 @@ var lastClose = 0.0;
 var handleRealTimeBar = function(realtimeBar) {
   //console.log( 'RealtimeBar:', realtimeBar);
 
-  var date = new Date(realtimeBar.timeLong * 1000);
-  var second = date.getUTCSeconds();
+  var date = moment.tz(realtimeBar.timeLong * 1000, "America/New_York");
+  var second = date.seconds();
   if (second <= 57 && second > 3) {
     return; // skip if it is not the end of minutes
   }
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
-  var minute = date.getUTCMinutes();
-  var hour = date.getUTCHours();
+  var minute = date.minutes();
+  var hour = date.hours();
   // always sell a the end of the day
-  var noPosition = (minute < 35 && hour === 13) || (minute >= 17 && hour >= 19);
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute >= 17 && hour === 15);
   var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9969 && position > 0);
   var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
   lastClose = realtimeBar.close;

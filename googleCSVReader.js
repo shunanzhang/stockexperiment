@@ -1,3 +1,4 @@
+var moment = require('moment-timezone');
 var toCent = require('./utils').toCent;
 var redis = require('./redis');
 
@@ -101,8 +102,8 @@ GoogleCSVReader.prototype.load = function(callback) {
     var i = 390 * 0;
     var date;
     for (var l = lines.length; i < l; i++) {
-      date = new Date(parseInt(lines[i][columnIndex], 10) * 1000);
-      if (date.getUTCHours() === 13 && date.getUTCMinutes() === 31) {
+      date = moment.tz(parseInt(lines[i][columnIndex], 10) * 1000, "America/New_York");
+      if (date.hours() === 9 && date.minutes() === 31) {
         break;
       }
     }
@@ -111,8 +112,8 @@ GoogleCSVReader.prototype.load = function(callback) {
     var baseTime = 0;
     for (i = 0; i < lines.length; i++) {
       var currTime = parseInt(lines[i][columnIndex], 10);
-      date = new Date(currTime * 1000);
-      if (date.getUTCHours() === 13 && date.getUTCMinutes() === 31) {
+      date = moment.tz(currTime * 1000, "America/New_York");
+      if (date.hours() === 9 && date.minutes() === 31) {
         baseTime = currTime;
         continue;
       }
