@@ -9,6 +9,7 @@ var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
+var MINUTES_DAY = TradeController.MINUTES_DAY;
 var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
@@ -52,8 +53,9 @@ var getPositions = function() {
 var placeLimitOrder = function(_contract, action, quantity, price) {
   console.log('Next valid order Id: %d', orderId);
   console.log('Placing order for', _contract.symbol);
+  console.log(action, quantity);
   var oldId = orderId++;
-  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
+  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
 };
 
 // Here we specify the event handlers.
@@ -63,6 +65,7 @@ var placeLimitOrder = function(_contract, action, quantity, price) {
 var handleValidOrderId = function(message) {
   orderId = message.orderId;
   console.log('next order Id is', orderId);
+  getPositions();
   getRealtimeBars(builtContract, 1);
 };
 
@@ -99,10 +102,10 @@ var handleRealTimeBar = function(realtimeBar) {
   var hour = date.hours();
   // always sell a the end of the day
   var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute >= 17 && hour === 15);
-  var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9969 && position > 0);
+  var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
   var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
   lastClose = realtimeBar.close;
-  console.log(result, realtimeBar);
+  console.log(result, noPosition, forceSell, position, realtimeBar);
 
   // check if there are shares to sell / money to buy fisrt
   var qty = Math.abs(position);
@@ -111,13 +114,13 @@ var handleRealTimeBar = function(realtimeBar) {
   } else if (result === HOLD && position > 0) {
     result = SELL;
   } else if ((result === BUY || result == SELL) && position === 0) {
-    qty = 100;
+    qty = 10;//0;
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
-    qty += 100;
+    qty += 10;//0;
   } else {
     return;
   }
-  //placeLimitOrder(builtContract, result.toUpperCase(), qty, realtimeBar.close);
+  placeLimitOrder(builtContract, result.toUpperCase(), qty, realtimeBar.close);
 };
 
 var handleOrderStatus = function(message) {
@@ -154,8 +157,8 @@ api.handlers[messageIds.clientError] = handleClientError;
 api.handlers[messageIds.disconnected] = handleDisconnected;
 api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
 api.handlers[messageIds.orderStatus] = handleOrderStatus;
-api.handlers[messageIds.openOrder] = handleOpenOrder;
-api.handlers[messageIds.openOrderEnd] = handleOpenOrderEnd;
+//api.handlers[messageIds.openOrder] = handleOpenOrder;
+//api.handlers[messageIds.openOrderEnd] = handleOpenOrderEnd;
 api.handlers[messageIds.position] = handlePosition;
 
 // Connect to the TWS client or IB Gateway
@@ -167,15 +170,26 @@ var warmupTrain = function () {
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
   tradeController = new TradeController(googleCSVReader.columns, closes);
   tradeController.supervise(TRAIN_LEN - 1);
-
+  var featureVectorHistory = [];
+  var dataLenToday = dataLen - dataLen % MINUTES_DAY;
+  console.log(dataLenToday);
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = tradeController.getFeatureVector(datum);
-    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10) || (i === dataLen - 1);
+    featureVectorHistory.push(featureVector);
+    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10);
     if (i >= TRAIN_LEN && isTraining) {
       tradeController.supervise(i);
     }
-    tradeController.train(i, featureVector);
+    if (i < dataLenToday && isTraining) {
+      for (var j = TRAIN_INTERVAL; j--;) {
+        featureVector = featureVectorHistory.shift();
+        if (!featureVector) {
+          break;
+        }
+        tradeController.train(i - j, featureVector);
+      }
+    }
   }
 
   googleCSVReader.shutdown();

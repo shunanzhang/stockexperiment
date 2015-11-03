@@ -61,8 +61,7 @@ TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar)
   datum[this.highColumnIndex] = toCent(realtimeBar.high);
   datum[this.lowColumnIndex] = toCent(realtimeBar.low);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
-  datum[this.volumeColumnIndex] = toCent(realtimeBar.volume);
-  console.log(datum);
+  datum[this.volumeColumnIndex] = realtimeBar.volume;
   return this.getFeatureVector(datum);
 };
 
