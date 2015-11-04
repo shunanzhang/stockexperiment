@@ -101,8 +101,8 @@ var handleRealTimeBar = function(realtimeBar) {
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute >= 17 && hour === 15);
-  var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 50 && hour === 15);
+  var forceSell = !noPosition && (((realtimeBar.close / lastClose) < 0.9973 && position > 0) || (minute > 25 && hour === 15));
   var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
   lastClose = realtimeBar.close;
   console.log(result, noPosition, forceSell, position, realtimeBar);
