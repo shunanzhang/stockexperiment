@@ -16,7 +16,7 @@ IBCDIR=/opt/IBController/
 #   access it. This folder and its contents should also be encrypted so that even users
 #   with administrator privileges can't see the contents:
 
-IBCINI="$PWD/IBController.ini"
+IBCINI="$HOME/Documents/git/stockexperiment/IBController.ini"
 
 
 #   The folder where TWS is installed:
@@ -43,7 +43,7 @@ TWSCP=jts.jar:total.jar
 #   jclient.LoginFrame is NOT part of the Java options, nor is anything
 #   that comes after it, so don't include that here):
 
-JAVAOPTS='-Xmx1024M -XX:MaxPermSize=256M'
+JAVAOPTS='-Xmx1024M -XX:MaxPermSize=256M -Djava.awt.headless=false'
 
 pushd $TWSDIR
 # prevent other Java tools interfering with IBController

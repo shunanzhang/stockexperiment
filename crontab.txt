@@ -1,4 +1,7 @@
-workdir=$HOME/Documents/git/stockexperiment
-00 6 * * 1-5 ${workdir}/IBControllerStart.sh 2>&1 | tee ${workdir}/tws.log
-15 6 * * 1-5 pkill redis || true; redis-server 2>&1 | tee ${workdir}/redis.log
-25 6 * * 1-5 pkill node || true; node ${workdir}/ib.js 2>&1 | tee ${workdir}/ib.js.log
+workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
+00 6 * * 1-5 kill $(pgrep -f IBController.ini)
+05 6 * * 1-5 ${workdir}/IBControllerStart.sh 2>&1 | tee ${workdir}/tws.log
+14 6 * * 1-5 pkill node || true
+15 6 * * 1-5 pkill redis || true
+20 6 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
+25 6 * * 1-5 cd ${workdir}; /usr/local/bin/node ib.js 2>&1 | tee ${workdir}/ib.js.log
