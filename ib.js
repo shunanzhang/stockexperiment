@@ -31,6 +31,8 @@ var position = 0;
 //  Make sure you keep track of this.
 var orderId = -1;
 
+var lastOrderStatus = 'Filled';
+
 var buildContract = function(symbl, exchange) {
   var _contract = contract.createContract();
   _contract.symbol = symbl;
@@ -95,6 +97,9 @@ var handleRealTimeBar = function(realtimeBar) {
   var date = moment.tz(realtimeBar.timeLong * 1000, "America/New_York");
   var second = date.seconds();
   if (second <= 57 && second > 3) {
+    if (second <= 57 && second > 52 && lastOrderStatus !== 'Filled') {
+      cancelPrevOrder(orderId - 1);
+    }
     return; // skip if it is not the end of minutes
   }
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
@@ -129,6 +134,7 @@ var handleOrderStatus = function(message) {
   if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
   }
+  lastOrderStatus = message.status;
 };
 
 var handleOpenOrder = function(message) {
@@ -172,7 +178,6 @@ var warmupTrain = function () {
   tradeController.supervise(TRAIN_LEN - 1);
   var featureVectorHistory = [];
   var dataLenToday = dataLen - dataLen % MINUTES_DAY;
-  console.log(dataLenToday);
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var featureVector = tradeController.getFeatureVector(datum);
