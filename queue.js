@@ -32,8 +32,7 @@ var _enq1 = function(item) {
       this.low = low;
     }
     return true;
-  }
-  else {
+  } else {
     this.sum += item;
     this.length += 1;
     this.high = max(high, item);
@@ -50,8 +49,7 @@ var _enq2 = function(item) {
   if (newestId >= this.limit) {
     this.oldestId += 1;
     return true;
-  }
-  else {
+  } else {
     this.length += 1;
     return false;
   }

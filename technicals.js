@@ -212,6 +212,27 @@ BOIL.prototype.analize = function(stockPrice) {
     return plusSigma;
   }
 };
+BOIL.prototype.provision = function(stockPrice) {
+  var q = this.q;
+  var n = q.length;
+  var oldestId = q.oldestId;
+  var newestId = oldestId + n;
+  if (newestId >= q.limit) {
+    var ave = (q.sum + stockPrice - q[oldestId]) / n; // TODO change to EMA
+    var sigma = 0;
+    var diff = 0;
+
+    for (var i = oldestId + 1, l = oldestId + n; i < l; i++) {
+      diff = q[i] - ave;
+      sigma += diff * diff;
+    }
+    diff = stockPrice - ave;
+    sigma += diff * diff;
+    sigma = Math.sqrt(sigma / n) * 2; // 2sigma
+    return (stockPrice > sigma + ave) ? 1 : (stockPrice < ave - sigma) ? -1 : 0;
+  }
+  return 0;
+};
 
 //var CCIMA = module.exports.CCIMA = function(nCCI, nEMA) {
 //  this.nCCI = nCCI;

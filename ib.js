@@ -12,6 +12,9 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
+//var Technicals = require('./technicals');
+//var boil = new Technicals.BOIL(20);
+//var toCent = require('./utils').toCent;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
 
@@ -92,7 +95,8 @@ var handleDisconnected = function(message) {
 
 var lastClose = 0.0;
 var handleRealTimeBar = function(realtimeBar) {
-  //console.log( 'RealtimeBar:', realtimeBar);
+  //var beyond2Sigma = boil.provision(toCent(realtimeBar.close));
+  //var boilResult = (beyond2Sigma > 0) ? SELL : (beyond2Sigma < 0) ? : BUY : HOLD;
 
   var date = moment.tz(realtimeBar.timeLong * 1000, "America/New_York");
   var second = date.seconds();
@@ -100,8 +104,11 @@ var handleRealTimeBar = function(realtimeBar) {
     if (second <= 57 && second > 52 && lastOrderStatus !== 'Filled') {
       cancelPrevOrder(orderId - 1);
     }
+    //if (boilResult !== HOLD) {
+    //}
     return; // skip if it is not the end of minutes
   }
+  //boil.analize(toCent(realtimeBar.close));
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   var minute = date.minutes();
   var hour = date.hours();

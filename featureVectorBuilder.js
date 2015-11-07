@@ -7,7 +7,6 @@ var EMA = Technicals.EMA;
 var DEMA = Technicals.DEMA;
 var EMAS= Technicals.EMAS;
 var PVALUE = Technicals.PVALUE;
-var BOIL = Technicals.BOIL;
 var MACD = Technicals.MACD;
 var STOCHASTIC = Technicals.STOCHASTIC;
 var RSI = Technicals.RSI;
@@ -56,7 +55,6 @@ var FeatureVectorBuilder = module.exports = function() {
   //this.PVALUE50     = new PVALUE(50);
   //this.PVALUE100    = new PVALUE(100);
   //this.pvalue200    = new PVALUE(200);
-  //this.BOIL         = new BOIL(20);
   //this.MACD12       = new MACD(12, 26, 9);
   //this.MACD5        = new MACD(5, 35, 5);
   //this.stochastic14 = new STOCHASTIC(14, 3, 3);
@@ -228,7 +226,6 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     //PVALUE200n  : PVALUE200,
     //PVALUE200o  : PVALUE200,
     //PVALUE200p  : PVALUE200,
-    //BOIL        : this.BOIL.analize(close),
     //MACD12      : MACD12,
     //MACD5       : this.MACD5.analize(close),
     //stochastic14a: STOCHASTIC14,
