@@ -17,6 +17,7 @@ var TRAIN_LEN = TradeController.TRAIN_LEN;
 //var toCent = require('./utils').toCent;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
+var MAX_POSITION = 10;
 
 /**
  * argument parsing
@@ -126,9 +127,9 @@ var handleRealTimeBar = function(realtimeBar) {
   } else if (result === HOLD && position > 0) {
     result = SELL;
   } else if ((result === BUY || result == SELL) && position === 0) {
-    qty = 10;//0;
+    qty = MAX_POSITION;
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
-    qty += 10;//0;
+    qty += MAX_POSITION;
   } else {
     return;
   }
