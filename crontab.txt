@@ -5,3 +5,4 @@ workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
 15 6 * * 1-5 pkill redis || true
 20 6 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
 25 6 * * 1-5 cd ${workdir}; /usr/local/bin/node ib.js 2>&1 | tee ${workdir}/ib.js.log
+00 17 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js NFLX true 2>&1 | tee ${workdir}/getIntraday.js.log
