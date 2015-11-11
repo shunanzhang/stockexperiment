@@ -145,15 +145,15 @@ var handleOrderStatus = function(message) {
   lastOrderStatus = message.status;
 };
 
-var handleOpenOrder = function(message) {
-  console.log('OpenOrder: ');
-  console.log(JSON.stringify(message));
-};
-
-var handleOpenOrderEnd = function(message) {
-  console.log('OpenOrderEnd: ');
-  console.log(JSON.stringify(message));
-};
+//var handleOpenOrder = function(message) {
+//  console.log('OpenOrder: ');
+//  console.log(JSON.stringify(message));
+//};
+//
+//var handleOpenOrderEnd = function(message) {
+//  console.log('OpenOrderEnd: ');
+//  console.log(JSON.stringify(message));
+//};
 
 var handlePosition = function(message) {
   console.log('Position: ');
