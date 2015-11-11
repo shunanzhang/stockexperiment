@@ -44,9 +44,6 @@ var backtest = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
-    //if (i_MINUTES_DAY === 0) {
-    //  tradeController.featureVectorBuilder.reset();
-    //}
     var featureVector = tradeController.getFeatureVector(datum);
     var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10) || (i === dataLen - 1);
     var result = '';

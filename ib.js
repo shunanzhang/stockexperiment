@@ -17,7 +17,7 @@ var TRAIN_LEN = TradeController.TRAIN_LEN;
 //var toCent = require('./utils').toCent;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 50;
+var MAX_POSITION = 100;
 
 /**
  * argument parsing
