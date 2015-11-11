@@ -12,12 +12,9 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
-//var Technicals = require('./technicals');
-//var boil = new Technicals.BOIL(20);
-//var toCent = require('./utils').toCent;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 100;
+var MAX_POSITION = 200;
 
 /**
  * argument parsing
@@ -96,20 +93,14 @@ var handleDisconnected = function(message) {
 
 var lastClose = 0.0;
 var handleRealTimeBar = function(realtimeBar) {
-  //var beyond2Sigma = boil.provision(toCent(realtimeBar.close));
-  //var boilResult = (beyond2Sigma > 0) ? SELL : (beyond2Sigma < 0) ? : BUY : HOLD;
-
   var date = moment.tz(realtimeBar.timeLong * 1000, "America/New_York");
   var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second <= 57 && second > 52 && lastOrderStatus !== 'Filled') {
       cancelPrevOrder(orderId - 1);
     }
-    //if (boilResult !== HOLD) {
-    //}
     return; // skip if it is not the end of minutes
   }
-  //boil.analize(toCent(realtimeBar.close));
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   var minute = date.minutes();
   var hour = date.hours();
@@ -126,10 +117,10 @@ var handleRealTimeBar = function(realtimeBar) {
     result = BUY;
   } else if (result === HOLD && position > 0) {
     result = SELL;
-  } else if ((result === BUY || result == SELL) && position === 0) {
-    qty = MAX_POSITION;
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
     qty += MAX_POSITION;
+  } else if ((result === BUY || result === SELL) && MAX_POSITION > qty) {
+    qty = MAX_POSITION - qty;
   } else {
     return;
   }
@@ -144,16 +135,6 @@ var handleOrderStatus = function(message) {
   }
   lastOrderStatus = message.status;
 };
-
-//var handleOpenOrder = function(message) {
-//  console.log('OpenOrder: ');
-//  console.log(JSON.stringify(message));
-//};
-//
-//var handleOpenOrderEnd = function(message) {
-//  console.log('OpenOrderEnd: ');
-//  console.log(JSON.stringify(message));
-//};
 
 var handlePosition = function(message) {
   console.log('Position: ');
@@ -171,8 +152,6 @@ api.handlers[messageIds.clientError] = handleClientError;
 api.handlers[messageIds.disconnected] = handleDisconnected;
 api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
 api.handlers[messageIds.orderStatus] = handleOrderStatus;
-//api.handlers[messageIds.openOrder] = handleOpenOrder;
-//api.handlers[messageIds.openOrderEnd] = handleOpenOrderEnd;
 api.handlers[messageIds.position] = handlePosition;
 
 // Connect to the TWS client or IB Gateway
