@@ -2,7 +2,7 @@ var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
 var contract = ibapi.contract;
-var order = ibapi.order;
+//var order = ibapi.order;
 var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var TradeController = require('./tradeController');
@@ -54,11 +54,11 @@ var getPositions = function() {
 };
 
 var placeLimitOrder = function(_contract, action, quantity, price) {
-  console.log('Next valid order Id: %d', orderId);
-  console.log('Placing order for', _contract.symbol);
-  console.log(action, quantity);
   var oldId = orderId++;
   setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
+  console.log('Next valid order Id: %d', oldId);
+  console.log('Placing order for', _contract.symbol);
+  console.log(action, quantity);
 };
 
 // Here we specify the event handlers.
@@ -73,8 +73,8 @@ var handleValidOrderId = function(message) {
 };
 
 var cancelPrevOrder = function(prevOrderId) {
-  console.log('canceling order: %d', prevOrderId);
   setImmediate(api.cancelOrder.bind(api, prevOrderId));
+  console.log('canceling order: %d', prevOrderId);
 };
 
 var handleServerError = function(message) {
@@ -88,7 +88,7 @@ var handleClientError = function(message) {
 
 var handleDisconnected = function(message) {
   console.log('disconnected');
-  process.exit(1);
+  //process.exit(1);
 };
 
 var lastClose = 0.0;
@@ -105,11 +105,11 @@ var handleRealTimeBar = function(realtimeBar) {
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 25 && hour === 15);
-  var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
-  var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 25 && hour === 15) || ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
+  //var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
+  //var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
+  var result = tradeController.trade(featureVector, noPosition);
   lastClose = realtimeBar.close;
-  console.log(result, noPosition, forceSell, position, realtimeBar);
 
   // check if there are shares to sell / money to buy fisrt
   var qty = Math.abs(position);
@@ -125,6 +125,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   placeLimitOrder(builtContract, result.toUpperCase(), qty, realtimeBar.close);
+  console.log(result, noPosition, position, realtimeBar);
 };
 
 var handleOrderStatus = function(message) {
