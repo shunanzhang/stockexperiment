@@ -2,7 +2,6 @@ var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
 var contract = ibapi.contract;
-//var order = ibapi.order;
 var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var TradeController = require('./tradeController');
@@ -14,7 +13,7 @@ var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 200;
+var MAX_POSITION = 300;
 
 /**
  * argument parsing
@@ -88,7 +87,6 @@ var handleClientError = function(message) {
 
 var handleDisconnected = function(message) {
   console.log('disconnected');
-  //process.exit(1);
 };
 
 var lastClose = 0.0;
@@ -105,9 +103,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 25 && hour === 15) || ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
-  //var forceSell = !noPosition && ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
-  //var result = forceSell ? SELL : tradeController.trade(featureVector, noPosition);
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 25 && hour === 15);// || ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
   var result = tradeController.trade(featureVector, noPosition);
   lastClose = realtimeBar.close;
 
@@ -146,7 +142,7 @@ var handlePosition = function(message) {
 };
 
 // After that, you must register the event handler with a messageId
-//  For list of valid messageIds, see messageIds.js file.
+// For list of valid messageIds, see messageIds.js file.
 api.handlers[messageIds.nextValidId] = handleValidOrderId;
 api.handlers[messageIds.svrError] = handleServerError;
 api.handlers[messageIds.clientError] = handleClientError;
