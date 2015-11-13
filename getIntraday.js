@@ -86,7 +86,7 @@ var backtest = function() {
       }
     }
     if (isTraining) {
-      //for (var j = resultHistory.length; j--;) {
+      //for (var j = featureVectorHistory.length; j--;) {
       for (var j = TRAIN_INTERVAL; j--;) {
         featureVector = featureVectorHistory.shift();
         if (!featureVector) {
