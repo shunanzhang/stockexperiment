@@ -89,7 +89,6 @@ var handleDisconnected = function(message) {
   console.log('disconnected');
 };
 
-var lastClose = 0.0;
 var handleRealTimeBar = function(realtimeBar) {
   var date = moment.tz(realtimeBar.timeLong * 1000, "America/New_York");
   var second = date.seconds();
@@ -103,9 +102,8 @@ var handleRealTimeBar = function(realtimeBar) {
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 25 && hour === 15);// || ((realtimeBar.close / lastClose) < 0.9973 && position > 0);
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 25 && hour === 15);
   var result = tradeController.trade(featureVector, noPosition);
-  lastClose = realtimeBar.close;
 
   // check if there are shares to sell / money to buy fisrt
   var qty = Math.abs(position);
