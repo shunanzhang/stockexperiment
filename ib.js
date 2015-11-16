@@ -86,7 +86,7 @@ var handleClientError = function(message) {
 };
 
 var handleDisconnected = function(message) {
-  console.log('disconnected');
+  //console.log('disconnected');
 };
 
 var handleRealTimeBar = function(realtimeBar) {
