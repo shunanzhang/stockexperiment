@@ -13,7 +13,7 @@ var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 300;
+var MAX_POSITION = 400;
 
 /**
  * argument parsing
