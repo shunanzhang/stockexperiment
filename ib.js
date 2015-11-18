@@ -13,7 +13,7 @@ var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 400;
+var MAX_POSITION = 500;
 
 /**
  * argument parsing
@@ -21,6 +21,7 @@ var MAX_POSITION = 400;
 var symbol = process.argv[2] || 'NFLX';
 var exchange = process.argv[3] || 'NASDAQ';
 var googleCSVReader = new GoogleCSVReader(symbol);
+var minSellPrice = process.argv[4] || 65.00; // for flash crash
 
 var api = new ibapi.NodeIbapi();
 var tradeController;
@@ -53,6 +54,10 @@ var getPositions = function() {
 };
 
 var placeLimitOrder = function(_contract, action, quantity, price) {
+  if (price < minSellPrice) {
+    console.log('order ignored since the limit price is', price, ', which is less than the threshold', minSellPrice);
+    return;
+  }
   var oldId = orderId++;
   setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
   console.log('Next valid order Id: %d', oldId);
