@@ -59,7 +59,8 @@ var placeLimitOrder = function(_contract, action, quantity, price) {
     return;
   }
   var oldId = orderId++;
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
+  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
+  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'MKT', 0.0, 0.0));
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', _contract.symbol);
   console.log(action, quantity);
