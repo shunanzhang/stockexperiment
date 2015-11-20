@@ -59,8 +59,8 @@ var placeLimitOrder = function(_contract, action, quantity, price) {
     return;
   }
   var oldId = orderId++;
-  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'MKT', 0.0, 0.0));
+  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
+  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'MKT', 0.0, 0.0));
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', _contract.symbol);
   console.log(action, quantity);
@@ -124,7 +124,7 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  placeLimitOrder(builtContract, result.toUpperCase(), qty, realtimeBar.close);
+  placeLimitOrder(builtContract, result.toUpperCase(), qty, realtimeBar.close + 0.05);
   console.log(result, noPosition, position, realtimeBar);
 };
 
