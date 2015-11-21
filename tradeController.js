@@ -38,11 +38,6 @@ var TradeController = module.exports = function(columns, closes) {
   this.lowColumnIndex = columns[LOW_COLUMN];
   this.openColumnIndex = columns[OPEN_COLUMN];
   this.volumeColumnIndex = columns[VOLUME_COLUMN];
-  //var reverseCloses = [];
-  //for (var i = closes.length; i--;) {
-  //  reverseCloses[i] = 10000000 - closes[i];
-  //}
-  //this.kMaximalLosses = new KMaximalGains(reverseCloses);
 };
 TradeController.BUY = BUY;
 TradeController.SELL = SELL;
@@ -71,14 +66,10 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
 
 TradeController.prototype.supervise = function(i) {
   this.kMaximalGains.getOptimal(K, i - TRAIN_LEN + 1, i);
-  //this.kMaximalLosses.getOptimal(K, i - TRAIN_LEN + 1, i);
 };
 
 TradeController.prototype.train = function(i_j, featureVector) {
   var correctResult = this.kMaximalGains.isInRange(i_j, BUY, HOLD);
-  //if (correctResult === HOLD) {
-  //  correctResult = this.kMaximalLosses.isInRange(i_j, SELL, HOLD);
-  //}
   this.scw.update({
     featureVector: featureVector,
     category: correctResult
