@@ -34,29 +34,6 @@ SMA.prototype.analize = function(stockPrice) {
   }
 };
 
-var GAINS = module.exports.GAINS = function(n) {
-  if (! (this instanceof GAINS)) { // enforcing new
-    return new GAINS(n);
-  }
-  Technical.call(this);
-  this.q = new Queue(n, function(i) {
-    return this[i] - this[i - 1];
-  });
-};
-GAINS.prototype = Object.create(Technical.prototype);
-GAINS.prototype.analize = function(stockPrice) {
-  var q = this.q;
-  if (q.enq(stockPrice)) {
-    var oldestId = q.oldestId;
-    var n = q.length;
-    var results = [];
-    for (var i = oldestId, l = oldestId + n; i < l; i++) {
-      results.push(q.yq[i]);
-    }
-    return results;
-  }
-};
-
 var LSS = module.exports.LSS = function(n) {
   if (! (this instanceof LSS)) { // enforcing new
     return new LSS(n);
