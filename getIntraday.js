@@ -41,6 +41,8 @@ var backtest = function() {
   var featureVectorHistory = [];
   var resultHistory = [];
   var gains = [];
+  var pGain = 0;
+  var nGain = 0;
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
@@ -58,6 +60,11 @@ var backtest = function() {
         if (bought < 0) {
           gains.push(bought + newClose);
           gain -= bought + newClose;
+          if (gains[gains.length - 1] > 0) {
+            pGain += 1;
+          } else {
+            nGain += 1;
+          }
           //console.log(gain);
           console.log(BUY, i, newClose, -(bought + newClose), gain);
         }
@@ -70,6 +77,11 @@ var backtest = function() {
         if (bought > 0) {
           gains.push(newClose - bought);
           gain += newClose - bought;
+          if (gains[gains.length - 1] > 0) {
+            pGain += 1;
+          } else {
+            nGain += 1;
+          }
           //console.log(gain);
           console.log(SELL, i, newClose, newClose - bought, gain);
         }
@@ -130,6 +142,7 @@ var backtest = function() {
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
   console.log('elapsed:', (dataLen - TRAIN_LEN) / MINUTES_DAY | 0, 'days, ', (dataLen - TRAIN_LEN) % MINUTES_DAY, 'minutes');
   console.log('gain:', gain, ', per day =', 100.0 * gain / closes[TRAIN_LEN] / (dataLen - TRAIN_LEN) * MINUTES_DAY, '%');
+  console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain));
   console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, '# trades: ', gains.length);
   console.log('buy and hold:', closes[dataLen - 1] - closes[TRAIN_LEN]);
 

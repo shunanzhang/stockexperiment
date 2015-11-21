@@ -53,14 +53,13 @@ var getPositions = function() {
   api.reqPositions();
 };
 
-var placeLimitOrder = function(_contract, action, quantity, price) {
+var placeMyOrder = function(_contract, action, quantity, orderType, price) {
   if (price < minSellPrice) {
     console.log('order ignored since the limit price is', price, ', which is less than the threshold', minSellPrice);
     return;
   }
   var oldId = orderId++;
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'LMT', price, price)); // last parameter is auxPrice, should it be 0?
-  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, 'MKT', 0.0, 0.0));
+  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, price, price)); // last parameter is auxPrice, should it be 0?
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', _contract.symbol);
   console.log(action, quantity);
@@ -124,7 +123,13 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  placeLimitOrder(builtContract, result.toUpperCase(), qty, realtimeBar.close + 0.05);
+  var orderType = 'MKT';
+  var price = 0.0;
+  if (result === SELL && !noPosition) {
+    orderType = 'LMT';
+    price = realtimeBar.close + 0.05;
+  }
+  placeMyOrder(builtContract, result.toUpperCase(), qty, orderType, price);
   console.log(result, noPosition, position, realtimeBar);
 };
 
