@@ -124,7 +124,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var orderType = 'MKT';
-  var price = 0.0;
+  var price = realtimeBar.close;
   if (result === SELL && !noPosition) {
     orderType = 'LMT';
     price = realtimeBar.close + 0.05;
