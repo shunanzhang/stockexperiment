@@ -124,13 +124,7 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  var orderType = 'MKT';
-  var price = realtimeBar.close;
-  if (result === SELL && !noPosition) {
-    orderType = 'LMT';
-    price = realtimeBar.close + 0.05;
-  }
-  placeMyOrder(builtContract, result.toUpperCase(), qty, orderType, price);
+  placeMyOrder(builtContract, result.toUpperCase(), qty, 'MKT', realtimeBar.close);
   console.log(result, noPosition, position, realtimeBar);
 };
 
