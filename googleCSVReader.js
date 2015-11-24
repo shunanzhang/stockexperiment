@@ -9,6 +9,7 @@ var LOW_COLUMN = 'LOW';
 var OPEN_COLUMN = 'OPEN';
 var VOLUME_COLUMN = 'VOLUME';
 var COLUMNS = [DATE_COLUMN, CLOSE_COLUMN, HIGH_COLUMN, LOW_COLUMN, OPEN_COLUMN, VOLUME_COLUMN];
+var TIMEZONE = 'America/New_York';
 
 var GoogleCSVReader = module.exports = function(tickerId) {
   if (! (this instanceof GoogleCSVReader)) { // enforcing new
@@ -30,6 +31,7 @@ GoogleCSVReader.HIGH_COLUMN = HIGH_COLUMN;
 GoogleCSVReader.LOW_COLUMN = LOW_COLUMN;
 GoogleCSVReader.OPEN_COLUMN = OPEN_COLUMN;
 GoogleCSVReader.VOLUME_COLUMN = VOLUME_COLUMN;
+GoogleCSVReader.TIMEZONE = TIMEZONE;
 
 GoogleCSVReader.prototype.parseLine = function(line) {
   if (!line) {
@@ -101,20 +103,27 @@ GoogleCSVReader.prototype.load = function(callback) {
     var columnIndex = this.columns[DATE_COLUMN];
     var i = 390 * 0;
     var date;
+    var day = 0;
     for (var l = lines.length; i < l; i++) {
-      date = moment.tz(parseInt(lines[i][columnIndex], 10) * 1000, "America/New_York");
+      date = moment.tz(parseInt(lines[i][columnIndex], 10) * 1000, TIMEZONE);
       if (date.hours() === 9 && date.minutes() === 31) {
+        day = date.date();
         break;
       }
     }
     lines.splice(0, i);
-    console.log(i);
     var baseTime = 0;
     for (i = 0; i < lines.length; i++) {
       var currTime = parseInt(lines[i][columnIndex], 10);
-      date = moment.tz(currTime * 1000, "America/New_York");
+      date = moment.tz(currTime * 1000, TIMEZONE);
       if (date.hours() === 9 && date.minutes() === 31) {
         baseTime = currTime;
+        day = date.date();
+        continue;
+      } else if (date.date() !== day) {
+        baseTime = date.hours(9).minutes(31).unix();
+        day = date.date();
+        lines[i][columnIndex] = baseTime;
         continue;
       }
       baseTime += 60; // TODO parameterize 60

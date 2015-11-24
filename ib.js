@@ -4,6 +4,7 @@ var messageIds = ibapi.messageIds;
 var contract = ibapi.contract;
 var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
+var TIMEZONE = GoogleCSVReader.TIMEZONE;
 var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
@@ -95,7 +96,7 @@ var handleDisconnected = function(message) {
 };
 
 var handleRealTimeBar = function(realtimeBar) {
-  var date = moment.tz(realtimeBar.timeLong * 1000, "America/New_York");
+  var date = moment.tz(realtimeBar.timeLong * 1000, TIMEZONE);
   var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second <= 57 && second > 52 && lastOrderStatus !== 'Filled') {
