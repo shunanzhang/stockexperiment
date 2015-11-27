@@ -6,20 +6,18 @@ var FeatureVectorBuilder = module.exports = function() {
   if (! (this instanceof FeatureVectorBuilder)) { // enforcing new
     return new FeatureVectorBuilder();
   }
-  this.lss200  = new LSS(101);
-  this.alss200 = new ALSS(33, 20);
+  this.lss  = new LSS(101);
+  this.alss = new ALSS(33, 20);
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
-  var LSS200 = this.lss200.analize(close);
-  var ALSS200 = this.alss200.analize(close);
   var featureVector = {
-    sma200a  : 1,
-    sma200b  : 1.01,
-    sma200c  : 0.5,
-    sma200d  : 0.5,
-    lss200a  : LSS200,
-    alss200a : ALSS200,
+    a    : 1,
+    b    : 1.01,
+    c    : 0.5,
+    d    : 0.5,
+    lss  : this.lss.analize(close),
+    alss : this.alss.analize(close),
   }; // key: feature, val:scalar
   var i = 0;
   var isNaN = isNaN;

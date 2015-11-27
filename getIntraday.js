@@ -68,6 +68,7 @@ var backtest = function() {
           //console.log(gain);
           console.log(BUY, i, newClose, -(bought + newClose), gain);
         }
+        //console.log(BUY, featureVector, tradeController.scw.weightMatrix[BUY]);
         if (result === BUY) {
           bought = newClose;
         } else {
@@ -85,6 +86,7 @@ var backtest = function() {
           //console.log(gain);
           console.log(SELL, i, newClose, newClose - bought, gain);
         }
+        //console.log(SELL, featureVector, tradeController.scw.weightMatrix[SELL]);
         if (result === SELL) {
           bought = -newClose;
         } else {
@@ -120,6 +122,9 @@ var backtest = function() {
           }
         }
       }
+    }
+    if (i_MINUTES_DAY === MINUTES_DAY - 1) {
+      console.log('=====');
     }
   }
   var precision = tp / (tp + fp);
