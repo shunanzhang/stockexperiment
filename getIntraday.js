@@ -58,7 +58,7 @@ var backtest = function() {
       resultHistory.push(result);
       if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
         if (bought < 0) {
-          gains.push(bought + newClose);
+          gains.push(-(bought + newClose));
           gain -= bought + newClose;
           if (gains[gains.length - 1] > 0) {
             pGain += 1;
