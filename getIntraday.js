@@ -131,8 +131,15 @@ var backtest = function() {
   var recall = tp / (tp + fn);
   var aveGain = 0;
   var variance = 0;
+  var pg = 0;
+  var ng = 0;
   for (i = gains.length; i--;) {
     aveGain += gains[i];
+    if (gains[i] > 0) {
+      pg += gains[i];
+    } else if (gains[i] < 0) {
+      ng += -gains[i];
+    }
   }
   aveGain /= gains.length;
   for (i = gains.length; i--;) {
@@ -147,8 +154,8 @@ var backtest = function() {
   console.log('f1 score: =', 200.0 * precision * recall / (precision + recall), '%');
   console.log('elapsed:', (dataLen - TRAIN_LEN) / MINUTES_DAY | 0, 'days, ', (dataLen - TRAIN_LEN) % MINUTES_DAY, 'minutes');
   console.log('gain:', gain, ', per day =', 100.0 * gain / closes[TRAIN_LEN] / (dataLen - TRAIN_LEN) * MINUTES_DAY, '%');
-  console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain));
-  console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, 'ratio', aveGain/Math.sqrt(variance), '# trades: ', gains.length);
+  console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain), 'kelly criterion:', pGain / (pGain + nGain) - nGain / (pGain + nGain) / ((pg / pGain) / (ng / nGain)));
+  console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, 'ratio:', aveGain/Math.sqrt(variance), '# trades: ', gains.length);
   console.log('buy and hold:', closes[dataLen - 1] - closes[TRAIN_LEN]);
 
   googleCSVReader.shutdown();
