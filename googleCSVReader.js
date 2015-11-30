@@ -116,7 +116,9 @@ GoogleCSVReader.prototype.load = function(callback) {
     for (i = 0; i < lines.length; i++) {
       var currTime = parseInt(lines[i][columnIndex], 10);
       date = moment.tz(currTime * 1000, TIMEZONE);
-      if (date.hours() === 9 && date.minutes() === 31) {
+      if (date.date() !== day && moment.tz(baseTime * 1000, TIMEZONE).hours() !== 16) {
+        // do nothing
+      } else if (date.hours() === 9 && date.minutes() === 31) {
         baseTime = currTime;
         day = date.date();
         continue;
