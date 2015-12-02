@@ -14,7 +14,7 @@ var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 500;
+var MAX_POSITION = 200;
 
 /**
  * argument parsing
@@ -60,7 +60,8 @@ var placeMyOrder = function(_contract, action, quantity, orderType, price) {
     return;
   }
   var oldId = orderId++;
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, price, price)); // last parameter is auxPrice, should it be 0?
+  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, price, price)); // last parameter is auxPrice, should it be 0?
+  setTimeout(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, price, price), 30 * 1000); // last parameter is auxPrice, should it be 0?
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', _contract.symbol);
   console.log(action, quantity);
