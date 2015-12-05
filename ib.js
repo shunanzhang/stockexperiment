@@ -14,7 +14,7 @@ var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 300;
+var MAX_POSITION = 200;
 
 /**
  * argument parsing
@@ -170,7 +170,7 @@ var warmupTrain = function () {
     var datum = data[i];
     var featureVector = tradeController.getFeatureVector(datum);
     featureVectorHistory.push(featureVector);
-    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 10);
+    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 1);
     if (i >= TRAIN_LEN && isTraining) {
       tradeController.supervise(i);
     }
