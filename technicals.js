@@ -51,6 +51,24 @@ LSS.prototype.analize = function(stockPrice) {
   }
 };
 
+var LSST = module.exports.LSST = function(n, t) {
+  if (! (this instanceof LSST)) { // enforcing new
+    return new LSST(n, t);
+  }
+  Technical.call(this);
+  this.t = t;
+  this.q = new Queue(n, function(i) {
+    return this[i - t];
+  }, t);
+};
+LSST.prototype = Object.create(Technical.prototype);
+LSST.prototype.analize = function(stockPrice) {
+  var q = this.q;
+  if (q.enq(stockPrice)) {
+    return q.llss();
+  }
+};
+
 var ALSS = module.exports.ALSS = function(n, t) {
   if (! (this instanceof ALSS)) { // enforcing new
     return new ALSS(n, t);
