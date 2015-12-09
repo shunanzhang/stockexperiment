@@ -14,7 +14,7 @@ var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
 var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 100;
+var MAX_POSITION = 200;
 
 /**
  * argument parsing
@@ -123,6 +123,9 @@ var handleRealTimeBar = function(realtimeBar) {
     qty = MAX_POSITION - qty;
   } else {
     return;
+  }
+  if (qty > 100) {
+    qty = 100;
   }
   placeMyOrder(builtContract, result.toUpperCase(), qty, 'MKT', realtimeBar.close);
   console.log(result, noPosition, position, realtimeBar);
