@@ -206,7 +206,8 @@ BOL.prototype.analize = function(stockPrice) {
     twoSigma = Math.sqrt(twoSigma / n) * 2;
     return {
       upper: ave + twoSigma,
-      lower: ave - twoSigma
+      lower: ave - twoSigma,
+      twoSigma: twoSigma
     };
   }
 };

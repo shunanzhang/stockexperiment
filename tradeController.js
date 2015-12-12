@@ -46,7 +46,7 @@ TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar)
 var countDown = 0;
 var lastPos = HOLD;
 var HOLDING = 2;
-var SLOPE_LIMIT = 0.000001;
+var SLOPE_LIMIT = 0.00035;
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
     lastPos = HOLD;
@@ -59,12 +59,13 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
     var close = featureVector.close;
     var high = featureVector.high;
     var low = featureVector.low;
-    if (Math.abs(uLss) / close < SLOPE_LIMIT && band.upper < high) {
+    var twoSigma = band.twoSigma;
+    if (Math.abs(uLss) / twoSigma < SLOPE_LIMIT && band.upper < high) {
       countDown = HOLDING;
       lastPos = SELL;
       return SELL;
     }
-    if (Math.abs(lLss) / close < SLOPE_LIMIT && band.lower > low) {
+    if (Math.abs(lLss) / twoSigma < SLOPE_LIMIT && band.lower > low) {
       countDown = HOLDING;
       lastPos = BUY;
       return BUY;
