@@ -53,7 +53,6 @@ var backtest = function() {
         console.log(BUY, i%MINUTES_DAY, newClose, -(bought + newClose), gain, pGain / (pGain + nGain));
       }
       if (result === BUY) {
-        //newClose = [newClose, featureVector.band.lower, featureVector.low].sort()[1];
         bought = newClose;
         console.log('bought', i%MINUTES_DAY);
       } else {
@@ -72,7 +71,6 @@ var backtest = function() {
         console.log(SELL, i%MINUTES_DAY, newClose, newClose - bought, gain, pGain / (pGain + nGain));
       }
       if (result === SELL) {
-        //newClose = [newClose, featureVector.band.upper, featureVector.high].sort()[1];
         bought = -newClose;
         console.log('sold', i%MINUTES_DAY);
       } else {

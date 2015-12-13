@@ -19,8 +19,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     high: high,
     low: low,
     uLss: band ? this.upper.analize(band.upper) : undefined,
-    //lLss: band ? this.lower.analize(band.lower) : undefined,
-    lLss: band ? this.upper.analize(band.lower) : undefined,
+    lLss: band ? this.lower.analize(band.lower) : undefined,
   }; // key: feature, val:scalar
   var i = 0;
   var isNaN = isNaN;
