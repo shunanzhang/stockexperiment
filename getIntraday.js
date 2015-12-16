@@ -38,7 +38,7 @@ var backtest = function() {
     var i_MINUTES_DAY = i % MINUTES_DAY;
     var featureVector = tradeController.getFeatureVector(datum);
     var newClose = closes[i];
-    var noPosition = (i_MINUTES_DAY < 4) || (i_MINUTES_DAY >= MINUTES_DAY - 4);
+    var noPosition = (i_MINUTES_DAY < 20) || (i_MINUTES_DAY >= MINUTES_DAY - 4);
     var result = tradeController.trade(featureVector, noPosition);
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
       if (bought < 0) {
