@@ -69,7 +69,7 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
       lastPos = BUY;
       return BUY;
     }
-    if (twoSigma/ave > BAND_LIMIT && Math.abs(uLss) / twoSigma < SLOPE_LIMIT && band.higher < high) {
+    if (twoSigma/ave > BAND_LIMIT && Math.abs(uLss) / twoSigma < SLOPE_LIMIT && band.upper < high) {
       countDown = HOLDING;
       lastPos = SELL;
       return SELL;
