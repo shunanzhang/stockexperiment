@@ -47,7 +47,8 @@ var countDown = 0;
 var lastPos = HOLD;
 var HOLDING = 2;
 var SLOPE_LIMIT = 0.2;
-var BAND_LIMIT = 0.005;
+var BAND_LIMIT = 0.005; // NFLX
+//var BAND_LIMIT = 0.0033; // AMZN, FB
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
     lastPos = HOLD;
