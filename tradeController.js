@@ -47,7 +47,6 @@ var countDown = 0;
 var lastPos = HOLD;
 var HOLDING = 2;
 var SLOPE_LIMIT = 0.2;
-var BAR_LIMIT = 0.7;
 var BAND_LIMIT = 0.005;
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
@@ -63,13 +62,12 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
     var low = featureVector.low;
     var twoSigma = band.twoSigma;
     var ave = band.ave;
-    var bar = high - low;
-    if (twoSigma/ave > BAND_LIMIT && Math.abs(lLss) / twoSigma < SLOPE_LIMIT && band.lower > low) {
+    if (twoSigma/ave > BAND_LIMIT && lLss / ave > -SLOPE_LIMIT && band.lower > low) {
       countDown = HOLDING;
       lastPos = BUY;
       return BUY;
     }
-    if (twoSigma/ave > BAND_LIMIT && Math.abs(uLss) / twoSigma < SLOPE_LIMIT && band.upper < high) {
+    if (twoSigma/ave > BAND_LIMIT && uLss / ave < SLOPE_LIMIT && band.upper < high) {
       countDown = HOLDING;
       lastPos = SELL;
       return SELL;
