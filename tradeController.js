@@ -46,9 +46,10 @@ TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar)
 var countDown = 0;
 var lastPos = HOLD;
 var HOLDING = 2;
-var SLOPE_LIMIT = 0.001;
-var BAND_LIMIT = 0.005; // NFLX
-//var BAND_LIMIT = 0.0033; // AMZN, FB
+//var HOLDING = 10; // AMZN
+var BAND_LOWER_LIMIT = 0.005; // NFLX
+//var BAND_LOWER_LIMIT = 0.0033; // AMZN, FB
+var BAND_UPPER_LIMIT = 0.0087;
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
     lastPos = HOLD;
@@ -56,22 +57,23 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
   }
   var band = featureVector.band;
   if (band) {
-    var uLss = featureVector.uLss;
-    var lLss = featureVector.lLss;
     var close = featureVector.close;
     var high = featureVector.high;
     var low = featureVector.low;
     var twoSigma = band.twoSigma;
     var ave = band.ave;
-    if (twoSigma/ave > BAND_LIMIT && lLss / ave > -SLOPE_LIMIT && band.lower > low) {
-      countDown = HOLDING;
-      lastPos = BUY;
-      return BUY;
-    }
-    if (twoSigma/ave > BAND_LIMIT && uLss / ave < SLOPE_LIMIT && band.upper < high) {
-      countDown = HOLDING;
-      lastPos = SELL;
-      return SELL;
+    var bandWidth = twoSigma/ave;
+    if (bandWidth > BAND_LOWER_LIMIT && bandWidth < BAND_UPPER_LIMIT) {
+      if (band.lower > low) {
+        countDown = HOLDING;
+        lastPos = BUY;
+        return BUY;
+      }
+      if (band.upper < high) {
+        countDown = HOLDING;
+        lastPos = SELL;
+        return SELL;
+      }
     }
   }
   countDown = Math.max(0, countDown - 1);

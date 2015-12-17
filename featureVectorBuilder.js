@@ -1,5 +1,4 @@
 var Technicals = require('./technicals');
-var LSS = Technicals.LSS;
 var BOL = Technicals.BOL;
 
 var FeatureVectorBuilder = module.exports = function() {
@@ -7,8 +6,6 @@ var FeatureVectorBuilder = module.exports = function() {
     return new FeatureVectorBuilder();
   }
   this.boil = new BOL(20);
-  this.upper  = new LSS(50);
-  this.lower  = new LSS(50);
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
@@ -18,8 +15,6 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     close: close,
     high: high,
     low: low,
-    uLss: band ? this.upper.analize(band.upper) : undefined,
-    lLss: band ? this.lower.analize(band.lower) : undefined,
   }; // key: feature, val:scalar
   var i = 0;
   var isNaN = isNaN;
