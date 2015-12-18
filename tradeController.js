@@ -13,9 +13,9 @@ var HOLD = 'hold';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 
-var TradeController = module.exports = function(columns, closes) {
+var TradeController = module.exports = function(columns) {
   if (! (this instanceof TradeController)) { // enforcing new
-    return new TradeController(columns, closes);
+    return new TradeController(columns);
   }
   this.featureVectorBuilder = new FeatureVectorBuilder();
   this.closeColumnIndex = columns[CLOSE_COLUMN];

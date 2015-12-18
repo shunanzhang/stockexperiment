@@ -3,18 +3,18 @@ var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
 var contract = ibapi.contract;
 var GoogleCSVReader = require('./googleCSVReader');
-var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var TIMEZONE = GoogleCSVReader.TIMEZONE;
 var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
-var TRAIN_INTERVAL = TradeController.TRAIN_INTERVAL;
-var TRAIN_LEN = TradeController.TRAIN_LEN;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
 var MAX_POSITION = 300;
+
+var MAX_INT = 0x7FFFFFFF; // max 31 bit
+var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
 
 /**
  * argument parsing
@@ -27,6 +27,11 @@ var minSellPrice = process.argv[4] || 65.00; // for flash crash
 var api = new ibapi.NodeIbapi();
 var tradeController;
 var position = 0;
+var abs = Math.abs;
+var max = Math.max;
+var min = Math.min;
+var low = MAX_INT;
+var high = MIN_INT;
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -97,6 +102,8 @@ var handleDisconnected = function(message) {
 
 var handleRealTimeBar = function(realtimeBar) {
   var date = moment.tz(realtimeBar.timeLong * 1000, TIMEZONE);
+  low = realtimeBar.low = min(realtimeBar.low, low);
+  high = realtimeBar.high = min(realtimeBar.high, high);
   var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second <= 57 && second > 52 && lastOrderStatus !== 'Filled') {
@@ -105,14 +112,16 @@ var handleRealTimeBar = function(realtimeBar) {
     return; // skip if it is not the end of minutes
   }
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
+  low = MAX_INT;
+  high = MIN_INT;
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 25 && hour === 15);
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
   var result = tradeController.trade(featureVector, noPosition);
 
   // check if there are shares to sell / money to buy fisrt
-  var qty = Math.abs(position);
+  var qty = abs(position);
   if (result === HOLD && position < 0) {
     result = BUY;
   } else if (result === HOLD && position > 0) {
@@ -123,9 +132,6 @@ var handleRealTimeBar = function(realtimeBar) {
     qty = MAX_POSITION - qty;
   } else {
     return;
-  }
-  if (qty > 100) {
-    qty = 100;
   }
   placeMyOrder(builtContract, result.toUpperCase(), qty, 'MKT', realtimeBar.close);
   console.log(result, noPosition, position, realtimeBar);
@@ -164,28 +170,9 @@ var connected = api.connect('127.0.0.1', 7496, 0);
 var warmupTrain = function () {
   var data = googleCSVReader.data;
   var dataLen = data.length;
-  var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
-  tradeController = new TradeController(googleCSVReader.columns, closes);
-  tradeController.supervise(TRAIN_LEN - 1);
-  var featureVectorHistory = [];
-  var dataLenToday = dataLen - dataLen % MINUTES_DAY;
+  tradeController = new TradeController(googleCSVReader.columns);
   for (var i = 0; i < dataLen; i++) {
-    var datum = data[i];
-    var featureVector = tradeController.getFeatureVector(datum);
-    featureVectorHistory.push(featureVector);
-    var isTraining = (i % TRAIN_INTERVAL >= TRAIN_INTERVAL - 1);
-    if (i >= TRAIN_LEN && isTraining) {
-      tradeController.supervise(i);
-    }
-    if (i < dataLenToday && isTraining) {
-      for (var j = TRAIN_INTERVAL; j--;) {
-        featureVector = featureVectorHistory.shift();
-        if (!featureVector) {
-          break;
-        }
-        tradeController.train(i - j, featureVector);
-      }
-    }
+    tradeController.getFeatureVector(data[i]);
   }
 
   googleCSVReader.shutdown();
