@@ -35,7 +35,7 @@ TradeController.prototype.getFeatureVector = function(datum) {
 
 TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar) {
   var datum = [];
-  datum[this.closeColumnIndex] = toCent(realtimeBar.wap || realtimeBar.close);
+  datum[this.closeColumnIndex] = toCent(realtimeBar.close);
   datum[this.highColumnIndex] = toCent(realtimeBar.high);
   datum[this.lowColumnIndex] = toCent(realtimeBar.low);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
@@ -59,12 +59,9 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
   }
   var band = featureVector.band;
   if (band) {
-    var close = featureVector.close;
     var high = featureVector.high;
     var low = featureVector.low;
-    var twoSigma = band.twoSigma;
-    var ave = band.ave;
-    var bandWidth = twoSigma/ave;
+    var bandWidth = band.twoSigma / band.ave;
     if (bandWidth > BAND_LOWER_LIMIT) {
       if ((bandWidth > BAND_ABOVE_LIMIT && band.upper < high) || (bandWidth < BAND_UPPER_LIMIT && band.lower > low)) {
         countDown = HOLDING;

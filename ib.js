@@ -103,7 +103,7 @@ var handleDisconnected = function(message) {
 var handleRealTimeBar = function(realtimeBar) {
   var date = moment.tz(realtimeBar.timeLong * 1000, TIMEZONE);
   low = realtimeBar.low = min(realtimeBar.low, low);
-  high = realtimeBar.high = min(realtimeBar.high, high);
+  high = realtimeBar.high = max(realtimeBar.high, high);
   var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second <= 57 && second > 52 && lastOrderStatus !== 'Filled') {
