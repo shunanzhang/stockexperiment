@@ -52,7 +52,8 @@ var BAND_LOWER_LIMIT = 0.0051; // NFLX
 var BAND_UPPER_LIMIT = 0.0086;
 var BAND_ABOVE_LIMIT = 0.0100; // NFLX
 //var BAND_ABOVE_LIMIT = 0.0087; // AMZN
-var BAND_BELOW_LIMIT = 0.0139;
+var BAND_BELOW_LIMIT = 0.0139; // NFLX
+//var BAND_BELOW_LIMIT = 0.0109; // AMZN
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
     lastPos = HOLD;
