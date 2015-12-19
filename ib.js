@@ -11,7 +11,7 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 300;
+var MAX_POSITION = 600;
 
 var MAX_INT = 0x7FFFFFFF; // max 31 bit
 var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
@@ -133,7 +133,7 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  placeMyOrder(builtContract, result.toUpperCase(), qty, 'MKT', realtimeBar.close);
+  placeMyOrder(builtContract, result.toUpperCase(), qty, 'SNAP MID', 0);
   console.log(result, noPosition, position, realtimeBar);
 };
 

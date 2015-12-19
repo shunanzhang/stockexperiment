@@ -12,6 +12,7 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
   var band = this.boil.analize(close);
   var featureVector = {
     band: band,
+    open: open,
     close: close,
     high: high,
     low: low,
