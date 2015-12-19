@@ -183,50 +183,34 @@ PVALUE.prototype.analize = function(stockPrice) {
   }
 };
 
-var BOIL = module.exports.BOIL = function(n) {
-  if (! (this instanceof BOIL)) { // enforcing new
-    return new BOIL(n);
+var BOL = module.exports.BOL = function(n) {
+  if (! (this instanceof BOL)) { // enforcing new
+    return new BOL(n);
   }
   Technical.call(this);
   this.q = new Queue(n);
 };
-BOIL.prototype = Object.create(Technical.prototype);
-BOIL.prototype.analize = function(stockPrice) {
+BOL.prototype = Object.create(Technical.prototype);
+BOL.prototype.analize = function(stockPrice) {
   var q = this.q;
   if (q.enq(stockPrice)) {
     var oldestId = q.oldestId;
     var n = q.length;
     var ave = q.ave();
-    var plusSigma = 0;
+    var twoSigma = 0;
 
     for (var i = oldestId, l = oldestId + n; i < l; i++) {
       var diff = q[i] - ave;
-      plusSigma += diff * diff;
+      twoSigma += diff * diff;
     }
-    plusSigma = Math.sqrt(plusSigma / n) * 2 + ave; // 2sigma
-    return plusSigma;
+    twoSigma = Math.sqrt(twoSigma / n) * 2;
+    return {
+      upper: ave + twoSigma,
+      lower: ave - twoSigma,
+      twoSigma: twoSigma,
+      ave: ave
+    };
   }
-};
-BOIL.prototype.provision = function(stockPrice) {
-  var q = this.q;
-  var n = q.length;
-  var oldestId = q.oldestId;
-  var newestId = oldestId + n;
-  if (newestId >= q.limit) {
-    var ave = (q.sum + stockPrice - q[oldestId]) / n; // TODO change to EMA
-    var sigma = 0;
-    var diff = 0;
-
-    for (var i = oldestId + 1, l = oldestId + n; i < l; i++) {
-      diff = q[i] - ave;
-      sigma += diff * diff;
-    }
-    diff = stockPrice - ave;
-    sigma += diff * diff;
-    sigma = Math.sqrt(sigma / n) * 2; // 2sigma
-    return (stockPrice > sigma + ave) ? 1 : (stockPrice < ave - sigma) ? -1 : 0;
-  }
-  return 0;
 };
 
 //var CCIMA = module.exports.CCIMA = function(nCCI, nEMA) {
