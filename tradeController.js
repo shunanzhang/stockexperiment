@@ -50,8 +50,9 @@ var HOLDING = 2;
 var BAND_LOWER_LIMIT = 0.0051; // NFLX
 //var BAND_LOWER_LIMIT = 0.0033; // AMZN, FB
 var BAND_UPPER_LIMIT = 0.0086;
-var BAND_ABOVE_LIMIT = 0.01; // NFLX
+var BAND_ABOVE_LIMIT = 0.0100; // NFLX
 //var BAND_ABOVE_LIMIT = 0.0087; // AMZN
+var BAND_BELOW_LIMIT = 0.0139;
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
     lastPos = HOLD;
@@ -61,18 +62,21 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
   if (band) {
     var high = featureVector.high;
     var low = featureVector.low;
-    var up = (featureVector.close - featureVector.open) > 0; // NFLX
-    var down = (featureVector.close - featureVector.open) < 0; // NFLX
-    //var up = true; // AMZN, FB
-    //var down = true; // AMZN, FB
+    var bar = featureVector.close - featureVector.open;
+    var bull = bar > 0; // NFLX
+    var bear = bar < 0; // NFLX
+    //var bull = true; // AMZN, FB
+    //var bear = true; // AMZN, FB
+    var bandUpper = band.upper;
+    var bandLower = band.lower;
     var bandWidth = band.twoSigma / band.ave;
-    if (bandWidth > BAND_LOWER_LIMIT) {
-      if ((bandWidth > BAND_ABOVE_LIMIT && band.upper < high) || (down && bandWidth < BAND_UPPER_LIMIT && band.lower > low)) {
+    if (BAND_LOWER_LIMIT < bandWidth && bandWidth < BAND_BELOW_LIMIT) {
+      if ((BAND_ABOVE_LIMIT < bandWidth && bandUpper < high) || (bear && bandWidth < BAND_UPPER_LIMIT && low < bandLower)) {
         countDown = HOLDING;
         lastPos = BUY;
         return BUY;
       }
-      if ((bandWidth > BAND_ABOVE_LIMIT && band.lower > low) || (up && bandWidth < BAND_UPPER_LIMIT && band.upper < high)) {
+      if ((BAND_ABOVE_LIMIT < bandWidth && low < bandLower) || (bull && bandWidth < BAND_UPPER_LIMIT && bandUpper < high)) {
         countDown = HOLDING;
         lastPos = SELL;
         return SELL;
