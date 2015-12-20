@@ -118,6 +118,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var hour = date.hours();
   // always sell a the end of the day
   var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.trade(featureVector, noPosition);
 
   // check if there are shares to sell / money to buy fisrt
