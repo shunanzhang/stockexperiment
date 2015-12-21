@@ -11,7 +11,7 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 600;
+var MAX_POSITION = 900;
 
 var MAX_INT = 0x7FFFFFFF; // max 31 bit
 var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
@@ -60,10 +60,6 @@ var getPositions = function() {
 };
 
 var placeMyOrder = function(_contract, action, quantity, orderType, price) {
-  if (price < minSellPrice) {
-    console.log('order ignored since the limit price is', price, ', which is less than the threshold', minSellPrice);
-    return;
-  }
   var oldId = orderId++;
   setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, price, price)); // last parameter is auxPrice, should it be 0?
   console.log('Next valid order Id: %d', oldId);
@@ -134,7 +130,12 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  placeMyOrder(builtContract, result.toUpperCase(), qty, 'SNAP MID', 0);
+  if (realtimeBar.close < minSellPrice) {
+    console.log('order ignored since the limit price is', realtimeBar.close, ', which is less than the threshold', minSellPrice);
+    return;
+  }
+  var orderType = noPosition ? 'MKT' : 'SNAP MID';
+  placeMyOrder(builtContract, result.toUpperCase(), qty, orderType, 0);
   console.log(result, noPosition, position, realtimeBar);
 };
 
