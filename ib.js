@@ -2,6 +2,7 @@ var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
 var contract = ibapi.contract;
+var order = ibapi.order;
 var GoogleCSVReader = require('./googleCSVReader');
 var TIMEZONE = GoogleCSVReader.TIMEZONE;
 var TradeController = require('./tradeController');
@@ -40,28 +41,33 @@ var orderId = -1;
 
 var lastOrderStatus = 'Filled';
 
-var buildContract = function(symbl, exchange) {
+var buildContract = function(symbl, exchange, route) {
   var _contract = contract.createContract();
   _contract.symbol = symbl;
   _contract.secType = 'STK';
-  _contract.exchange = 'SMART';
+  _contract.exchange = route || 'SMART';
   _contract.primaryExchange = exchange;
   _contract.currency = 'USD';
   return _contract;
 };
-var builtContract = buildContract(symbol, exchange);
+var islandContract = buildContract(symbol, exchange, 'ISLAND');
+var smartContract = buildContract(symbol, exchange);
 
 var getRealtimeBars = function(_contract, cancelId) {
   api.reqRealtimeBars(cancelId, _contract, REALTIME_INTERVAL, 'TRADES', true);
 };
 
-var getPositions = function() {
-  api.reqPositions();
-};
-
-var placeMyOrder = function(_contract, action, quantity, orderType, price) {
+var placeMyOrder = function(_contract, action, quantity, orderType, lmtPrice, auxPrice) {
   var oldId = orderId++;
-  setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, price, price)); // last parameter is auxPrice, should it be 0?
+  var newOrder = order.createOrder();
+  newOrder.action = action;
+  newOrder.totalQuantity = quantity;
+  newOrder.orderType = orderType;
+  newOrder.lmtPrice = lmtPrice;
+  newOrder.auxPrice = auxPrice;
+  newOrder.hidden = true;
+  setImmediate(api.placeOrder.bind(api, oldId, _contract, newOrder));
+  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, lmtPrice, auxPrice));
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', _contract.symbol);
   console.log(action, quantity);
@@ -74,8 +80,8 @@ var placeMyOrder = function(_contract, action, quantity, orderType, price) {
 var handleValidOrderId = function(message) {
   orderId = message.orderId;
   console.log('next order Id is', orderId);
-  getPositions();
-  getRealtimeBars(builtContract, 1);
+  api.reqPositions();
+  getRealtimeBars(smartContract, 1);
 };
 
 var cancelPrevOrder = function(prevOrderId) {
@@ -130,12 +136,19 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  if (realtimeBar.close < minSellPrice) {
-    console.log('order ignored since the limit price is', realtimeBar.close, ', which is less than the threshold', minSellPrice);
+  var close = realtimeBar.close;
+  if (close < minSellPrice) {
+    console.log('order ignored since the limit price is', close, ', which is less than the threshold', minSellPrice);
     return;
   }
-  var orderType = noPosition ? 'MKT' : 'SNAP MID';
-  placeMyOrder(builtContract, result.toUpperCase(), qty, orderType, 0);
+  var orderType = 'PEG MID';
+  var cntrct = islandContract;
+  if (noPosition) {
+    orderType = 'MKT';
+    cntrct = smartContract;
+  }
+  var limitPrice = close + (result === BUY ? 0.50 : -0.50);
+  placeMyOrder(cntrct, result.toUpperCase(), qty, orderType, limitPrice, 0);
   console.log(result, noPosition, position, realtimeBar);
 };
 
