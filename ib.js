@@ -50,7 +50,6 @@ var buildContract = function(symbl, exchange, route) {
   _contract.currency = 'USD';
   return _contract;
 };
-var islandContract = buildContract(symbol, exchange, 'ISLAND');
 var smartContract = buildContract(symbol, exchange);
 
 var getRealtimeBars = function(_contract, cancelId) {
@@ -141,14 +140,9 @@ var handleRealTimeBar = function(realtimeBar) {
     console.log('order ignored since the limit price is', close, ', which is less than the threshold', minSellPrice);
     return;
   }
-  var orderType = 'PEG MID';
-  var cntrct = islandContract;
-  if (noPosition) {
-    orderType = 'MKT';
-    cntrct = smartContract;
-  }
-  var limitPrice = close + (result === BUY ? 0.50 : -0.50);
-  placeMyOrder(cntrct, result.toUpperCase(), qty, orderType, limitPrice, 0);
+  var orderType = (noPosition || qty < MAX_POSITION) ? 'MKT' : 'REL';
+  var limitPrice = close + (result === BUY ? 0.10 : -0.10);
+  placeMyOrder(smartContract, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
   console.log(result, noPosition, position, realtimeBar);
 };
 
