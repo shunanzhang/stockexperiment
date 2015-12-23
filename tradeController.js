@@ -35,7 +35,7 @@ TradeController.prototype.getFeatureVector = function(datum) {
 
 TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar) {
   var datum = [];
-  datum[this.closeColumnIndex] = toCent(realtimeBar.close);
+  datum[this.closeColumnIndex] = toCent(realtimeBar.wap || realtimeBar.close);
   datum[this.highColumnIndex] = toCent(realtimeBar.high);
   datum[this.lowColumnIndex] = toCent(realtimeBar.low);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);

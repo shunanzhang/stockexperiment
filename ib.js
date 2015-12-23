@@ -141,7 +141,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var orderType = (noPosition || qty < MAX_POSITION) ? 'MKT' : 'REL';
-  var limitPrice = close + (result === BUY ? 0.10 : -0.10);
+  var limitPrice = close + (result === BUY ? 0.20 : -0.20);
   placeMyOrder(smartContract, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
   console.log(result, noPosition, position, realtimeBar);
 };
