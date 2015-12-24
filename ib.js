@@ -12,7 +12,7 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 100;
+var MAX_POSITION = 1200;
 
 var MAX_INT = 0x7FFFFFFF; // max 31 bit
 var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
@@ -33,8 +33,8 @@ var max = Math.max;
 var min = Math.min;
 var low = MAX_INT;
 var high = MIN_INT;
-var open = 0.0;
 var close = 0.0;
+var open = 0.0;
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -111,17 +111,18 @@ var handleRealTimeBar = function(realtimeBar) {
   var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimebar time has 5 sec delay, fastforward 5 sec
   low = min(realtimeBar.low, low);
   high = max(realtimeBar.high, high);
-  open = open || realtimeBar.open;
   close = close || realtimeBar.close;
   var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second <= 7) {
       low = MAX_INT;
       high = MIN_INT;
-      open = 0.0;
       close = 0.0;
-    } else if (second > 52 && lastOrderStatus !== 'Filled') {
-      cancelPrevOrder(orderId - 1);
+    } else {
+      open = open || realtimeBar.open;
+      if (second > 52 && lastOrderStatus !== 'Filled') {
+        cancelPrevOrder(orderId - 1);
+      }
     }
     return; // skip if it is not the end of minutes
   }
@@ -129,6 +130,7 @@ var handleRealTimeBar = function(realtimeBar) {
   realtimeBar.high = high;
   realtimeBar.close = close;
   realtimeBar.open = open;
+  console.log(realtimeBar, new Date());
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   low = MAX_INT;
   high = MIN_INT;
@@ -137,8 +139,8 @@ var handleRealTimeBar = function(realtimeBar) {
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
-  //var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
-  var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.trade(featureVector, noPosition);
 
   // check if there are shares to sell / money to buy fisrt
@@ -167,12 +169,12 @@ var handleRealTimeBar = function(realtimeBar) {
 var handleTickPrice = function(tickPrice) {
   var field = tickPrice.field;
   var price = tickPrice.price;
-  if (field === 6) { // high
-    high = max(price, high);
-  } else if (field === 7) { // low
+  if (field === 4) { // last
     low = min(price, low);
-  } else if (field === 9) { // close
+    high = max(price, high);
     close = price;
+    open = open || price;
+    console.log(tickPrice, low, high, close, open);
   }
 };
 
