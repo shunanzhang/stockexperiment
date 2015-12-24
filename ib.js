@@ -12,7 +12,7 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 900;
+var MAX_POSITION = 1200;
 
 var MAX_INT = 0x7FFFFFFF; // max 31 bit
 var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
@@ -66,7 +66,6 @@ var placeMyOrder = function(_contract, action, quantity, orderType, lmtPrice, au
   newOrder.auxPrice = auxPrice;
   newOrder.hidden = true;
   setImmediate(api.placeOrder.bind(api, oldId, _contract, newOrder));
-  //setImmediate(api.placeSimpleOrder.bind(api, oldId, _contract, action, quantity, orderType, lmtPrice, auxPrice));
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', _contract.symbol);
   console.log(action, quantity);
@@ -118,8 +117,8 @@ var handleRealTimeBar = function(realtimeBar) {
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
-  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
+  //var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
+  var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.trade(featureVector, noPosition);
 
   // check if there are shares to sell / money to buy fisrt
@@ -141,7 +140,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var orderType = (noPosition || qty < MAX_POSITION) ? 'MKT' : 'REL';
-  var limitPrice = close + (result === BUY ? 0.20 : -0.20);
+  var limitPrice = close + (result === BUY ? 0.16 : -0.16);
   placeMyOrder(smartContract, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
   console.log(result, noPosition, position, realtimeBar);
 };
