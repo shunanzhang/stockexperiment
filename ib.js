@@ -12,7 +12,7 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 1200;
+var MAX_POSITION = 100;
 
 var MAX_INT = 0x7FFFFFFF; // max 31 bit
 var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
@@ -33,6 +33,8 @@ var max = Math.max;
 var min = Math.min;
 var low = MAX_INT;
 var high = MIN_INT;
+var open = 0.0;
+var close = 0.0;
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -54,6 +56,10 @@ var smartContract = buildContract(symbol, exchange);
 
 var getRealtimeBars = function(_contract, cancelId) {
   api.reqRealtimeBars(cancelId, _contract, REALTIME_INTERVAL, 'TRADES', true);
+};
+
+var getMktData = function(_contract, cancelId) {
+  api.reqMktData(cancelId, _contract, '', false);
 };
 
 var placeMyOrder = function(_contract, action, quantity, orderType, lmtPrice, auxPrice) {
@@ -80,6 +86,7 @@ var handleValidOrderId = function(message) {
   console.log('next order Id is', orderId);
   api.reqPositions();
   getRealtimeBars(smartContract, 1);
+  getMktData(smartContract, 1);
 };
 
 var cancelPrevOrder = function(prevOrderId) {
@@ -101,19 +108,32 @@ var handleDisconnected = function(message) {
 };
 
 var handleRealTimeBar = function(realtimeBar) {
-  var date = moment.tz(realtimeBar.timeLong * 1000, TIMEZONE);
-  low = realtimeBar.low = min(realtimeBar.low, low);
-  high = realtimeBar.high = max(realtimeBar.high, high);
+  var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimebar time has 5 sec delay, fastforward 5 sec
+  low = min(realtimeBar.low, low);
+  high = max(realtimeBar.high, high);
+  open = open || realtimeBar.open;
+  close = close || realtimeBar.close;
   var second = date.seconds();
   if (second <= 57 && second > 3) {
-    if (second <= 57 && second > 52 && lastOrderStatus !== 'Filled') {
+    if (second <= 7) {
+      low = MAX_INT;
+      high = MIN_INT;
+      open = 0.0;
+      close = 0.0;
+    } else if (second > 52 && lastOrderStatus !== 'Filled') {
       cancelPrevOrder(orderId - 1);
     }
     return; // skip if it is not the end of minutes
   }
+  realtimeBar.low = low;
+  realtimeBar.high = high;
+  realtimeBar.close = close;
+  realtimeBar.open = open;
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   low = MAX_INT;
   high = MIN_INT;
+  close = 0.0;
+  open = 0.0;
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
@@ -134,7 +154,6 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  var close = realtimeBar.close;
   if (close < minSellPrice) {
     console.log('order ignored since the limit price is', close, ', which is less than the threshold', minSellPrice);
     return;
@@ -143,6 +162,18 @@ var handleRealTimeBar = function(realtimeBar) {
   var limitPrice = close + (result === BUY ? 0.16 : -0.16);
   placeMyOrder(smartContract, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
   console.log(result, noPosition, position, realtimeBar);
+};
+
+var handleTickPrice = function(tickPrice) {
+  var field = tickPrice.field;
+  var price = tickPrice.price;
+  if (field === 6) { // high
+    high = max(price, high);
+  } else if (field === 7) { // low
+    low = min(price, low);
+  } else if (field === 9) { // close
+    close = price;
+  }
 };
 
 var handleOrderStatus = function(message) {
@@ -169,6 +200,7 @@ api.handlers[messageIds.svrError] = handleServerError;
 api.handlers[messageIds.clientError] = handleClientError;
 api.handlers[messageIds.disconnected] = handleDisconnected;
 api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
+api.handlers[messageIds.tickPrice] = handleTickPrice;
 api.handlers[messageIds.orderStatus] = handleOrderStatus;
 api.handlers[messageIds.position] = handlePosition;
 
