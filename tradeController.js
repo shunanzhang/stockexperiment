@@ -50,7 +50,7 @@ var HOLDING = 2;
 var BAND_LOWER_LIMIT = 0.0051; // NFLX
 //var BAND_LOWER_LIMIT = 0.0033; // AMZN, FB
 var BAND_UPPER_LIMIT = 0.0086;
-var BAND_ABOVE_LIMIT = 0.0100; // NFLX
+var BAND_ABOVE_LIMIT = 0.0126; // NFLX
 //var BAND_ABOVE_LIMIT = 0.0087; // AMZN
 var BAND_BELOW_LIMIT = 0.0139; // NFLX
 //var BAND_BELOW_LIMIT = 0.0109; // AMZN
@@ -76,8 +76,7 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
         countDown = HOLDING;
         lastPos = BUY;
         return BUY;
-      }
-      if ((BAND_ABOVE_LIMIT < bandWidth && low < bandLower) || (bull && bandWidth < BAND_UPPER_LIMIT && bandUpper < high)) {
+      } else if ((BAND_ABOVE_LIMIT < bandWidth && low < bandLower) || (bull && bandWidth < BAND_UPPER_LIMIT && bandUpper < high)) {
         countDown = HOLDING;
         lastPos = SELL;
         return SELL;
