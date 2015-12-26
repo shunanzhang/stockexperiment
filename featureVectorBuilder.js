@@ -17,19 +17,6 @@ FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) 
     high: high,
     low: low,
   }; // key: feature, val:scalar
-  var i = 0;
-  var isNaN = isNaN;
-  if (Number.isNaN) {
-    isNaN = Number.isNaN; // ES6 better version of isNaN
-  }
-  var keys = Object.keys(featureVector || {});
-  for (i = keys.length; i--;) {
-    key = keys[i];
-    var feature = featureVector[key];
-    if (feature === undefined || isNaN(feature)) {
-      delete featureVector[key];
-    }
-  }
   return featureVector;
 };
 
