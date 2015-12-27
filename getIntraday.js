@@ -105,6 +105,7 @@ var backtest = function() {
   console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain), 'kelly criterion:', pGain / (pGain + nGain) - nGain / (pGain + nGain) / ((pg / pGain) / (ng / nGain)));
   console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, 'ratio:', aveGain/Math.sqrt(variance), '# trades: ', gains.length);
   console.log('buy and hold:', closes[dataLen - 1] - closes[0]);
+  console.log('pGain*ave/sigma:', pGain * aveGain / Math.sqrt(variance));
 
   googleCSVReader.shutdown();
 };
