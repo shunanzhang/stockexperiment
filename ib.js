@@ -23,7 +23,7 @@ var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
 var symbol = process.argv[2] || 'NFLX';
 var exchange = process.argv[3] || 'NASDAQ';
 var googleCSVReader = new GoogleCSVReader(symbol);
-var minSellPrice = process.argv[4] || 65.00; // for flash crash
+var minSellPrice = process.argv[4] || 85.00; // for flash crash
 
 var api = new ibapi.NodeIbapi();
 var tradeController;
@@ -156,12 +156,12 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  if (close < minSellPrice) {
-    console.log('order ignored since the limit price is', close, ', which is less than the threshold', minSellPrice);
+  var limitPrice = featureVector.close + (result === BUY ? 0.16 : -0.16);
+  if (limitPrice < minSellPrice) {
+    console.log('order ignored since the limit price is', limitPrice, ', which is less than the threshold', minSellPrice);
     return;
   }
   var orderType = (noPosition || qty < MAX_POSITION) ? 'MKT' : 'REL';
-  var limitPrice = close + (result === BUY ? 0.16 : -0.16);
   placeMyOrder(smartContract, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
   console.log(result, noPosition, position, realtimeBar);
 };
