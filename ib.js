@@ -108,7 +108,7 @@ var handleDisconnected = function(message) {
 };
 
 var handleRealTimeBar = function(realtimeBar) {
-  var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimebar time has 5 sec delay, fastforward 5 sec
+  var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
   low = min(realtimeBar.low, low);
   high = max(realtimeBar.high, high);
   close = close || realtimeBar.close;
@@ -156,7 +156,7 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  var limitPrice = featureVector.close + (result === BUY ? 0.16 : -0.16);
+  var limitPrice = realtimeBar.close + (result === BUY ? 0.16 : -0.16);
   if (limitPrice < minSellPrice) {
     console.log('order ignored since the limit price is', limitPrice, ', which is less than the threshold', minSellPrice);
     return;
