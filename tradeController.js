@@ -47,9 +47,7 @@ var countDown = 0;
 var lastPos = HOLD;
 var HOLDING = 2;
 var BAND_LOWER_LIMIT = 0.0051;
-var BAND_UPPER_LIMIT = 0.0086;
-var BAND_ABOVE_LIMIT = 0.0126;
-var BAND_BELOW_LIMIT = 0.0139;
+var BAND_UPPER_LIMIT = 0.00859;
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
     lastPos = HOLD;
@@ -57,20 +55,16 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
   }
   var band = featureVector.band;
   if (band) {
-    var high = featureVector.high;
-    var low = featureVector.low;
-    var bar = featureVector.close - featureVector.open;
-    var bull = bar > 1;
-    var bear = bar < -3;
-    var bandUpper = band.upper;
-    var bandLower = band.lower;
     var bandWidth = band.twoSigma / band.ave;
-    if (BAND_LOWER_LIMIT < bandWidth && bandWidth < BAND_BELOW_LIMIT) {
-      if ((BAND_ABOVE_LIMIT < bandWidth && bandUpper < high) || (bear && bandWidth < BAND_UPPER_LIMIT && low < bandLower)) {
+    if (BAND_LOWER_LIMIT < bandWidth && bandWidth < BAND_UPPER_LIMIT) {
+      var bar = featureVector.close - featureVector.open;
+      var bull = bar > 1;
+      var bear = bar < -3;
+      if (bear && featureVector.low < band.lower) {
         countDown = HOLDING;
         lastPos = BUY;
         return BUY;
-      } else if ((BAND_ABOVE_LIMIT < bandWidth && low < bandLower) || (bull && bandWidth < BAND_UPPER_LIMIT && bandUpper < high)) {
+      } else if (bull && band.upper < featureVector.high) {
         countDown = HOLDING;
         lastPos = SELL;
         return SELL;
