@@ -48,6 +48,12 @@ var lastPos = HOLD;
 var HOLDING = 2;
 var BAND_LOWER_LIMIT = 0.0051;
 var BAND_UPPER_LIMIT = 0.00859;
+//var BAND_LOWER_LIMIT = 0.00120; // AAPL
+//var BAND_UPPER_LIMIT = 0.00905; // AAPL
+//var BAND_LOWER_LIMIT = 0.00220; // FB
+//var BAND_UPPER_LIMIT = 0.00759; // FB
+//var BAND_LOWER_LIMIT = 0.00330; // AMZN
+//var BAND_UPPER_LIMIT = 0.01100; // AMZN
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
     lastPos = HOLD;
