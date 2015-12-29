@@ -12,7 +12,7 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 
 var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 1200;
+var MAX_POSITION = 1500;
 
 var MAX_INT = 0x7FFFFFFF; // max 31 bit
 var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
