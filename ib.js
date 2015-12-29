@@ -130,7 +130,6 @@ var handleRealTimeBar = function(realtimeBar) {
   realtimeBar.high = high;
   realtimeBar.close = close;
   realtimeBar.open = open;
-  console.log(realtimeBar, new Date());
   var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   low = MAX_INT;
   high = MIN_INT;
@@ -163,7 +162,7 @@ var handleRealTimeBar = function(realtimeBar) {
   }
   var orderType = (noPosition || qty < MAX_POSITION) ? 'MKT' : 'REL';
   placeMyOrder(smartContract, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
-  console.log(result, noPosition, position, realtimeBar);
+  console.log(result, noPosition, position, realtimeBar, new Date());
 };
 
 var handleTickPrice = function(tickPrice) {
@@ -174,7 +173,6 @@ var handleTickPrice = function(tickPrice) {
     high = max(price, high);
     close = price;
     open = open || price;
-    console.log(tickPrice, low, high, close, open);
   }
 };
 
