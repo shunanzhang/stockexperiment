@@ -5,11 +5,11 @@ var FeatureVectorBuilder = module.exports = function() {
   if (! (this instanceof FeatureVectorBuilder)) { // enforcing new
     return new FeatureVectorBuilder();
   }
-  this.boil = new BOL(20);
+  this.bol = new BOL(20);
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
-  var band = this.boil.analize(close);
+  var band = this.bol.analize(close);
   var featureVector = {
     band: band,
     open: open,
