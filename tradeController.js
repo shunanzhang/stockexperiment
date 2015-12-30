@@ -34,7 +34,7 @@ var BAND_LIMIT = {
   },
   AMZN: {
     lower: 0.00330,
-    upper: 0.01100,
+    upper: 0.01007,
     bull: 4,
     bear: -4
   },

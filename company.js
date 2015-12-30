@@ -7,17 +7,32 @@ var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
 
 var EXCHANGES = {
   NFLX: 'NASDAQ',
-  AAPL: 'NASDAQ'
+  AAPL: 'NASDAQ',
+  AMZN: 'NASDAQ'
 };
 
 var MIN_PRICES = {
   NFLX: 85.00,
-  AAPL: 85.00
+  AAPL: 85.00,
+  AMZN: 550.00
 };
 
 var MAX_POSITIONS = {
-  NFLX: 1500,
-  AAPL: 0
+  NFLX: 1100,
+  AAPL: 0,
+  AMZN: 100
+};
+
+var LIMIT_OFFSET = {
+  NFLX: 0.16,
+  AAPL: 0.16,
+  AMZN: 0.93
+};
+
+var REL_OFFSET = {
+  NFLX: 0.04,
+  AAPL: 0.04,
+  AMZN: 0.23
 };
 
 var cancelId = 0;
@@ -45,6 +60,8 @@ var Company = module.exports = function(symbol) {
   this.cancelId = ++cancelId;
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id
+  this.limitOffset = LIMIT_OFFSET[symbol] || 0.16;
+  this.relOffset = REL_OFFSET[symbol] || 0.01;
 };
 
 Company.prototype.resetLowHighClose = function() {

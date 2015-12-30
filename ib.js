@@ -19,7 +19,7 @@ var cancelIds = {};
 var symbols = {};
 var orderIds = {};
 
-var companies = [new Company('NFLX')];
+var companies = [new Company('NFLX'), new Company('AMZN')];
 for (var i = companies.length; i--;) {
   var company = companies[i];
   cancelIds[company.cancelId] = company;
@@ -141,13 +141,13 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  var limitPrice = close + (result === BUY ? 0.16 : -0.16);
+  var limitPrice = close + (result === BUY ? company.limitOffset : -company.limitOffset);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
   }
   var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, company.relOffset);
   console.log(result, noPosition, position, realtimeBar, new Date());
 };
 
