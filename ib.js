@@ -1,7 +1,6 @@
 var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var contract = ibapi.contract;
 var order = ibapi.order;
 var GoogleCSVReader = require('./googleCSVReader');
 var TIMEZONE = GoogleCSVReader.TIMEZONE;
@@ -10,60 +9,42 @@ var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
+var Company = require('./company');
 
-var REALTIME_INTERVAL = 5; // only 5 sec is supported, only regular trading ours == true
-var MAX_POSITION = 1500;
-
-var MAX_INT = 0x7FFFFFFF; // max 31 bit
-var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
-
-/**
- * argument parsing
- */
-var symbol = process.argv[2] || 'NFLX';
-var exchange = process.argv[3] || 'NASDAQ';
-var googleCSVReader = new GoogleCSVReader(symbol);
-var minSellPrice = process.argv[4] || 85.00; // for flash crash
-
-var api = new ibapi.NodeIbapi();
-var tradeController;
-var position = 0;
 var abs = Math.abs;
 var max = Math.max;
 var min = Math.min;
-var low = MAX_INT;
-var high = MIN_INT;
-var close = 0.0;
-var open = 0.0;
+
+var cancelIds = {};
+var symbols = {};
+var orderIds = {};
+
+var companies = [new Company('NFLX'), new Company('AAPL')];
+for (var i = companies.length; i--;) {
+  var company = companies[i];
+  cancelIds[company.cancelId] = company;
+  symbols[company.symbol] = company;
+}
+
+var api = new ibapi.NodeIbapi();
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
 //  Make sure you keep track of this.
 var orderId = -1;
 
-var lastOrderStatus = 'Filled';
-
-var buildContract = function(symbl, exchange, route) {
-  var _contract = contract.createContract();
-  _contract.symbol = symbl;
-  _contract.secType = 'STK';
-  _contract.exchange = route || 'SMART';
-  _contract.primaryExchange = exchange;
-  _contract.currency = 'USD';
-  return _contract;
-};
-var smartContract = buildContract(symbol, exchange);
-
-var getRealtimeBars = function(_contract, cancelId) {
-  api.reqRealtimeBars(cancelId, _contract, REALTIME_INTERVAL, 'TRADES', true);
+var getRealtimeBars = function(company) {
+  // only 5 sec is supported, only regular trading ours == true
+  api.reqRealtimeBars(company.cancelId, company.contract, 5, 'TRADES', true);
 };
 
-var getMktData = function(_contract, cancelId) {
-  api.reqMktData(cancelId, _contract, '', false);
+var getMktData = function(company) {
+  api.reqMktData(company.cancelId, company.contract, '', false);
 };
 
-var placeMyOrder = function(_contract, action, quantity, orderType, lmtPrice, auxPrice) {
-  var oldId = orderId++;
+var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice) {
+  var oldId = company.orderId = orderId++;
+  orderIds[oldId] = company;
   var newOrder = order.createOrder();
   newOrder.action = action;
   newOrder.totalQuantity = quantity;
@@ -71,9 +52,9 @@ var placeMyOrder = function(_contract, action, quantity, orderType, lmtPrice, au
   newOrder.lmtPrice = lmtPrice;
   newOrder.auxPrice = auxPrice;
   newOrder.hidden = true;
-  setImmediate(api.placeOrder.bind(api, oldId, _contract, newOrder));
+  setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   console.log('Next valid order Id: %d', oldId);
-  console.log('Placing order for', _contract.symbol);
+  console.log('Placing order for', company.symbol);
   console.log(action, quantity);
 };
 
@@ -85,8 +66,11 @@ var handleValidOrderId = function(message) {
   orderId = message.orderId;
   console.log('next order Id is', orderId);
   api.reqPositions();
-  getRealtimeBars(smartContract, 1);
-  getMktData(smartContract, 1);
+  for (var i = companies.length; i--;) {
+    var company = companies[i];
+    getRealtimeBars(company);
+    getMktData(company);
+  }
 };
 
 var cancelPrevOrder = function(prevOrderId) {
@@ -95,12 +79,11 @@ var cancelPrevOrder = function(prevOrderId) {
 };
 
 var handleServerError = function(message) {
-  console.log('Error:', message.id.toString(), '-', message.errorCode.toString(), '-', message.errorString.toString());
+  console.log('[ServerError]', message.id.toString(), '-', message.errorCode.toString(), '-', message.errorString.toString());
 };
 
 var handleClientError = function(message) {
-  console.log('clientError');
-  console.log(JSON.stringify(message));
+  console.log('[ClientError]', JSON.stringify(message));
 };
 
 var handleDisconnected = function(message) {
@@ -108,20 +91,24 @@ var handleDisconnected = function(message) {
 };
 
 var handleRealTimeBar = function(realtimeBar) {
+  var company = cancelIds[realtimeBar.reqId];
+  if (!company) {
+    console.log('[WARNING] Unknown realtimeBar', realtimeBar);
+    return;
+  }
   var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
-  low = min(realtimeBar.low, low);
-  high = max(realtimeBar.high, high);
-  close = close || realtimeBar.close;
+  var low = company.low = min(realtimeBar.low, company.low);
+  var high = company.high = max(realtimeBar.high, company.high);
+  var close = company.close = company.close || realtimeBar.close;
+  var open = company.open;
   var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second <= 7) {
-      low = MAX_INT;
-      high = MIN_INT;
-      close = 0.0;
+      company.resetLowHighClose();
     } else {
-      open = open || realtimeBar.open;
-      if (second > 52 && lastOrderStatus !== 'Filled') {
-        cancelPrevOrder(orderId - 1);
+      company.open = open || realtimeBar.open;
+      if (second > 52 && company.lastOrderStatus !== 'Filled') {
+        cancelPrevOrder(company.orderId - 1);
       }
     }
     return; // skip if it is not the end of minutes
@@ -130,66 +117,70 @@ var handleRealTimeBar = function(realtimeBar) {
   realtimeBar.high = high;
   realtimeBar.close = close;
   realtimeBar.open = open;
-  var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
-  low = MAX_INT;
-  high = MIN_INT;
-  close = 0.0;
-  open = 0.0;
+  var featureVector = company.tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
+  company.resetLowHighCloseOpen();
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
   var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
   //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
-  var result = tradeController.trade(featureVector, noPosition);
+  var result = company.tradeController.trade(featureVector, noPosition);
 
   // check if there are shares to sell / money to buy fisrt
+  var position = company.position;
+  var maxPosition = company.maxPosition;
   var qty = abs(position);
   if (result === HOLD && position < 0) {
     result = BUY;
   } else if (result === HOLD && position > 0) {
     result = SELL;
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
-    qty += MAX_POSITION;
-  } else if ((result === BUY || result === SELL) && MAX_POSITION > qty) {
-    qty = MAX_POSITION - qty;
+    qty += maxPosition;
+  } else if ((result === BUY || result === SELL) && maxPosition > qty) {
+    qty = maxPosition - qty;
   } else {
     return;
   }
-  var limitPrice = realtimeBar.close + (result === BUY ? 0.16 : -0.16);
-  if (limitPrice < minSellPrice) {
-    console.log('order ignored since the limit price is', limitPrice, ', which is less than the threshold', minSellPrice);
+  var limitPrice = close + (result === BUY ? 0.16 : -0.16);
+  if (limitPrice < company.minPrice) {
+    console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
   }
-  var orderType = (noPosition || qty < MAX_POSITION) ? 'MKT' : 'REL';
-  placeMyOrder(smartContract, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
+  var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.04);
   console.log(result, noPosition, position, realtimeBar, new Date());
 };
 
 var handleTickPrice = function(tickPrice) {
+  var company = cancelIds[tickPrice.tickerId];
   var field = tickPrice.field;
   var price = tickPrice.price;
-  if (field === 4) { // last
-    low = min(price, low);
-    high = max(price, high);
-    close = price;
-    open = open || price;
+  if (field === 4 && company) { // last
+    company.low = min(price, company.low);
+    company.high = max(price, company.high);
+    company.close = price;
+    company.open = company.open || price;
   }
 };
 
 var handleOrderStatus = function(message) {
-  console.log('OrderStatus: ');
-  console.log(JSON.stringify(message));
+  console.log('OrderStatus:', JSON.stringify(message));
   if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
   }
-  lastOrderStatus = message.status;
+  var company = orderIds[message.orderId];
+  if (company) {
+    company.lastOrderStatus = message.status;
+  }
 };
 
 var handlePosition = function(message) {
-  console.log('Position: ');
-  console.log(JSON.stringify(message));
-  if (message.contract && message.contract.symbol === symbol) {
-    position = message.position;
+  console.log('Position:', JSON.stringify(message));
+  if (message.contract) {
+    var company = symbols[message.contract.symbol];
+    if (company) {
+      company.position = message.position;
+    }
   }
 };
 
@@ -207,25 +198,9 @@ api.handlers[messageIds.position] = handlePosition;
 // Connect to the TWS client or IB Gateway
 var connected = api.connect('127.0.0.1', 7496, 0);
 
-var warmupTrain = function () {
-  var data = googleCSVReader.data;
-  var dataLen = data.length;
-  tradeController = new TradeController(googleCSVReader.columns);
-  for (var i = 0; i < dataLen; i++) {
-    tradeController.getFeatureVector(data[i]);
-  }
-
-  googleCSVReader.shutdown();
-};
-
-var setup = function() {
-  warmupTrain();
-  // Once connected, start processing incoming and outgoing messages
-  if (connected) {
-    api.beginProcessing();
-  } else {
-    throw new Error('Failed connecting to localhost TWS/IB Gateway');
- }
-};
-
-googleCSVReader.load(setup);
+// Once connected, start processing incoming and outgoing messages
+if (connected) {
+  api.beginProcessing();
+} else {
+  throw new Error('Failed connecting to localhost TWS/IB Gateway');
+}

@@ -1,6 +1,6 @@
 var moment = require('moment-timezone');
 var toCent = require('./utils').toCent;
-var redis = require('./redis');
+var redis;
 
 var DATE_COLUMN = 'DATE';
 var CLOSE_COLUMN = 'CLOSE';
@@ -10,6 +10,13 @@ var OPEN_COLUMN = 'OPEN';
 var VOLUME_COLUMN = 'VOLUME';
 var COLUMNS = [DATE_COLUMN, CLOSE_COLUMN, HIGH_COLUMN, LOW_COLUMN, OPEN_COLUMN, VOLUME_COLUMN];
 var TIMEZONE = 'America/New_York';
+
+var initRedis = function() {
+  if (!redis) {
+    redis = require('./redis');
+  }
+  return redis;
+};
 
 var GoogleCSVReader = module.exports = function(tickerId) {
   if (! (this instanceof GoogleCSVReader)) { // enforcing new
@@ -91,11 +98,11 @@ GoogleCSVReader.prototype.getColumnData = function(column) {
 };
 
 GoogleCSVReader.prototype.save = function() {
-  redis.saveIntraday(this.tickerId, this.columns[DATE_COLUMN], this.data);
+  initRedis().saveIntraday(this.tickerId, this.columns[DATE_COLUMN], this.data);
 };
 
 GoogleCSVReader.prototype.load = function(callback) {
-  redis.loadIntraday(this.tickerId, (function(err, lines) {
+  initRedis().loadIntraday(this.tickerId, (function(err, lines) {
     if (err) {
       this.shutdown();
       throw new Error('Redis load error ' + err);
@@ -141,4 +148,6 @@ GoogleCSVReader.prototype.load = function(callback) {
   }).bind(this));
 };
 
-GoogleCSVReader.prototype.shutdown = redis.quit.bind(redis);
+GoogleCSVReader.prototype.shutdown = function() {
+  initRedis().quit();
+};

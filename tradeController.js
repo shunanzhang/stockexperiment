@@ -13,9 +13,36 @@ var HOLD = 'hold';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 
-var TradeController = module.exports = function(columns) {
+var BAND_LIMIT = {
+  NFLX: {
+    lower: 0.00510,
+    upper: 0.00859,
+    bull: 1,
+    bear: -3
+  },
+  AAPL: {
+    lower: 0.00120,
+    upper: 0.00905,
+    bull: 1,
+    bear: -4
+  },
+  FB: {
+    lower: 0.00220,
+    upper: 0.00759,
+    bull: 1,
+    bear: -0
+  },
+  AMZN: {
+    lower: 0.00330,
+    upper: 0.01100,
+    bull: 4,
+    bear: -4
+  }
+};
+
+var TradeController = module.exports = function(columns, symbol, holding) {
   if (! (this instanceof TradeController)) { // enforcing new
-    return new TradeController(columns);
+    return new TradeController(columns, symbol, holding);
   }
   this.featureVectorBuilder = new FeatureVectorBuilder();
   this.closeColumnIndex = columns[CLOSE_COLUMN];
@@ -23,6 +50,14 @@ var TradeController = module.exports = function(columns) {
   this.lowColumnIndex = columns[LOW_COLUMN];
   this.openColumnIndex = columns[OPEN_COLUMN];
   this.volumeColumnIndex = columns[VOLUME_COLUMN];
+  var bandLimit = BAND_LIMIT[symbol] || BAND_LIMIT.NFLX;
+  this.lowerLimit = bandLimit.lower;
+  this.upperLimit = bandLimit.upper;
+  this.bullLimit = bandLimit.bull;
+  this.bearLimit = bandLimit.bear;
+  this.holding = holding || 2;
+  this.countDown = 0;
+  this.lastPos = HOLD;
 };
 TradeController.BUY = BUY;
 TradeController.SELL = SELL;
@@ -43,44 +78,31 @@ TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar)
   return this.getFeatureVector(datum);
 };
 
-var countDown = 0;
-var lastPos = HOLD;
-var HOLDING = 2;
-var BAND_LOWER_LIMIT = 0.0051;
-var BAND_UPPER_LIMIT = 0.00859;
-//var BAND_LOWER_LIMIT = 0.00120; // AAPL
-//var BAND_UPPER_LIMIT = 0.00905; // AAPL
-//var BAND_LOWER_LIMIT = 0.00220; // FB
-//var BAND_UPPER_LIMIT = 0.00759; // FB
-//var BAND_LOWER_LIMIT = 0.00330; // AMZN
-//var BAND_UPPER_LIMIT = 0.01100; // AMZN
 TradeController.prototype.trade = function(featureVector, forceHold) {
   if (forceHold) {
-    lastPos = HOLD;
+    this.lastPos = HOLD;
     return HOLD;
   }
   var band = featureVector.band;
   if (band) {
     var bandWidth = band.twoSigma / band.ave;
-    if (BAND_LOWER_LIMIT < bandWidth && bandWidth < BAND_UPPER_LIMIT) {
+    if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit) {
       var bar = featureVector.close - featureVector.open;
-      var bull = bar > 1;
-      var bear = bar < -3;
-      if (bear && featureVector.low < band.lower) {
-        countDown = HOLDING;
-        lastPos = BUY;
+      if (bar < this.bearLimit && featureVector.low < band.lower) {
+        this.countDown = this.holding;
+        this.lastPos = BUY;
         return BUY;
-      } else if (bull && band.upper < featureVector.high) {
-        countDown = HOLDING;
-        lastPos = SELL;
+      } else if (bar > this.bullLimit && featureVector.high > band.upper) {
+        this.countDown = this.holding;
+        this.lastPos = SELL;
         return SELL;
       }
     }
   }
-  countDown = Math.max(0, countDown - 1);
-  if (countDown > 0) {
-    return lastPos;
+  this.countDown = Math.max(0, this.countDown - 1);
+  if (this.countDown > 0) {
+    return this.lastPos;
   }
-  lastPos = HOLD;
+  this.lastPos = HOLD;
   return HOLD;
 };

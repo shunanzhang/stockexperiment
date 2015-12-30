@@ -26,7 +26,7 @@ var backtest = function() {
   var data = googleCSVReader.data;
   var dataLen = data.length;
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
-  var tradeController = new TradeController(googleCSVReader.columns);
+  var tradeController = new TradeController(googleCSVReader.columns, tickerId);
 
   var bought = 0;
   var gain = 0;
