@@ -33,6 +33,9 @@ var api = new ibapi.NodeIbapi();
 //  Make sure you keep track of this.
 var orderId = -1;
 
+// only one company can hold a position at the same time
+var positionLock = 0;
+
 var getRealtimeBars = function(company) {
   // only 5 sec is supported, only regular trading ours == true
   api.reqRealtimeBars(company.cancelId, company.contract, 5, 'TRADES', true);
@@ -117,27 +120,34 @@ var handleRealTimeBar = function(realtimeBar) {
   realtimeBar.high = high;
   realtimeBar.close = close;
   realtimeBar.open = open;
-  var featureVector = company.tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
+  var tradeController = company.tradeController;
+  var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
   company.resetLowHighCloseOpen();
   var minute = date.minutes();
   var hour = date.hours();
   // always sell a the end of the day
   var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
   //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
-  var result = company.tradeController.trade(featureVector, noPosition);
+  var result = tradeController.trade(featureVector, noPosition);
 
   // check if there are shares to sell / money to buy fisrt
   var position = company.position;
   var maxPosition = company.maxPosition;
+  var cancelId = company.cancelId;
   var qty = abs(position);
   if (result === HOLD && position < 0) {
     result = BUY;
   } else if (result === HOLD && position > 0) {
     result = SELL;
+  } else if (positionLock && positionLock !== cancelId) {
+    console.log('[WARNING] cancelId', positionLock, 'is blocking cancelId', cancelId, 'position');
+    return;
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
     qty += maxPosition;
+    positionLock = cancelId;
   } else if ((result === BUY || result === SELL) && maxPosition > qty) {
     qty = maxPosition - qty;
+    positionLock = cancelId;
   } else {
     return;
   }
@@ -180,6 +190,14 @@ var handlePosition = function(message) {
     var company = symbols[message.contract.symbol];
     if (company) {
       company.position = message.position;
+      positionLock = 0;
+      for (var i = companies.length; i--;) {
+        company = companies[i];
+        if (company.position) {
+          positionLock = company.cancelId;
+          break;
+        }
+      }
     }
   }
 };

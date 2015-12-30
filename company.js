@@ -18,7 +18,7 @@ var MIN_PRICES = {
 };
 
 var MAX_POSITIONS = {
-  NFLX: 1100,
+  NFLX: 1500,
   AAPL: 0,
   AMZN: 100
 };
