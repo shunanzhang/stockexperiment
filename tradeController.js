@@ -21,7 +21,7 @@ var BAND_LIMIT = {
     bear: -3
   },
   AAPL: {
-    lower: 0.00120,
+    lower: 0.00251,
     upper: 0.00905,
     bull: 1,
     bear: -4
@@ -35,6 +35,12 @@ var BAND_LIMIT = {
   AMZN: {
     lower: 0.00330,
     upper: 0.01100,
+    bull: 4,
+    bear: -4
+  },
+  GOOG: {
+    lower: 0.00240,
+    upper: 0.00700,
     bull: 4,
     bear: -4
   }

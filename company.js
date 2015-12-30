@@ -16,8 +16,8 @@ var MIN_PRICES = {
 };
 
 var MAX_POSITIONS = {
-  NFLX: 800,
-  AAPL: 800
+  NFLX: 1500,
+  AAPL: 0
 };
 
 var cancelId = 0;

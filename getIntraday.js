@@ -42,7 +42,7 @@ var backtest = function() {
     var result = tradeController.trade(featureVector, noPosition);
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
       if (bought < 0) {
-        gains.push(-(bought + newClose));
+        gains.push(-(bought + newClose) - 1); // take 1 cent off for round trip commission
         gain -= bought + newClose;
         if (gains[gains.length - 1] > 0) {
           pGain += 1;
@@ -60,7 +60,7 @@ var backtest = function() {
       }
     } else if ((result === SELL && bought >= 0) || (result === HOLD && bought > 0)) {
       if (bought > 0) {
-        gains.push(newClose - bought);
+        gains.push(newClose - bought - 1); // take 1 cent off for round trip commission
         gain += newClose - bought;
         if (gains[gains.length - 1] > 0) {
           pGain += 1;
