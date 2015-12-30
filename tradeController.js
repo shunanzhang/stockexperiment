@@ -43,6 +43,12 @@ var BAND_LIMIT = {
     upper: 0.00700,
     bull: 4,
     bear: -4
+  },
+  JNJ: {
+    lower: 0.00322,
+    upper: 0.00759,
+    bull: 1,
+    bear: -1
   }
 };
 
