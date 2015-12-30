@@ -39,6 +39,7 @@ var backtest = function() {
     var featureVector = tradeController.getFeatureVector(datum);
     var newClose = closes[i];
     var noPosition = (i_MINUTES_DAY < 20) || (i_MINUTES_DAY >= MINUTES_DAY - 4);
+    var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(featureVector, noPosition);
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
       if (bought < 0) {
@@ -50,11 +51,11 @@ var backtest = function() {
           nGain += 1;
         }
         //console.log(gain);
-        console.log(BUY, i%MINUTES_DAY, newClose, -(bought + newClose), gain, pGain / (pGain + nGain));
+        console.log(BUY, displayTime, newClose, -(bought + newClose), gain, pGain / (pGain + nGain));
       }
       if (result === BUY) {
         bought = newClose;
-        console.log('bought', i%MINUTES_DAY);
+        console.log('bought', displayTime);
       } else {
         bought = 0;
       }
@@ -68,11 +69,11 @@ var backtest = function() {
           nGain += 1;
         }
         //console.log(gain);
-        console.log(SELL, i%MINUTES_DAY, newClose, newClose - bought, gain, pGain / (pGain + nGain));
+        console.log(SELL, displayTime, newClose, newClose - bought, gain, pGain / (pGain + nGain));
       }
       if (result === SELL) {
         bought = -newClose;
-        console.log('sold', i%MINUTES_DAY);
+        console.log('sold', displayTime);
       } else {
         bought = 0;
       }

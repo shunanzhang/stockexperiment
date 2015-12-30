@@ -134,30 +134,33 @@ var handleRealTimeBar = function(realtimeBar) {
   var position = company.position;
   var maxPosition = company.maxPosition;
   var cancelId = company.cancelId;
+  var notHold = (result === BUY || result === SELL);
   var qty = abs(position);
   if (result === HOLD && position < 0) {
     result = BUY;
   } else if (result === HOLD && position > 0) {
     result = SELL;
-  } else if (positionLock && positionLock !== cancelId) {
+  } else if (positionLock && positionLock !== cancelId && notHold) {
     console.log('[WARNING] cancelId', positionLock, 'is blocking cancelId', cancelId, 'position');
-    return;
+    if ((result === SELL && position <= 0) || (result === BUY && position >= 0)) {
+      return;
+    }
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
     qty += maxPosition;
     positionLock = cancelId;
-  } else if ((result === BUY || result === SELL) && maxPosition > qty) {
+  } else if (notHold && maxPosition > qty) {
     qty = maxPosition - qty;
     positionLock = cancelId;
   } else {
     return;
   }
-  var limitPrice = close + (result === BUY ? company.limitOffset : -company.limitOffset);
+  var limitPrice = close + close * 0.00137 * (result === BUY ? 1.0 : -1.0);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
   }
   var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, company.relOffset);
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, close * 0.00034);
   console.log(result, noPosition, position, realtimeBar, new Date());
 };
 
@@ -175,7 +178,7 @@ var handleTickPrice = function(tickPrice) {
 
 var handleOrderStatus = function(message) {
   console.log('OrderStatus:', JSON.stringify(message));
-  if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
+  if (message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
   }
   var company = orderIds[message.orderId];
