@@ -117,8 +117,6 @@ var loadAndBacktest = function() {
 
 if (readNewData) {
   request(url)
-  //fs.createReadStream(__dirname + '/nflx20150927.txt')
-  //fs.createReadStream(__dirname + '/nflx20151001.txt')
   .pipe(new ByLineStream()).on('readable', function() {
     googleCSVReader.parseLine(this.read());
   }).on('end', function() {
