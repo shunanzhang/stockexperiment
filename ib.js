@@ -1,7 +1,7 @@
 var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var createOrder = ibapi.order.createOrder;
+var order = ibapi.order;
 var GoogleCSVReader = require('./googleCSVReader');
 var TIMEZONE = GoogleCSVReader.TIMEZONE;
 var TradeController = require('./tradeController');
@@ -48,7 +48,7 @@ var getMktData = function(company) {
 var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice) {
   var oldId = company.orderId = orderId++;
   orderIds[oldId] = company;
-  var newOrder = createOrder();
+  var newOrder = order.createOrder();
   newOrder.action = action;
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
@@ -57,8 +57,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.hidden = true;
   setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   console.log('Next valid order Id: %d', oldId);
-  console.log('Placing order for', company.symbol);
-  console.log(action, quantity);
+  console.log('Placing order for', company.symbol, action, quantity, orderType, lmtPrice, auxPrice);
 };
 
 // Here we specify the event handlers.
