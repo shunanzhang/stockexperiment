@@ -151,6 +151,9 @@ var handleRealTimeBar = function(realtimeBar) {
     qty = maxPosition - qty;
     positionLock = cancelId;
   } else {
+    if (positionLock && positionLock === cancelId && result === HOLD) {
+      positionLock = 0;
+    }
     return;
   }
   var limitPrice = close + close * (result === BUY ? 0.00137 : -0.00137);
