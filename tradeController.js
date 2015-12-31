@@ -21,10 +21,10 @@ var BAND_LIMIT = {
     bear: -3
   },
   AAPL: {
-    lower: 0.00251,
+    lower: 0.00239,
     upper: 0.00905,
     bull: 1,
-    bear: -4
+    bear: -0
   },
   FB: {
     lower: 0.00337,

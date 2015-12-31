@@ -13,13 +13,13 @@ var EXCHANGES = {
 
 var MIN_PRICES = {
   NFLX: 85.00,
-  AAPL: 85.00,
+  AAPL: 80.00,
   AMZN: 550.00
 };
 
 var MAX_POSITIONS = {
   NFLX: 1400,
-  AAPL: 0,
+  AAPL: 1500,
   AMZN: 200
 };
 
