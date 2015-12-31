@@ -52,6 +52,8 @@ var BAND_LIMIT = {
   }
 };
 
+var max = Math.max;
+
 var TradeController = module.exports = function(columns, symbol, holding) {
   if (! (this instanceof TradeController)) { // enforcing new
     return new TradeController(columns, symbol, holding);
@@ -97,9 +99,9 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
   }
   var band = featureVector.band;
   if (band) {
-    var bandWidth = band.twoSigma / band.ave;
+    var bandWidth = band.width;
     if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit) {
-      var bar = featureVector.close - featureVector.open;
+      var bar = featureVector.bar;
       if (bar < this.bearLimit && featureVector.low < band.lower) {
         this.countDown = this.holding;
         this.lastPos = BUY;
@@ -111,7 +113,7 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
       }
     }
   }
-  this.countDown = Math.max(0, this.countDown - 1);
+  this.countDown = max(0, this.countDown - 1);
   if (this.countDown > 0) {
     return this.lastPos;
   }

@@ -207,8 +207,7 @@ BOL.prototype.analize = function(stockPrice) {
     return {
       upper: ave + twoSigma,
       lower: ave - twoSigma,
-      twoSigma: twoSigma,
-      ave: ave
+      width: twoSigma / ave
     };
   }
 };

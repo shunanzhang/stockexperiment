@@ -1,7 +1,7 @@
 var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var order = ibapi.order;
+var createOrder = ibapi.order.createOrder;
 var GoogleCSVReader = require('./googleCSVReader');
 var TIMEZONE = GoogleCSVReader.TIMEZONE;
 var TradeController = require('./tradeController');
@@ -48,7 +48,7 @@ var getMktData = function(company) {
 var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice) {
   var oldId = company.orderId = orderId++;
   orderIds[oldId] = company;
-  var newOrder = order.createOrder();
+  var newOrder = createOrder();
   newOrder.action = action;
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;

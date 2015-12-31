@@ -9,11 +9,9 @@ var FeatureVectorBuilder = module.exports = function() {
 };
 
 FeatureVectorBuilder.prototype.build = function(close, high, low, open, volume) {
-  var band = this.bol.analize(close);
   var featureVector = {
-    band: band,
-    open: open,
-    close: close,
+    band: this.bol.analize(close),
+    bar: close - open,
     high: high,
     low: low,
   }; // key: feature, val:scalar
