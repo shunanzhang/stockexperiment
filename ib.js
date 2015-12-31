@@ -153,7 +153,7 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  var limitPrice = close + close * 0.00137 * (result === BUY ? 1.0 : -1.0);
+  var limitPrice = close + close * (result === BUY ? 0.00137 : -0.00137);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
@@ -177,7 +177,7 @@ var handleTickPrice = function(tickPrice) {
 
 var handleOrderStatus = function(message) {
   console.log('OrderStatus:', JSON.stringify(message));
-  if (message.status === 'Inactive') {
+  if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
   }
   var company = orderIds[message.orderId];
