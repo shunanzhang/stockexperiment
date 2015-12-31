@@ -27,10 +27,10 @@ var BAND_LIMIT = {
     bear: -4
   },
   FB: {
-    lower: 0.00220,
+    lower: 0.00337,
     upper: 0.00759,
-    bull: 1,
-    bear: -0
+    bull: 2,
+    bear: -1
   },
   AMZN: {
     lower: 0.00330,
