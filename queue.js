@@ -6,6 +6,35 @@ var min = Math.min;
 var _enq1 = function(item) {
   var oldestId = this.oldestId;
   var newestId = oldestId + this.length;
+  this[newestId] = item;
+  if (newestId >= this.limit) {
+    this.sum += item - this[oldestId];
+    this.oldestId += 1;
+    return true;
+  } else {
+    this.sum += item;
+    this.length += 1;
+    return false;
+  }
+};
+
+var _enq2 = function(item) {
+  var oldestId = this.oldestId;
+  var newestId = oldestId + this.length;
+  this[newestId] = item;
+  this.yq[newestId] = this.func_y.call(this, newestId);
+  if (newestId >= this.limit) {
+    this.oldestId += 1;
+    return true;
+  } else {
+    this.length += 1;
+    return false;
+  }
+};
+
+var _enq3 = function(item) {
+  var oldestId = this.oldestId;
+  var newestId = oldestId + this.length;
   var high = this.high;
   var low = this.low;
   this[newestId] = item;
@@ -37,20 +66,6 @@ var _enq1 = function(item) {
     this.length += 1;
     this.high = max(high, item);
     this.low = min(low, item);
-    return false;
-  }
-};
-
-var _enq2 = function(item) {
-  var oldestId = this.oldestId;
-  var newestId = oldestId + this.length;
-  this[newestId] = item;
-  this.yq[newestId] = this.func_y.call(this, newestId);
-  if (newestId >= this.limit) {
-    this.oldestId += 1;
-    return true;
-  } else {
-    this.length += 1;
     return false;
   }
 };
@@ -92,6 +107,7 @@ var Queue = module.exports = function(limit, func_y, start) {
   } else {
     this.sum = 0;
     this.enq = _enq1;
+    this.enqhl = _enq3;
     this.ave = ave;
     this.high = MIN_INT;
     this.low = MAX_INT;

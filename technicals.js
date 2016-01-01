@@ -1,7 +1,7 @@
 // TODO use ES6 class
 var Queue = require('./queue');
-var Ema = require('./ema');
-var pValues = require('./normalDistributionTable').pValues;
+//var Ema = require('./ema');
+//var pValues = require('./normalDistributionTable').pValues;
 
 var Technical = function() {
   if (! (this instanceof Technical)) { // enforcing new
@@ -90,98 +90,98 @@ ALSS.prototype.analize = function(stockPrice) {
   }
 };
 
-var EMA = module.exports.EMA = function(n) {
-  if (! (this instanceof EMA)) { // enforcing new
-    return new EMA(n);
-  }
-  Technical.call(this);
-  this.e = new Ema(n);
-};
-EMA.prototype = Object.create(Technical.prototype);
-EMA.prototype.analize = function(stockPrice) {
-  var e = this.e;
-  if (e.add(stockPrice)) {
-    return e.ema;
-  }
-};
+//var EMA = module.exports.EMA = function(n) {
+//  if (! (this instanceof EMA)) { // enforcing new
+//    return new EMA(n);
+//  }
+//  Technical.call(this);
+//  this.e = new Ema(n);
+//};
+//EMA.prototype = Object.create(Technical.prototype);
+//EMA.prototype.analize = function(stockPrice) {
+//  var e = this.e;
+//  if (e.add(stockPrice)) {
+//    return e.ema;
+//  }
+//};
 
-var DEMA = module.exports.DEMA = function(n) {
-  if (! (this instanceof DEMA)) { // enforcing new
-    return new DEMA(n);
-  }
-  Technical.call(this);
-  this.e = new Ema(n);
-  this.e2 = new Ema(n);
-};
-DEMA.prototype = Object.create(Technical.prototype);
-DEMA.prototype.analize = function(stockPrice) {
-  // http://www.metatrader5.com/en/terminal/help/analytics/indicators/trend_indicators/dema
-  var e = this.e;
-  var e2 = this.e2;
-  e.add(stockPrice);
-  if (e2.add(stockPrice - e.ema)) {
-    return e.ema + e2.ema;
-  }
-};
+//var DEMA = module.exports.DEMA = function(n) {
+//  if (! (this instanceof DEMA)) { // enforcing new
+//    return new DEMA(n);
+//  }
+//  Technical.call(this);
+//  this.e = new Ema(n);
+//  this.e2 = new Ema(n);
+//};
+//DEMA.prototype = Object.create(Technical.prototype);
+//DEMA.prototype.analize = function(stockPrice) {
+//  // http://www.metatrader5.com/en/terminal/help/analytics/indicators/trend_indicators/dema
+//  var e = this.e;
+//  var e2 = this.e2;
+//  e.add(stockPrice);
+//  if (e2.add(stockPrice - e.ema)) {
+//    return e.ema + e2.ema;
+//  }
+//};
 
-var EMAS = module.exports.EMAS = function(n, t) {
-  if (! (this instanceof EMAS)) { // enforcing new
-    return new EMAS(n, t);
-  }
-  Technical.call(this);
-  this.t = t;
-  this.q = new Queue(2 * t + 1);
-  this.e = new Ema(n);
-};
-EMAS.prototype = Object.create(Technical.prototype);
-EMAS.prototype.analize = function(stockPrice) {
-  var t = this.t;
-  var q = this.q;
-  var e = this.e;
-  if (e.add(stockPrice)) {
-    stockPrice = e.ema;
-    if (q.enq(stockPrice)) {
-      var oldestId = q.oldestId;
-      var qt = q[t + oldestId];
-      var slope = (q[2 * t + oldestId] - qt) - (qt - q[oldestId]);
+//var EMAS = module.exports.EMAS = function(n, t) {
+//  if (! (this instanceof EMAS)) { // enforcing new
+//    return new EMAS(n, t);
+//  }
+//  Technical.call(this);
+//  this.t = t;
+//  this.q = new Queue(2 * t + 1);
+//  this.e = new Ema(n);
+//};
+//EMAS.prototype = Object.create(Technical.prototype);
+//EMAS.prototype.analize = function(stockPrice) {
+//  var t = this.t;
+//  var q = this.q;
+//  var e = this.e;
+//  if (e.add(stockPrice)) {
+//    stockPrice = e.ema;
+//    if (q.enq(stockPrice)) {
+//      var oldestId = q.oldestId;
+//      var qt = q[t + oldestId];
+//      var slope = (q[2 * t + oldestId] - qt) - (qt - q[oldestId]);
+//
+//      return slope;
+//    }
+//  }
+//};
 
-      return slope;
-    }
-  }
-};
-
-var PVALUE = module.exports.PVALUE = function(n) {
-  if (! (this instanceof PVALUE)) { // enforcing new
-    return new PVALUE(n);
-  }
-  Technical.call(this);
-  this.q = new Queue(n);
-};
-PVALUE.prototype = Object.create(Technical.prototype);
-PVALUE.prototype.analize = function(stockPrice) {
-  var q = this.q;
-  if (q.enq(stockPrice)) {
-    var oldestId = q.oldestId;
-    var n = q.length;
-    var ave = q.ave();
-    var sigma = 0;
-
-    for (var i = oldestId, l = oldestId + n; i < l; i++) {
-      var diff = q[i] - ave;
-      sigma += diff * diff;
-    }
-    sigma = Math.sqrt(sigma / n);
-    var zScore100 = (100 * (stockPrice - ave) / sigma) | 0;
-    var sign = -1;
-    if (zScore100 < 0) {
-      zScore100 = -zScore100;
-      sign = 1;
-    }
-    // The lower stock price, the closer to +1 is returned.
-    // The higher stock price, the closer to -1 is returned.
-    return (zScore100 < pValues.length ? pValues[zScore100] : 1.0) * sign; // -1.0 ~ -0.5 or 0.5 ~ 1.0
-  }
-};
+//var PVALUE = module.exports.PVALUE = function(n) {
+//  if (! (this instanceof PVALUE)) { // enforcing new
+//    return new PVALUE(n);
+//  }
+//  Technical.call(this);
+//  this.q = new Queue(n);
+//};
+//PVALUE.prototype = Object.create(Technical.prototype);
+//PVALUE.prototype.analize = function(stockPrice) {
+//  var q = this.q;
+//  if (q.enq(stockPrice)) {
+//    var oldestId = q.oldestId;
+//    var n = q.length;
+//    var ave = q.ave();
+//    var sigma = 0;
+//
+//    for (var i = oldestId, l = oldestId + n; i < l; i++) {
+//      var diff = q[i] - ave;
+//      sigma += diff * diff;
+//    }
+//    sigma = Math.sqrt(sigma / n);
+//    var zScore100 = (100 * (stockPrice - ave) / sigma) | 0;
+//    var sign = -1;
+//    if (zScore100 < 0) {
+//      zScore100 = -zScore100;
+//      sign = 1;
+//    }
+//    // The lower stock price, the closer to +1 is returned.
+//    // The higher stock price, the closer to -1 is returned.
+//    return (zScore100 < pValues.length ? pValues[zScore100] : 1.0) * sign; // -1.0 ~ -0.5 or 0.5 ~ 1.0
+//  }
+//};
 
 var BOL = module.exports.BOL = function(n) {
   if (! (this instanceof BOL)) { // enforcing new
@@ -197,13 +197,13 @@ BOL.prototype.analize = function(stockPrice) {
     var oldestId = q.oldestId;
     var n = q.length;
     var ave = q.ave();
-    var twoSigma = 0;
+    var twoSigma = 0.0;
 
     for (var i = oldestId, l = oldestId + n; i < l; i++) {
       var diff = q[i] - ave;
       twoSigma += diff * diff;
     }
-    twoSigma = Math.sqrt(twoSigma / n) * 2;
+    twoSigma = Math.sqrt(twoSigma / n) * 2.0;
     return {
       upper: ave + twoSigma,
       lower: ave - twoSigma,
@@ -244,30 +244,30 @@ BOL.prototype.analize = function(stockPrice) {
 //  return ret;
 //};
 
-var MACD = module.exports.MACD = function(nFast, nSlow, nSignal) {
-  if (! (this instanceof MACD)) { // enforcing new
-    return new MACD(nFast, nSlow, nSignal);
-  }
-  Technical.call(this);
-  this.eFast = new Ema(nFast);
-  this.eSlow = new Ema(nSlow);
-  this.eSignal = new Ema(nSignal);
-};
-MACD.prototype = Object.create(Technical.prototype);
-MACD.prototype.analize = function(stockPrice) {
-  var eFast = this.eFast;
-  var eSlow = this.eSlow;
-  var eSignal = this.eSignal;
-  var macd = 0;
-
-  if (eFast.add(stockPrice) && eSlow.add(stockPrice)) {
-    macd = eFast.ema - eSlow.ema;
-  }
-
-  if (eSignal.add(stockPrice) && macd) {
-    return macd - eSignal.ema;
-  }
-};
+//var MACD = module.exports.MACD = function(nFast, nSlow, nSignal) {
+//  if (! (this instanceof MACD)) { // enforcing new
+//    return new MACD(nFast, nSlow, nSignal);
+//  }
+//  Technical.call(this);
+//  this.eFast = new Ema(nFast);
+//  this.eSlow = new Ema(nSlow);
+//  this.eSignal = new Ema(nSignal);
+//};
+//MACD.prototype = Object.create(Technical.prototype);
+//MACD.prototype.analize = function(stockPrice) {
+//  var eFast = this.eFast;
+//  var eSlow = this.eSlow;
+//  var eSignal = this.eSignal;
+//  var macd = 0;
+//
+//  if (eFast.add(stockPrice) && eSlow.add(stockPrice)) {
+//    macd = eFast.ema - eSlow.ema;
+//  }
+//
+//  if (eSignal.add(stockPrice) && macd) {
+//    return macd - eSignal.ema;
+//  }
+//};
 
 var STOCHASTIC = module.exports.STOCHASTIC = function(n, m, o) {
   if (! (this instanceof STOCHASTIC)) { // enforcing new
@@ -285,7 +285,7 @@ STOCHASTIC.prototype.analize = function(stockPrice, high, low) {
   var ql = this.ql;
   var qk = this.qk;
   var qd = this.qd;
-  if (qh.enq(high) && ql.enq(low)) {
+  if (qh.enqhl(high) && ql.enqhl(low)) {
     var h = qh.high;
     var l = ql.low;
     var k = 100 * (stockPrice - l) / (h - l);
