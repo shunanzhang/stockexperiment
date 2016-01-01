@@ -8,19 +8,25 @@ var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
 var EXCHANGES = {
   NFLX: 'NASDAQ',
   AAPL: 'NASDAQ',
-  AMZN: 'NASDAQ'
+  AMZN: 'NASDAQ',
+  BIDU: 'NASDAQ',
+  AGN: 'NYSE'
 };
 
 var MIN_PRICES = {
   NFLX: 85.00,
   AAPL: 80.00,
-  AMZN: 550.00
+  AMZN: 550.00,
+  BIDU: 140.00,
+  AGN: 250.00
 };
 
 var MAX_POSITIONS = {
   NFLX: 1600,
   AAPL: 1500,
-  AMZN: 200
+  AMZN: 200,
+  BIDU: 100,
+  AGN: 100
 };
 
 var cancelId = 0;
