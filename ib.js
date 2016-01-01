@@ -1,7 +1,7 @@
 var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var order = ibapi.order;
+var createOrder = ibapi.order.createOrder;
 var GoogleCSVReader = require('./googleCSVReader');
 var TIMEZONE = GoogleCSVReader.TIMEZONE;
 var TradeController = require('./tradeController');
@@ -10,6 +10,7 @@ var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 var Company = require('./company');
+var roundCent = require('./utils').roundCent;
 
 var abs = Math.abs;
 var max = Math.max;
@@ -48,16 +49,16 @@ var getMktData = function(company) {
 var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice) {
   var oldId = company.orderId = orderId++;
   orderIds[oldId] = company;
-  var newOrder = order.createOrder();
+  var newOrder = createOrder();
   newOrder.action = action;
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
-  newOrder.lmtPrice = lmtPrice;
-  newOrder.auxPrice = auxPrice;
+  newOrder.lmtPrice = roundCent(lmtPrice); // roundCent is required to place a correct order
+  newOrder.auxPrice = roundCent(auxPrice);
   newOrder.hidden = true;
   setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   console.log('Next valid order Id: %d', oldId);
-  console.log('Placing order for', company.symbol, action, quantity, orderType, lmtPrice, auxPrice);
+  console.log('Placing order for', company.symbol, newOrder);
 };
 
 // Here we specify the event handlers.
@@ -124,8 +125,7 @@ var handleRealTimeBar = function(realtimeBar) {
   company.resetLowHighCloseOpen();
   var minute = date.minutes();
   var hour = date.hours();
-  // always sell a the end of the day
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15);
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15); // always sell a the end of the day
   //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.trade(featureVector, noPosition);
 
@@ -170,7 +170,7 @@ var handleTickPrice = function(tickPrice) {
   var company = cancelIds[tickPrice.tickerId];
   var field = tickPrice.field;
   var price = tickPrice.price;
-  if (field === 4 && company) { // last
+  if (field === 4 && company) { // last price
     company.low = min(price, company.low);
     company.high = max(price, company.high);
     company.close = price;
@@ -180,7 +180,7 @@ var handleTickPrice = function(tickPrice) {
 
 var handleOrderStatus = function(message) {
   console.log('OrderStatus:', JSON.stringify(message));
-  if (message.status === 'PreSubmitted' || message.status === 'Inactive') {
+  if (message.status === 'Inactive') {
     cancelPrevOrder(message.orderId);
   }
   var company = orderIds[message.orderId];
