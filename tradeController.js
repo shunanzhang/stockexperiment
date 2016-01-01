@@ -49,6 +49,12 @@ var BAND_LIMIT = {
     upper: 0.00759,
     bull: 1,
     bear: -1
+  },
+  TSLA: {
+    lower: 0.00312,
+    upper: 0.00758,
+    bull: 4,
+    bear: -6
   }
 };
 
