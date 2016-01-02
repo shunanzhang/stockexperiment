@@ -25,8 +25,8 @@ var MAX_POSITIONS = {
   NFLX: 1600,
   AAPL: 1500,
   AMZN: 200,
-  BIDU: 100,
-  AGN: 100
+  BIDU: 1000,
+  AGN: 600
 };
 
 var cancelId = 0;
