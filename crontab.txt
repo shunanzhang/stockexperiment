@@ -6,3 +6,4 @@ workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
 55 14 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
 00 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js NFLX true 2>&1 | tee ${workdir}/nflx.log
 02 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js AMZN true 2>&1 | tee ${workdir}/amzn.log
+04 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js AGN true 2>&1 | tee ${workdir}/agn.log

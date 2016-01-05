@@ -22,11 +22,11 @@ var MIN_PRICES = {
 };
 
 var MAX_POSITIONS = {
-  NFLX: 900,
-  AAPL: 900,
-  AMZN: 150,
-  BIDU: 500,
-  AGN: 300
+  NFLX: 600,
+  AAPL: 600,
+  AMZN: 100,
+  BIDU: 300,
+  AGN: 200
 };
 
 var cancelId = 0;
