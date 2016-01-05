@@ -35,7 +35,7 @@ var api = new ibapi.NodeIbapi();
 var orderId = -1;
 
 // only one company can hold a position at the same time
-var positionLock = 0;
+//var positionLock = 0;
 
 var getRealtimeBars = function(company) {
   // only 5 sec is supported, only regular trading ours == true
@@ -125,8 +125,8 @@ var handleRealTimeBar = function(realtimeBar) {
   company.resetLowHighCloseOpen();
   var minute = date.minutes();
   var hour = date.hours();
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 56 && hour === 15); // always sell a the end of the day
-  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 56 && hour === 12); // for thanksgiving and christmas
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 49 && hour === 15); // always sell a the end of the day
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 49 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.trade(featureVector, noPosition);
 
   // check if there are shares to sell / money to buy fisrt
@@ -139,21 +139,21 @@ var handleRealTimeBar = function(realtimeBar) {
     result = BUY;
   } else if (result === HOLD && position > 0) {
     result = SELL;
-  } else if (positionLock && positionLock !== cancelId && notHold) {
-    console.log('[WARNING] cancelId', positionLock, 'is blocking cancelId', cancelId, 'position');
-    if ((result === SELL && position <= 0) || (result === BUY && position >= 0)) {
-      return;
-    }
+  //} else if (positionLock && positionLock !== cancelId && notHold) {
+  //  console.log('[WARNING] cancelId', positionLock, 'is blocking cancelId', cancelId, 'position');
+  //  if ((result === SELL && position <= 0) || (result === BUY && position >= 0)) {
+  //    return;
+  //  }
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
     qty += maxPosition;
-    positionLock = cancelId;
+    //positionLock = cancelId;
   } else if (notHold && maxPosition > qty) {
     qty = maxPosition - qty;
-    positionLock = cancelId;
+    //positionLock = cancelId;
   } else {
-    if (positionLock && positionLock === cancelId && result === HOLD) {
-      positionLock = 0;
-    }
+    //if (positionLock && positionLock === cancelId && result === HOLD) {
+    //  positionLock = 0;
+    //}
     return;
   }
   var limitPrice = close + close * (result === BUY ? 0.00137 : -0.00137);
@@ -195,14 +195,14 @@ var handlePosition = function(message) {
     var company = symbols[message.contract.symbol];
     if (company) {
       company.position = message.position;
-      positionLock = 0;
-      for (var i = companies.length; i--;) {
-        company = companies[i];
-        if (company.position) {
-          positionLock = company.cancelId;
-          break;
-        }
-      }
+      //positionLock = 0;
+      //for (var i = companies.length; i--;) {
+      //  company = companies[i];
+      //  if (company.position) {
+      //    positionLock = company.cancelId;
+      //    break;
+      //  }
+      //}
     }
   }
 };

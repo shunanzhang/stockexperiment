@@ -16,17 +16,17 @@ var EXCHANGES = {
 var MIN_PRICES = {
   NFLX: 85.00,
   AAPL: 80.00,
-  AMZN: 550.00,
+  AMZN: 500.00,
   BIDU: 140.00,
   AGN: 250.00
 };
 
 var MAX_POSITIONS = {
-  NFLX: 1600,
-  AAPL: 1500,
-  AMZN: 200,
-  BIDU: 1000,
-  AGN: 600
+  NFLX: 900,
+  AAPL: 900,
+  AMZN: 150,
+  BIDU: 500,
+  AGN: 300
 };
 
 var cancelId = 0;
