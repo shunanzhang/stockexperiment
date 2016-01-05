@@ -9,24 +9,21 @@ var EXCHANGES = {
   NFLX: 'NASDAQ',
   AAPL: 'NASDAQ',
   AMZN: 'NASDAQ',
-  BIDU: 'NASDAQ',
-  AGN: 'NYSE'
+  BIDU: 'NASDAQ'
 };
 
 var MIN_PRICES = {
   NFLX: 85.00,
   AAPL: 80.00,
   AMZN: 500.00,
-  BIDU: 140.00,
-  AGN: 250.00
+  BIDU: 140.00
 };
 
 var MAX_POSITIONS = {
-  NFLX: 600,
+  NFLX: 1000,
   AAPL: 600,
   AMZN: 100,
-  BIDU: 300,
-  AGN: 200
+  BIDU: 300
 };
 
 var cancelId = 0;

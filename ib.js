@@ -20,7 +20,7 @@ var cancelIds = {};
 var symbols = {};
 var orderIds = {};
 
-var companies = [new Company('NFLX'), new Company('AMZN'), new Company('AGN')];
+var companies = [new Company('NFLX'), new Company('AMZN')];
 for (var i = companies.length; i--;) {
   var company = companies[i];
   cancelIds[company.cancelId] = company;
@@ -33,9 +33,6 @@ var api = new ibapi.NodeIbapi();
 //  inputted. The orderId is incremented everytime you submit an order.
 //  Make sure you keep track of this.
 var orderId = -1;
-
-// only one company can hold a position at the same time
-//var positionLock = 0;
 
 var getRealtimeBars = function(company) {
   // only 5 sec is supported, only regular trading ours == true
@@ -90,7 +87,12 @@ var handleClientError = function(message) {
 };
 
 var handleDisconnected = function(message) {
-  //console.log('disconnected');
+  if (api.isConnected()) {
+    api.disconnect();
+  }
+  if (api.connect('127.0.0.1', 7496, 0)) {
+    api.beginProcessing();
+  }
 };
 
 var handleRealTimeBar = function(realtimeBar) {
@@ -139,21 +141,11 @@ var handleRealTimeBar = function(realtimeBar) {
     result = BUY;
   } else if (result === HOLD && position > 0) {
     result = SELL;
-  //} else if (positionLock && positionLock !== cancelId && notHold) {
-  //  console.log('[WARNING] cancelId', positionLock, 'is blocking cancelId', cancelId, 'position');
-  //  if ((result === SELL && position <= 0) || (result === BUY && position >= 0)) {
-  //    return;
-  //  }
   } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
     qty += maxPosition;
-    //positionLock = cancelId;
   } else if (notHold && maxPosition > qty) {
     qty = maxPosition - qty;
-    //positionLock = cancelId;
   } else {
-    //if (positionLock && positionLock === cancelId && result === HOLD) {
-    //  positionLock = 0;
-    //}
     return;
   }
   var limitPrice = close + close * (result === BUY ? 0.00137 : -0.00137);
@@ -162,7 +154,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, close * 0.00040);
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, close * 0.00050);
   console.log(result, noPosition, position, realtimeBar, new Date());
 };
 
@@ -195,14 +187,6 @@ var handlePosition = function(message) {
     var company = symbols[message.contract.symbol];
     if (company) {
       company.position = message.position;
-      //positionLock = 0;
-      //for (var i = companies.length; i--;) {
-      //  company = companies[i];
-      //  if (company.position) {
-      //    positionLock = company.cancelId;
-      //    break;
-      //  }
-      //}
     }
   }
 };

@@ -50,12 +50,6 @@ var BAND_LIMIT = {
     bull: 4,
     bear: -6
   },
-  AGN: {
-    lower: 0.00032,
-    upper: 0.00247,
-    bull: 0,
-    bear: -2
-  },
   BIDU: {
     lower: 0.00314,
     upper: 0.00721,
