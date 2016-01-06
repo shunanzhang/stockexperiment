@@ -113,7 +113,7 @@ var handleRealTimeBar = function(realtimeBar) {
     } else {
       company.open = open || realtimeBar.open;
       if (second > 52 && company.lastOrderStatus !== 'Filled') {
-        cancelPrevOrder(company.orderId - 1);
+        cancelPrevOrder(company.orderId);
       }
     }
     return; // skip if it is not the end of minutes
