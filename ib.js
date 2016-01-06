@@ -123,13 +123,12 @@ var handleRealTimeBar = function(realtimeBar) {
   realtimeBar.close = close;
   realtimeBar.open = open;
   var tradeController = company.tradeController;
-  var featureVector = tradeController.getFeatureVectorFromRaltimeBar(realtimeBar);
-  company.resetLowHighCloseOpen();
   var minute = date.minutes();
   var hour = date.hours();
   var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 49 && hour === 15); // always sell a the end of the day
   //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 49 && hour === 12); // for thanksgiving and christmas
-  var result = tradeController.trade(featureVector, noPosition);
+  var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
+  company.resetLowHighCloseOpen();
 
   // check if there are shares to sell / money to buy fisrt
   var position = company.position;

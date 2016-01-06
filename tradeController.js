@@ -3,9 +3,8 @@ var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
 var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
-var VOLUME_COLUMN = GoogleCSVReader.VOLUME_COLUMN;
-var FeatureVectorBuilder = require('./featureVectorBuilder');
 var toCent = require('./utils').toCent;
+var BOL = require('./technicals').BOL;
 
 var BUY = 'buy';
 var SELL = 'sell';
@@ -76,19 +75,16 @@ var BAND_LIMIT = {
   }
 };
 
-var max = Math.max;
 var abs = Math.abs;
 
 var TradeController = module.exports = function(columns, symbol, holding) {
   if (! (this instanceof TradeController)) { // enforcing new
     return new TradeController(columns, symbol, holding);
   }
-  this.featureVectorBuilder = new FeatureVectorBuilder();
   this.closeColumnIndex = columns[CLOSE_COLUMN];
   this.highColumnIndex = columns[HIGH_COLUMN];
   this.lowColumnIndex = columns[LOW_COLUMN];
   this.openColumnIndex = columns[OPEN_COLUMN];
-  this.volumeColumnIndex = columns[VOLUME_COLUMN];
   var bandLimit = BAND_LIMIT[symbol] || BAND_LIMIT.NFLX;
   this.lowerLimit = bandLimit.lower;
   this.upperLimit = bandLimit.upper;
@@ -97,51 +93,49 @@ var TradeController = module.exports = function(columns, symbol, holding) {
   this.holding = holding || 2;
   this.countDown = 0;
   this.lastPos = HOLD;
+  this.bol = new BOL(20);
 };
 TradeController.BUY = BUY;
 TradeController.SELL = SELL;
 TradeController.HOLD = HOLD;
 TradeController.MINUTES_DAY = MINUTES_DAY;
 
-TradeController.prototype.getFeatureVector = function(datum) {
-  return this.featureVectorBuilder.build(datum[this.closeColumnIndex], datum[this.highColumnIndex], datum[this.lowColumnIndex], datum[this.openColumnIndex], datum[this.volumeColumnIndex]);
-};
-
-TradeController.prototype.getFeatureVectorFromRaltimeBar = function(realtimeBar) {
-  var datum = [];
+TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold) {
+  var datum = [0]; // contiguous keys starting at 0 for performance
   datum[this.closeColumnIndex] = toCent(realtimeBar.close);
   datum[this.highColumnIndex] = toCent(realtimeBar.high);
   datum[this.lowColumnIndex] = toCent(realtimeBar.low);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
-  datum[this.volumeColumnIndex] = realtimeBar.volume;
-  return this.getFeatureVector(datum);
+  return this.trade(datum, forceHold);
 };
 
-TradeController.prototype.trade = function(featureVector, forceHold) {
-  if (forceHold) {
+TradeController.prototype.trade = function(datum, forceHold) {
+  var close = datum[this.closeColumnIndex];
+  var high = datum[this.highColumnIndex];
+  var low = datum[this.lowColumnIndex];
+  var open = datum[this.openColumnIndex];
+  var band = this.bol.analize(close);
+  if (forceHold || !band) {
     this.lastPos = HOLD;
+    this.countDown = 0;
     return HOLD;
   }
-  var band = featureVector.band;
-  if (band) {
-    var bandWidth = band.width;
-    var bar = featureVector.bar;
-    if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit && abs(bar) < band.twoSigma) {
-      if (bar < this.bearLimit && featureVector.low < band.lower) {
-        this.countDown = this.holding;
-        this.lastPos = BUY;
-        return BUY;
-      } else if (bar > this.bullLimit && featureVector.high > band.upper) {
-        this.countDown = this.holding;
-        this.lastPos = SELL;
-        return SELL;
-      }
+  var bandWidth = band.width;
+  var bar = close - open;
+  if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit && abs(bar) < band.twoSigma) {
+    if (bar < this.bearLimit && low < band.lower) {
+      this.countDown = this.holding;
+      this.lastPos = BUY;
+      return BUY;
+    } else if (bar > this.bullLimit && high > band.upper) {
+      this.countDown = this.holding;
+      this.lastPos = SELL;
+      return SELL;
     }
   }
-  this.countDown = max(0, this.countDown - 1);
-  if (this.countDown > 0) {
-    return this.lastPos;
+  if (--this.countDown <= 0) {
+    this.lastPos = HOLD;
+    this.countDown = 0;
   }
-  this.lastPos = HOLD;
-  return HOLD;
+  return this.lastPos;
 };
