@@ -67,6 +67,12 @@ var BAND_LIMIT = {
     upper: 0.00767,
     bull: 0,
     bear: -0
+  },
+  GOOGL: {
+    lower: 0.00210,
+    upper: 0.00780,
+    bull: 6,
+    bear: -4
   }
 };
 
