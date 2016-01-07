@@ -77,6 +77,7 @@ var BAND_LIMIT = {
 };
 
 var max = Math.max;
+var abs = Math.abs;
 
 var TradeController = module.exports = function(columns, symbol, holding) {
   if (! (this instanceof TradeController)) { // enforcing new
@@ -124,8 +125,8 @@ TradeController.prototype.trade = function(featureVector, forceHold) {
   var band = featureVector.band;
   if (band) {
     var bandWidth = band.width;
-    if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit) {
-      var bar = featureVector.bar;
+    var bar = featureVector.bar;
+    if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit && abs(bar) < band.twoSigma) {
       if (bar < this.bearLimit && featureVector.low < band.lower) {
         this.countDown = this.holding;
         this.lastPos = BUY;
