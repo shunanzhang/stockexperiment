@@ -154,7 +154,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, close * 0.00050);
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, close * 0.00045);
   console.log(result, noPosition, position, realtimeBar, new Date());
 };
 
