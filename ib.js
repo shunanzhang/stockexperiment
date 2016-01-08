@@ -20,7 +20,7 @@ var cancelIds = {};
 var symbols = {};
 var orderIds = {};
 
-var companies = [new Company('NFLX'), new Company('AMZN')];
+var companies = [new Company('NFLX')];
 for (var i = companies.length; i--;) {
   var company = companies[i];
   cancelIds[company.cancelId] = company;
