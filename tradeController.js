@@ -13,11 +13,23 @@ var HOLD = 'hold';
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 
 var BAND_LIMIT = {
+  //NFLX: {
+  //  lower: 0.00510,
+  //  upper: 0.00859,
+  //  bull: 1,
+  //  bear: -3
+  //},
   NFLX: {
-    lower: 0.00510,
-    upper: 0.00859,
-    bull: 1,
-    bear: -3
+    lower: 0.00707,
+    upper: 0.00750,
+    bull: 0,
+    bear: -0
+  },
+  SPY: {
+    lower: 0.00434,
+    upper: 0.00521,
+    bull: 0,
+    bear: -0
   },
   AAPL: {
     lower: 0.00239,
@@ -122,6 +134,7 @@ TradeController.prototype.trade = function(datum, forceHold) {
   }
   var bandWidth = band.width;
   var bar = close - open;
+  console.log(new Date(), close, high, low, open, bandWidth, bar, band.lower, band.upper);
   if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit && abs(bar) < band.twoSigma) {
     if (bar < this.bearLimit && low < band.lower) {
       this.countDown = this.holding;

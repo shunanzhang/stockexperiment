@@ -20,12 +20,15 @@ var cancelIds = {};
 var symbols = {};
 var orderIds = {};
 
-var companies = [new Company('NFLX')];
-for (var i = companies.length; i--;) {
-  var company = companies[i];
-  cancelIds[company.cancelId] = company;
-  symbols[company.symbol] = company;
-}
+var createCompanies = function() {
+  var companies = [new Company('NFLX')];
+  for (var i = companies.length; i--;) {
+    var company = companies[i];
+    cancelIds[company.cancelId] = company;
+    symbols[company.symbol] = company;
+  }
+  return companies;
+};
 
 var api = new ibapi.NodeIbapi();
 
@@ -63,6 +66,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
 //  1. Add handlers to listen to messages
 //  2. Each handler must have be a function (message) signature
 var handleValidOrderId = function(message) {
+  var companies = createCompanies();
   orderId = message.orderId;
   console.log('next order Id is', orderId);
   api.reqPositions();
@@ -87,12 +91,7 @@ var handleClientError = function(message) {
 };
 
 var handleDisconnected = function(message) {
-  if (api.isConnected()) {
-    api.disconnect();
-  }
-  if (api.connect('127.0.0.1', 7496, 0)) {
-    api.beginProcessing();
-  }
+  process.exit(1);
 };
 
 var handleRealTimeBar = function(realtimeBar) {
@@ -153,7 +152,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, close * 0.00025);
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, close * 0.00010);
   console.log(result, noPosition, position, realtimeBar, new Date());
 };
 
