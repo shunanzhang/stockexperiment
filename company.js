@@ -20,7 +20,7 @@ var MIN_PRICES = {
 };
 
 var MAX_POSITIONS = {
-  NFLX: 100,
+  NFLX: 200,
   AAPL: 600,
   AMZN: 100,
   BIDU: 300

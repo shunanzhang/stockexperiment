@@ -134,7 +134,6 @@ TradeController.prototype.trade = function(datum, forceHold) {
   }
   var bandWidth = band.width;
   var bar = close - open;
-  console.log(new Date(), close, high, low, open, bandWidth, bar, band.lower, band.upper);
   if (this.lowerLimit < bandWidth && bandWidth < this.upperLimit && abs(bar) < band.twoSigma) {
     if (bar < this.bearLimit && low < band.lower) {
       this.countDown = this.holding;
