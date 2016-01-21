@@ -146,7 +146,7 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     return;
   }
-  var limitPrice = close + close * (result === BUY ? 0.00137 : -0.00137);
+  var limitPrice = close + close * (result === BUY ? 0.00237 : -0.00237);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
