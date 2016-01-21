@@ -16,7 +16,7 @@ var MINUTES_DAY = TradeController.MINUTES_DAY;
 /**
  * argument parsing
  */
-var tickerId = process.argv[2] || 'NFLX';
+var tickerId = process.argv[2] || 'SPY';
 var readNewData = process.argv[3];
 
 var googleCSVReader = new GoogleCSVReader(tickerId);
@@ -26,7 +26,7 @@ var backtest = function() {
   var data = googleCSVReader.data;
   var dataLen = data.length;
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
-  var tradeController = new TradeController(googleCSVReader.columns, tickerId);
+  var tradeController = new TradeController(googleCSVReader.columns);
 
   var bought = 0;
   var gain = 0;
@@ -37,7 +37,7 @@ var backtest = function() {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
     var newClose = closes[i];
-    var noPosition = (i_MINUTES_DAY < 20) || (i_MINUTES_DAY >= MINUTES_DAY - 10);
+    var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 10);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition);
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {

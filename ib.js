@@ -21,7 +21,7 @@ var symbols = {};
 var orderIds = {};
 
 var createCompanies = function() {
-  var companies = [new Company('NFLX')];
+  var companies = [new Company('SPY')];
   for (var i = companies.length; i--;) {
     var company = companies[i];
     cancelIds[company.cancelId] = company;
@@ -124,8 +124,8 @@ var handleRealTimeBar = function(realtimeBar) {
   var tradeController = company.tradeController;
   var minute = date.minutes();
   var hour = date.hours();
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 50 && hour === 9) || (minute > 49 && hour === 15); // always sell a the end of the day
-  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 50 && hour === 9) || (minute > 49 && hour === 12); // for thanksgiving and christmas
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 30 && hour === 9) || (minute > 49 && hour === 15); // always sell a the end of the day
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 30 && hour === 9) || (minute > 49 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
   company.resetLowHighCloseOpen();
 

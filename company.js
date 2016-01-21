@@ -1,29 +1,29 @@
 var createContract = require('ibapi').contract.createContract;
 var GoogleCSVReader = require('./googleCSVReader');
 var TradeController = require('./tradeController');
-
-var MAX_INT = 0x7FFFFFFF; // max 31 bit
-var MIN_INT = -0x7FFFFFFE; // negative max 31 bit
+var utils = require('./utils');
+var MAX_INT = utils.MAX_INT;
+var MIN_INT = utils.MIN_INT;
 
 var EXCHANGES = {
   NFLX: 'NASDAQ',
   AAPL: 'NASDAQ',
   AMZN: 'NASDAQ',
-  BIDU: 'NASDAQ'
+  SPY: 'ARCA'
 };
 
 var MIN_PRICES = {
   NFLX: 85.00,
   AAPL: 80.00,
   AMZN: 500.00,
-  BIDU: 140.00
+  SPY:  150.00
 };
 
 var MAX_POSITIONS = {
   NFLX: 200,
   AAPL: 600,
   AMZN: 100,
-  BIDU: 300
+  SPY: 100
 };
 
 var cancelId = 0;
@@ -36,7 +36,7 @@ var Company = module.exports = function(symbol) {
   this.minPrice = MIN_PRICES[symbol] || MAX_INT; // for flash crash
   this.maxPosition = MAX_POSITIONS[symbol] || 0;
   var googleCSVReader = new GoogleCSVReader(symbol);
-  this.tradeController = new TradeController(googleCSVReader.columns, symbol);
+  this.tradeController = new TradeController(googleCSVReader.columns);
   this.position = 0;
   this.low = MAX_INT;
   this.high = MIN_INT;
