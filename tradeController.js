@@ -27,10 +27,12 @@ TradeController.MINUTES_DAY = MINUTES_DAY;
 
 TradeController.prototype.reset = function() {
   this.lastPos = HOLD;
-  this.ceiling = [MAX_INT, MAX_INT];
-  this.bottom = [MIN_INT, MIN_INT];
-  this.localCeiling = [MAX_INT, MAX_INT, MAX_INT];
-  this.localBottom = [MIN_INT, MIN_INT, MIN_INT];
+  this.ceiling = MAX_INT;
+  this.bottom = MIN_INT;
+  this.localCeiling0 = MAX_INT;
+  this.localBottom0 = MIN_INT;
+  this.localCeiling1 = MAX_INT;
+  this.localBottom1 = MIN_INT;
   this.lastHigh = MIN_INT;
   this.lastLow = MAX_INT;
 };
@@ -49,35 +51,28 @@ TradeController.prototype.trade = function(datum, forceHold) {
     this.reset();
     return this.lastPos;
   }
-  //console.log(new Date(), this.ceiling, this.bottom, this.localCeiling, this.localBottom, this.lastHigh, this.lastLow, high, low);
   if (this.lastHigh >= high && this.lastLow <= low) { // if inside bar
     return this.lastPos;
   }
   this.lastHigh = high;
   this.lastLow = low;
-  var localCeiling = this.localCeiling;
-  var localBottom = this.localBottom;
-  localCeiling.shift();
-  localBottom.shift();
-  localCeiling.push(high);
-  localBottom.push(low);
-  var localCeiling1 = localCeiling[1];
-  var localBottom1 = localBottom[1];
+  var localCeiling1 = this.localCeiling1;
+  var localBottom1 = this.localBottom1;
   var sharp = 8;
-  if (localCeiling[0] < localCeiling1 - sharp - 1 && localCeiling1 - sharp > localCeiling[2]) {
-    var ceiling = this.ceiling;
-    ceiling.shift();
-    ceiling.push(localCeiling1);
-    if (ceiling[0] - sharp > ceiling[1]) {
+  if (this.localCeiling0 < localCeiling1 - sharp - 1 && localCeiling1 - sharp > high) {
+    if (this.ceiling - sharp > localCeiling1) {
       this.lastPos = SELL;
     }
-  } else if (localBottom[0] > localBottom1 + sharp - 1 && localBottom1 + sharp < localBottom[2]) {
-    var bottom = this.bottom;
-    bottom.shift();
-    bottom.push(localBottom1);
-    if (bottom[0] + sharp < bottom[1]) {
+    this.ceiling = localCeiling1;
+  } else if (this.localBottom0 > localBottom1 + sharp - 1 && localBottom1 + sharp < low) {
+    if (this.bottom + sharp < localBottom1) {
       this.lastPos = BUY;
     }
+    this.bottom = localBottom1;
   }
+  this.localCeiling0 = localCeiling1;
+  this.localBottom0 = localBottom1;
+  this.localCeiling1 = high;
+  this.localBottom1 = low;
   return this.lastPos;
 };
