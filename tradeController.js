@@ -64,14 +64,14 @@ TradeController.prototype.trade = function(datum, forceHold) {
   var localCeiling1 = localCeiling[1];
   var localBottom1 = localBottom[1];
   var sharp = 8;
-  if (localCeiling[0] < localCeiling1 - sharp && localCeiling1 - sharp > localCeiling[2]) {
+  if (localCeiling[0] < localCeiling1 - sharp - 1 && localCeiling1 - sharp > localCeiling[2]) {
     var ceiling = this.ceiling;
     ceiling.shift();
     ceiling.push(localCeiling1);
     if (ceiling[0] - sharp > ceiling[1]) {
       this.lastPos = SELL;
     }
-  } else if (localBottom[0] > localBottom1 + sharp && localBottom1 + sharp < localBottom[2]) {
+  } else if (localBottom[0] > localBottom1 + sharp - 1 && localBottom1 + sharp < localBottom[2]) {
     var bottom = this.bottom;
     bottom.shift();
     bottom.push(localBottom1);
