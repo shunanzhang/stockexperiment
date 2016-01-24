@@ -82,12 +82,12 @@ TradeController.prototype.trade = function(datum, forceHold) {
     this.reset();
   }
   // Stop-and-Reverse
-  //var lossCut = 106;
+  //var lossCut = 107;
   //if (this.lastPos === BUY && this.lastEntry < high - lossCut) {
-  //    this.lastEntry = high;
+  //    this.lastEntry = low;
   //    this.lastPos = SELL;
   //} else if (this.lastPos === SELL && this.lastEntry > low + lossCut) {
-  //    this.lastEntry = low;
+  //    this.lastEntry = high;
   //    this.lastPos = BUY;
   //}
   return this.lastPos;
