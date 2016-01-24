@@ -77,18 +77,24 @@ TradeController.prototype.trade = function(datum, forceHold) {
   this.localBottom0 = localBottom1;
   this.localCeiling1 = high;
   this.localBottom1 = low;
-  var lossCut = 213;
-  if ((this.lastPos === BUY && this.lastEntry < low - lossCut) || (this.lastPos === SELL && this.lastEntry > high + lossCut)) {
+
+  // below is the strategy to take profit and cut loss
+  var lastEntry = this.lastEntry;
+  var cutLoss = 155;
+  var takeProfit = 213;
+  if ((this.lastPos === BUY && lastEntry < low - takeProfit) || (this.lastPos === SELL && lastEntry > high + takeProfit)) {
     this.reset();
   }
-  // Stop-and-Reverse
-  //var lossCut = 107;
-  //if (this.lastPos === BUY && this.lastEntry < high - lossCut) {
+  //var takeProfit = 107;
+  //if (this.lastPos === BUY && lastEntry < high - takeProfit) {
   //    this.lastEntry = low;
   //    this.lastPos = SELL;
-  //} else if (this.lastPos === SELL && this.lastEntry > low + lossCut) {
+  //} else if (this.lastPos === SELL && lastEntry > low + takeProfit) {
   //    this.lastEntry = high;
   //    this.lastPos = BUY;
   //}
+  else if ((this.lastPos === BUY && lastEntry > low + cutLoss) || (this.lastPos === SELL && lastEntry < high - cutLoss)) {
+    this.reset();
+  }
   return this.lastPos;
 };
