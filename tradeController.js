@@ -35,6 +35,7 @@ TradeController.prototype.reset = function() {
   this.localBottom1 = MIN_INT;
   this.lastHigh = MIN_INT;
   this.lastLow = MAX_INT;
+  this.lastEntry = 0;
 };
 
 TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold) {
@@ -61,11 +62,13 @@ TradeController.prototype.trade = function(datum, forceHold) {
   var sharp = 8;
   if (this.localCeiling0 < localCeiling1 - sharp - 1 && localCeiling1 - sharp > high) {
     if (this.ceiling - sharp > localCeiling1) {
+      this.lastEntry = high;
       this.lastPos = SELL;
     }
     this.ceiling = localCeiling1;
   } else if (this.localBottom0 > localBottom1 + sharp - 1 && localBottom1 + sharp < low) {
     if (this.bottom + sharp < localBottom1) {
+      this.lastEntry = low;
       this.lastPos = BUY;
     }
     this.bottom = localBottom1;
@@ -74,5 +77,11 @@ TradeController.prototype.trade = function(datum, forceHold) {
   this.localBottom0 = localBottom1;
   this.localCeiling1 = high;
   this.localBottom1 = low;
+  //var lossCut = 107;
+  //if ((this.lastPos === BUY && this.lastEntry < high - lossCut) || (this.lastPos === SELL && this.lastEntry > low + lossCut)) {
+  var lossCut = 213;
+  if ((this.lastPos === BUY && this.lastEntry < low - lossCut) || (this.lastPos === SELL && this.lastEntry > high + lossCut)) {
+    this.reset();
+  }
   return this.lastPos;
 };
