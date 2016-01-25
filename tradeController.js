@@ -27,8 +27,8 @@ TradeController.MINUTES_DAY = MINUTES_DAY;
 
 TradeController.prototype.reset = function() {
   this.lastPos = HOLD;
-  this.ceiling = MAX_INT;
-  this.bottom = MIN_INT;
+  this.ceiling = MIN_INT;
+  this.bottom = MAX_INT;
   this.localCeiling0 = MAX_INT;
   this.localBottom0 = MIN_INT;
   this.localCeiling1 = MAX_INT;
@@ -80,12 +80,12 @@ TradeController.prototype.trade = function(datum, forceHold) {
 
   // below is the strategy to take profit and cut loss
   var lastEntry = this.lastEntry;
-  var cutLoss = lastEntry * 0.0083 | 0;
-  var takeProfit = 213;
+  var cutLoss = lastEntry * 0.0087 | 0;
+  var takeProfit = 113;
   if ((this.lastPos === BUY && lastEntry < low - takeProfit) || (this.lastPos === SELL && lastEntry > high + takeProfit)) {
     this.reset();
   }
-  //var takeProfit = 107;
+  //var takeProfit = 108;
   //if (this.lastPos === BUY && lastEntry < high - takeProfit) {
   //    this.lastEntry = low;
   //    this.lastPos = SELL;
