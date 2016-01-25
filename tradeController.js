@@ -80,7 +80,7 @@ TradeController.prototype.trade = function(datum, forceHold) {
 
   // below is the strategy to take profit and cut loss
   var lastEntry = this.lastEntry;
-  var cutLoss = 155;
+  var cutLoss = lastEntry * 0.0083 | 0;
   var takeProfit = 213;
   if ((this.lastPos === BUY && lastEntry < low - takeProfit) || (this.lastPos === SELL && lastEntry > high + takeProfit)) {
     this.reset();
