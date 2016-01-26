@@ -36,6 +36,7 @@ TradeController.prototype.reset = function() {
   this.lastHigh = MIN_INT;
   this.lastLow = MAX_INT;
   this.lastEntry = 0;
+  this.realEntry = 0;
 };
 
 TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold) {
@@ -63,12 +64,18 @@ TradeController.prototype.trade = function(datum, forceHold) {
   if (this.localCeiling0 < localCeiling1 - sharp - 1 && localCeiling1 - sharp > high) {
     if (this.ceiling - sharp > localCeiling1) {
       this.lastEntry = high;
+      if (this.lastPos !== SELL) {
+        this.realEntry = high;
+      }
       this.lastPos = SELL;
     }
     this.ceiling = localCeiling1;
   } else if (this.localBottom0 > localBottom1 + sharp - 1 && localBottom1 + sharp < low) {
     if (this.bottom + sharp < localBottom1) {
       this.lastEntry = low;
+      if (this.lastPos !== BUY) {
+        this.realEntry = low;
+      }
       this.lastPos = BUY;
     }
     this.bottom = localBottom1;
@@ -80,7 +87,7 @@ TradeController.prototype.trade = function(datum, forceHold) {
 
   // below is the strategy to take profit and cut loss
   var lastEntry = this.lastEntry;
-  var cutLoss = lastEntry * 0.0087 | 0;
+  var cutLoss = lastEntry * 0.0041 | 0;
   var takeProfit = 113;
   if ((this.lastPos === BUY && lastEntry < low - takeProfit) || (this.lastPos === SELL && lastEntry > high + takeProfit)) {
     this.reset();
@@ -93,7 +100,7 @@ TradeController.prototype.trade = function(datum, forceHold) {
   //    this.lastEntry = high;
   //    this.lastPos = BUY;
   //}
-  else if ((this.lastPos === BUY && lastEntry > low + cutLoss) || (this.lastPos === SELL && lastEntry < high - cutLoss)) {
+  else if ((this.lastPos === BUY && this.realEntry > high + cutLoss) || (this.lastPos === SELL && this.realEntry < low - cutLoss)) {
     this.reset();
   }
   return this.lastPos;
