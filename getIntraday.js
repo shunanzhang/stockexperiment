@@ -38,8 +38,9 @@ var backtest = function() {
     var i_MINUTES_DAY = i % MINUTES_DAY;
     var newClose = closes[i];
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 10);
+    var lastOrder = (i_MINUTES_DAY >= MINUTES_DAY - 30);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
-    var result = tradeController.trade(datum, noPosition);
+    var result = tradeController.trade(datum, noPosition, lastOrder);
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
       if (bought < 0) {
         gains.push(-(bought + newClose) - 1); // take 1 cent off for round trip commission
