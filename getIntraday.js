@@ -50,11 +50,11 @@ var backtest = function() {
           nGain += 1;
         }
         //console.log(gain);
-        console.log(BUY, displayTime, newClose, -(bought + newClose), gain, pGain / (pGain + nGain));
+        console.log('  ', BUY, displayTime, newClose, -(bought + newClose), gain, pGain / (pGain + nGain));
       }
       if (result === BUY) {
         bought = newClose;
-        console.log('bought', displayTime);
+        console.log('bought', displayTime, newClose);
       } else {
         bought = 0;
       }
@@ -68,11 +68,11 @@ var backtest = function() {
           nGain += 1;
         }
         //console.log(gain);
-        console.log(SELL, displayTime, newClose, newClose - bought, gain, pGain / (pGain + nGain));
+        console.log(' ', SELL, displayTime, newClose, newClose - bought, gain, pGain / (pGain + nGain));
       }
       if (result === SELL) {
         bought = -newClose;
-        console.log('sold', displayTime);
+        console.log(' ', 'sold', displayTime, newClose);
       } else {
         bought = 0;
       }
