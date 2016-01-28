@@ -97,7 +97,9 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   lastMin.push(localMin);
   var pl = close - this.lastEntry;
   if (lastOrder) {
-    // do nothing
+    if ((this.lastPos === BUY && pl > 0) || (this.lastPos === SELL && pl < 0)) {
+      this.clear();
+    }
   } else if (nBull > 3 && lastMax[0] + 1 === min.apply(null, upper.slice(period - 6))) {
     this.lastPos = BUY;
     if (this.lastEntry === 0) {
