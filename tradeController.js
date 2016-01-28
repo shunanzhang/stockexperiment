@@ -64,8 +64,8 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
     return this.lastPos;
   }
   var period = 20;
-  var takeProfit = close * 0.011 | 0;
-  var cutLoss = close * -0.0053 | 0;
+  var takeProfit = close * 0.0051 | 0;
+  var cutLoss = close * -0.0047 | 0;
   var upper = this.upper;
   var lower = this.lower;
   upper.push(high);
@@ -83,9 +83,9 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   var nBear = 0;
   for (var i = lastBox.length; i--;) {
     var box = lastBox[i];
-    if (box > 2) {
+    if (box > 1) {
       nBull += 1;
-    } else if (box < 2) {
+    } else if (box < -1) {
       nBear += 1;
     }
   }
