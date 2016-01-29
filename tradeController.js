@@ -55,21 +55,23 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
     this.reset();
     return this.lastPos;
   }
-  var takeProfit = 0.0029;
-  var cutLoss = 0.0008;
+  var takeProfit = 0.00578;
+  var cutLoss = 0.0016;
   var lastPos = this.lastPos;
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
   if (lastBar) { // lastBar !== 0
     var enter = false;
+    var close2 = close * close;
+    var lastEntry2 = lastEntry * lastEntry;
     if (lastPos === HOLD) {
       enter = true;
     } else if (lastPos === BUY) {
-      if (close >= lastEntry * (1.0 + takeProfit) || close <= lastEntry * (1.0 - cutLoss)) {
+      if (close2 >= lastEntry2 * (1.0 + takeProfit) || close2 <= lastEntry2 * (1.0 - cutLoss)) {
         enter = true;
       }
     } else if (lastPos === SELL) {
-      if (close <= lastEntry * (1.0 - takeProfit) || close >= lastEntry * (1.0 + cutLoss)) {
+      if (close2 <= lastEntry2 * (1.0 - takeProfit) || close2 >= lastEntry2 * (1.0 + cutLoss)) {
         enter = true;
       }
     }
