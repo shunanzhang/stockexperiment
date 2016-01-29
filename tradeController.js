@@ -5,16 +5,12 @@ var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
 var utils = require('./utils');
 var toCent = utils.toCent;
-var MAX_INT = utils.MAX_INT;
-var MIN_INT = utils.MIN_INT;
 
 var BUY = 'buy';
 var SELL = 'sell';
 var HOLD = 'hold';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
-var max = Math.max;
-var min = Math.min;
 
 var TradeController = module.exports = function(columns) {
   if (! (this instanceof TradeController)) { // enforcing new
@@ -32,11 +28,7 @@ TradeController.HOLD = HOLD;
 TradeController.MINUTES_DAY = MINUTES_DAY;
 
 TradeController.prototype.reset = function() {
-  this.upper = [];
-  this.lower =  [];
-  this.lastBox = [0, 0, 0, 0, 0, 0];
-  this.lastMax = [MAX_INT, MAX_INT, MAX_INT, MAX_INT, MAX_INT, MAX_INT];
-  this.lastMin = [MIN_INT, MIN_INT, MIN_INT, MIN_INT, MIN_INT, MIN_INT];
+  this.lastBar = 0;
   this.clear();
 };
 
@@ -63,59 +55,40 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
     this.reset();
     return this.lastPos;
   }
-  var period = 20;
-  var takeProfit = close * 0.0051 | 0;
-  var cutLoss = close * -0.0047 | 0;
-  var upper = this.upper;
-  var lower = this.lower;
-  upper.push(high);
-  lower.push(low);
-  if (upper.length <= period || lower.length <= period) {
-    this.clear();
-    return this.lastPos;
-  }
-  upper.shift();
-  lower.shift();
-  var lastBox = this.lastBox;
-  lastBox.shift();
-  lastBox.push(close - open);
-  var nBull = 0;
-  var nBear = 0;
-  for (var i = lastBox.length; i--;) {
-    var box = lastBox[i];
-    if (box > 1) {
-      nBull += 1;
-    } else if (box < -1) {
-      nBear += 1;
+  var takeProfit = 0.0029;
+  var cutLoss = 0.0008;
+  var lastPos = this.lastPos;
+  var lastEntry = this.lastEntry;
+  var lastBar = this.lastBar;
+  if (lastBar) { // lastBar !== 0
+    var enter = false;
+    if (lastPos === HOLD) {
+      enter = true;
+    } else if (lastPos === BUY) {
+      if (close >= lastEntry * (1.0 + takeProfit) || close <= lastEntry * (1.0 - cutLoss)) {
+        enter = true;
+      }
+    } else if (lastPos === SELL) {
+      if (close <= lastEntry * (1.0 - takeProfit) || close >= lastEntry * (1.0 + cutLoss)) {
+        enter = true;
+      }
+    }
+    if (enter) {
+      //console.log(lastPos, close, lastEntry, lastEntry * (1.0 + takeProfit), lastEntry * (1.0 - cutLoss), lastEntry * (1.0 - takeProfit), lastEntry * (1.0 + cutLoss));
+      if (lastOrder) {
+        if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
+          this.clear();
+        }
+      } else if (lastBar > 1) {
+        this.lastPos = BUY;
+        this.lastEntry = close;
+      } else if (lastBar < 1) {
+        this.lastPos = SELL;
+        this.lastEntry = close;
+      }
     }
   }
-  var localMax = max.apply(null, upper);
-  var localMin = min.apply(null, lower);
-  var lastMax = this.lastMax;
-  var lastMin = this.lastMin;
-  lastMax.push(localMax);
-  lastMin.push(localMin);
-  var pl = close - this.lastEntry;
-  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), lastBox, nBull, nBear);
-  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), high, low);
-  if (lastOrder) {
-    if ((this.lastPos === BUY && pl > 0) || (this.lastPos === SELL && pl < 0)) {
-      this.clear();
-    }
-  } else if (nBull > 3 && lastMax[0] + 1 === min.apply(null, upper.slice(period - 6))) {
-    this.lastPos = BUY;
-    if (this.lastEntry === 0) {
-      this.lastEntry = close;
-    }
-  } else if (nBear > 3 && lastMin[0] - 1 === max.apply(null, lower.slice(period - 6))) {
-    this.lastPos = SELL;
-    if (this.lastEntry === 0) {
-      this.lastEntry = close;
-    }
-  } else if ((this.lastPos === BUY && (nBear > 5 || pl > takeProfit || pl < cutLoss)) || (this.lastPos === SELL && (nBull > 5 || -pl > takeProfit || -pl < cutLoss))) {
-    this.clear();
-  }
-  lastMax.shift();
-  lastMin.shift();
+  this.lastBar = close - open;
+  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), close, lastEntry, lastPos, enter);
   return this.lastPos;
 };

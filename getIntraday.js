@@ -37,8 +37,8 @@ var backtest = function() {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
     var newClose = closes[i];
-    var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 10);
-    var lastOrder = (i_MINUTES_DAY >= MINUTES_DAY - 30);
+    var noPosition = (i_MINUTES_DAY < 5) || (i_MINUTES_DAY >= MINUTES_DAY - 10);
+    var lastOrder = (i_MINUTES_DAY >= MINUTES_DAY - 23);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition, lastOrder);
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
@@ -87,6 +87,8 @@ var backtest = function() {
   var variance = 0;
   var pg = 0;
   var ng = 0;
+  var maxGain = 0;
+  var maxDd = 0;
   for (i = gains.length; i--;) {
     aveGain += gains[i];
     if (gains[i] > 0) {
@@ -94,6 +96,8 @@ var backtest = function() {
     } else if (gains[i] < 0) {
       ng += -gains[i];
     }
+    maxGain = Math.max(aveGain, maxGain);
+    maxDd = Math.min(maxGain - aveGain, maxDd);
   }
   aveGain /= gains.length;
   for (i = gains.length; i--;) {
@@ -106,6 +110,7 @@ var backtest = function() {
   console.log('gain:', gain, ', per day =', 100.0 * gain / closes[0] / dataLen * MINUTES_DAY, '%');
   console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain), 'kelly criterion:', pGain / (pGain + nGain) - nGain / (pGain + nGain) / ((pg / pGain) / (ng / nGain)));
   console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, 'ratio:', aveGain/Math.sqrt(variance), '# trades: ', gains.length);
+  console.log('max draw down: ', maxDd);
   console.log('buy and hold:', closes[dataLen - 1] - closes[0]);
   console.log('pGain*ave/sigma/days:', pGain * aveGain / Math.sqrt(variance) / (dataLen / MINUTES_DAY));
 
