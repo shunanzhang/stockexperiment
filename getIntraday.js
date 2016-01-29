@@ -4,6 +4,7 @@ var ByLineStream = require('./byLineStream');
 var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var TradeController = require('./tradeController');
+var MIN_INT = require('./utils').MIN_INT;
 
 var INTERVAL = 60; // sec
 var PERIOD = 20; // days
@@ -87,7 +88,7 @@ var backtest = function() {
   var variance = 0;
   var pg = 0;
   var ng = 0;
-  var maxGain = 0;
+  var maxGain = MIN_INT;
   var maxDd = 0;
   for (i = gains.length; i--;) {
     aveGain += gains[i];
@@ -97,7 +98,7 @@ var backtest = function() {
       ng += -gains[i];
     }
     maxGain = Math.max(aveGain, maxGain);
-    maxDd = Math.min(maxGain - aveGain, maxDd);
+    maxDd = Math.min(aveGain - maxGain, maxDd);
   }
   aveGain /= gains.length;
   for (i = gains.length; i--;) {
