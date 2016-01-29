@@ -82,7 +82,7 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
       } else if (lastBar > 1) {
         this.lastPos = BUY;
         this.lastEntry = close;
-      } else if (lastBar < 1) {
+      } else if (lastBar < 0) { // biasing to sell rather than < -1
         this.lastPos = SELL;
         this.lastEntry = close;
       }
