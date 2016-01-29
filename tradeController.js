@@ -96,6 +96,8 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   lastMax.push(localMax);
   lastMin.push(localMin);
   var pl = close - this.lastEntry;
+  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), lastBox, nBull, nBear);
+  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), high, low);
   if (lastOrder) {
     if ((this.lastPos === BUY && pl > 0) || (this.lastPos === SELL && pl < 0)) {
       this.clear();
