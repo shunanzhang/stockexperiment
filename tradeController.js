@@ -47,13 +47,14 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
     return this.lastPos;
   }
   var takeProfit = 0.00578;
-  var cutLoss = 0.0016;
+  var cutLoss = 0.00160;
+  var cutLossR = 0.00158;
   var lastPos = this.lastPos;
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
   if (lastBar) { // lastBar !== 0
     var ratio = (close * close) / (lastEntry * lastEntry) - 1.0;
-    if (lastPos === HOLD || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLoss))) {
+    if (lastPos === HOLD || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR))) {
       if (lastOrder) {
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
