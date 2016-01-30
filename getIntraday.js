@@ -107,12 +107,12 @@ var backtest = function() {
   variance /= gains.length;
   console.log('size:', dataLen);
   console.log(tickerId);
-  console.log('elapsed:', dataLen / MINUTES_DAY | 0, 'days, ', dataLen % MINUTES_DAY, 'minutes');
-  console.log('gain:', gain, ', per day =', 100.0 * gain / closes[0] / dataLen * MINUTES_DAY, '%');
+  console.log('elapsed:', dataLen / MINUTES_DAY | 0, 'days', dataLen % MINUTES_DAY, 'minutes');
+  console.log('gain:', gain, 'per day =', 100.0 * gain / closes[0] / dataLen * MINUTES_DAY, '%');
   console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain), 'kelly criterion:', pGain / (pGain + nGain) - nGain / (pGain + nGain) / ((pg / pGain) / (ng / nGain)));
   console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, 'ratio:', aveGain/Math.sqrt(variance), '# trades: ', gains.length);
   console.log('max draw down: ', maxDd);
-  console.log('buy and hold:', closes[dataLen - 1] - closes[0]);
+  console.log('buy and hold:', closes[dataLen - 1] - closes[0], 'profit factor:', pg / ng);
   console.log('pGain*ave/sigma/days:', pGain * aveGain / Math.sqrt(variance) / (dataLen / MINUTES_DAY));
 
   googleCSVReader.shutdown();
