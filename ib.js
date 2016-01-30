@@ -83,16 +83,17 @@ var cancelPrevOrder = function(prevOrderId) {
 };
 
 var handleServerError = function(message) {
-  console.log('[ServerError]', message.id.toString(), '-', message.errorCode.toString(), '-', message.errorString.toString());
+  console.log('[ServerError]', message);
   process.exit(1);
 };
 
 var handleClientError = function(message) {
-  console.log('[ClientError]', JSON.stringify(message));
+  console.log('[ClientError]', message);
   process.exit(1);
 };
 
 var handleDisconnected = function(message) {
+  console.log('[Disconnected]', message);
   process.exit(1);
 };
 
@@ -196,7 +197,7 @@ var handlePosition = function(message) {
 // After that, you must register the event handler with a messageId
 // For list of valid messageIds, see messageIds.js file.
 api.handlers[messageIds.nextValidId] = handleValidOrderId;
-api.handlers[messageIds.svrError] = handleServerError;
+api.handlers[messageIds.error] = handleServerError;
 api.handlers[messageIds.clientError] = handleClientError;
 api.handlers[messageIds.disconnected] = handleDisconnected;
 api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
