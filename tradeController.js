@@ -1,10 +1,7 @@
 var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
-var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
-var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
-var utils = require('./utils');
-var toCent = utils.toCent;
+var toCent = require('./utils').toCent;
 
 var BUY = 'buy';
 var SELL = 'sell';
@@ -17,8 +14,6 @@ var TradeController = module.exports = function(columns) {
     return new TradeController(columns);
   }
   this.closeColumnIndex = columns[CLOSE_COLUMN];
-  this.highColumnIndex = columns[HIGH_COLUMN];
-  this.lowColumnIndex = columns[LOW_COLUMN];
   this.openColumnIndex = columns[OPEN_COLUMN];
   this.reset();
 };
@@ -40,16 +35,12 @@ TradeController.prototype.clear = function() {
 TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder) {
   var datum = [0, 0, 0, 0, 0]; // contiguous keys starting at 0 for performance
   datum[this.closeColumnIndex] = toCent(realtimeBar.close);
-  datum[this.highColumnIndex] = toCent(realtimeBar.high);
-  datum[this.lowColumnIndex] = toCent(realtimeBar.low);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
   return this.trade(datum, forceHold, lastOrder);
 };
 
 TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   var close = datum[this.closeColumnIndex];
-  var high = datum[this.highColumnIndex];
-  var low = datum[this.lowColumnIndex];
   var open = datum[this.openColumnIndex];
   if (forceHold) {
     this.reset();
@@ -61,22 +52,8 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
   if (lastBar) { // lastBar !== 0
-    var enter = false;
-    var close2 = close * close;
-    var lastEntry2 = lastEntry * lastEntry;
-    if (lastPos === HOLD) {
-      enter = true;
-    } else if (lastPos === BUY) {
-      if (close2 >= lastEntry2 * (1.0 + takeProfit) || close2 <= lastEntry2 * (1.0 - cutLoss)) {
-        enter = true;
-      }
-    } else if (lastPos === SELL) {
-      if (close2 <= lastEntry2 * (1.0 - takeProfit) || close2 >= lastEntry2 * (1.0 + cutLoss)) {
-        enter = true;
-      }
-    }
-    if (enter) {
-      //console.log(lastPos, close, lastEntry, lastEntry * (1.0 + takeProfit), lastEntry * (1.0 - cutLoss), lastEntry * (1.0 - takeProfit), lastEntry * (1.0 + cutLoss));
+    var ratio = (close * close) / (lastEntry * lastEntry) - 1.0;
+    if (lastPos === HOLD || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLoss))) {
       if (lastOrder) {
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
@@ -91,6 +68,6 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
     }
   }
   this.lastBar = close - open;
-  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), close, lastEntry, lastPos, enter);
+  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), close, lastEntry, lastPos);
   return this.lastPos;
 };

@@ -84,10 +84,12 @@ var cancelPrevOrder = function(prevOrderId) {
 
 var handleServerError = function(message) {
   console.log('[ServerError]', message.id.toString(), '-', message.errorCode.toString(), '-', message.errorString.toString());
+  process.exit(1);
 };
 
 var handleClientError = function(message) {
   console.log('[ClientError]', JSON.stringify(message));
+  process.exit(1);
 };
 
 var handleDisconnected = function(message) {
