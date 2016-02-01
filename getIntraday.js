@@ -112,7 +112,7 @@ var backtest = function() {
   console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain), 'kelly criterion:', pGain / (pGain + nGain) - nGain / (pGain + nGain) / ((pg / pGain) / (ng / nGain)));
   console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, 'ratio:', aveGain/Math.sqrt(variance), '# trades: ', gains.length);
   console.log('max draw down: ', maxDd);
-  console.log('buy and hold:', closes[dataLen - 1] - closes[0], 'profit factor:', pg / ng);
+  console.log('buy and hold:', closes[dataLen - 1] - closes[0], 'profit factor:', pg / ng, 'payoff ratio: ', (pg / pGain) / (ng / nGain));
   console.log('pGain*ave/sigma/days:', pGain * aveGain / Math.sqrt(variance) / (dataLen / MINUTES_DAY));
 
   googleCSVReader.shutdown();
