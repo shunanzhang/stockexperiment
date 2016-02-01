@@ -84,17 +84,23 @@ var cancelPrevOrder = function(prevOrderId) {
 
 var handleServerError = function(message) {
   console.log('[ServerError]', message);
-  process.exit(1);
+  if (message.errorCode === 1100 || message.errorCode === 1300) {
+    process.exit(1);
+  }
 };
 
 var handleClientError = function(message) {
   console.log('[ClientError]', message);
-  process.exit(1);
+  if (message.errorCode === 1100 || message.errorCode === 1300) {
+    process.exit(1);
+  }
 };
 
 var handleDisconnected = function(message) {
   console.log('[Disconnected]', message);
-  process.exit(1);
+  if (message.errorCode === 1100 || message.errorCode === 1300) {
+    process.exit(1);
+  }
 };
 
 var handleRealTimeBar = function(realtimeBar) {
