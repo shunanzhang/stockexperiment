@@ -56,6 +56,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.lmtPrice = roundCent(lmtPrice); // roundCent is required to place a correct order
   newOrder.auxPrice = roundCent(auxPrice);
   newOrder.hidden = true;
+  newOrder.percentOffset = 0; // bug workaround
   setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', company.symbol, newOrder);
