@@ -24,6 +24,7 @@ TradeController.MINUTES_DAY = MINUTES_DAY;
 
 TradeController.prototype.reset = function() {
   this.lastBar = 0;
+  this.barCount = 0;
   this.clear();
 };
 
@@ -52,9 +53,21 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   var lastPos = this.lastPos;
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
+  var barCount = this.barCount;
+  if (lastBar < 0) {
+    if (barCount > 0) {
+      barCount = 0;
+    }
+    this.barCount = --barCount;
+  } else if (lastBar > 0) {
+    if (barCount < 0) {
+      barCount = 0;
+    }
+    this.barCount = ++barCount;
+  }
   if (lastBar) { // lastBar !== 0
     var ratio = (close * close) / (lastEntry * lastEntry) - 1.0;
-    if (lastPos === HOLD || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR))) {
+    if (lastPos === HOLD || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss || barCount < -5)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR || barCount > 5))) {
       if (lastOrder) {
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
