@@ -67,7 +67,8 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   }
   if (lastBar) { // lastBar !== 0
     var ratio = (close * close) / (lastEntry * lastEntry) - 1.0;
-    if (lastPos === HOLD || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss || barCount < -5)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR || barCount > 5))) {
+    var entryBar = close * 0.0007;
+    if ((lastPos === HOLD && (lastBar < -entryBar || lastBar > entryBar)) || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss || barCount < -5)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR || barCount > 5))) {
       if (lastOrder) {
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
