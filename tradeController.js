@@ -77,8 +77,7 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
       }
       if (this.contLoss > 9) {
         this.clear();
-      } else
-      if (lastOrder) {
+      } else if (lastOrder) {
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
         }

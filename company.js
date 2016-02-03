@@ -23,7 +23,7 @@ var MAX_POSITIONS = {
   NFLX: 200,
   AAPL: 600,
   AMZN: 100,
-  SPY: 105
+  SPY: 108
 };
 
 var cancelId = 0;
