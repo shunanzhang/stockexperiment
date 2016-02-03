@@ -45,7 +45,7 @@ var backtest = function() {
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
       if (bought < 0) {
         gains.push(-(bought + newClose) - 1); // take 1 cent off for round trip commission
-        gain -= bought + newClose;
+        gain -= bought + newClose + 1;
         if (gains[gains.length - 1] > 0) {
           pGain += 1;
         } else {
@@ -63,7 +63,7 @@ var backtest = function() {
     } else if ((result === SELL && bought >= 0) || (result === HOLD && bought > 0)) {
       if (bought > 0) {
         gains.push(newClose - bought - 1); // take 1 cent off for round trip commission
-        gain += newClose - bought;
+        gain += newClose - bought - 1;
         if (gains[gains.length - 1] > 0) {
           pGain += 1;
         } else {

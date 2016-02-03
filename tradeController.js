@@ -32,6 +32,7 @@ TradeController.prototype.reset = function() {
 TradeController.prototype.clear = function() {
   this.lastPos = HOLD;
   this.lastEntry = 0;
+  this.minHold = 0;
 };
 
 TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder) {
@@ -55,6 +56,7 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
   var barCount = this.barCount;
+  var minHold = --this.minHold;
   if (lastBar < 0) {
     if (barCount > 0) {
       barCount = 0;
@@ -69,24 +71,28 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   if (lastBar) { // lastBar !== 0
     var ratio = (close * close) / (lastEntry * lastEntry) - 1.0;
     var entryBar = close * 0.0007;
-    if ((lastPos === HOLD && (lastBar < -entryBar || lastBar > entryBar)) || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss || barCount < -5)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR || barCount > 5))) {
+    if ((lastPos === HOLD && (lastBar < -entryBar || lastBar > entryBar)) || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss || barCount < -5)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR || barCount > 6))) {
       if ((lastPos === BUY && close < lastEntry) || (lastPos === SELL && close > lastEntry)) {
         this.contLoss += 1;
       } else if (lastPos !== HOLD) {
         this.contLoss = 0;
       }
-      if (this.contLoss > 9) {
+      if (this.contLoss > 8) {
         this.clear();
       } else if (lastOrder) {
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
         }
+      } else if (minHold > 0 && this.contLoss > 5) {
+        // do nothing
       } else if (lastBar > 1) {
         this.lastPos = BUY;
         this.lastEntry = close;
+        this.minHold = 2;
       } else if (lastBar < 0) { // biasing to sell rather than < -1
         this.lastPos = SELL;
         this.lastEntry = close;
+        this.minHold = 2;
       }
     }
   }
