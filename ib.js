@@ -84,22 +84,22 @@ var cancelPrevOrder = function(prevOrderId) {
 };
 
 var handleServerError = function(message) {
-  console.log('[ServerError]', message);
-  if (message.errorCode === 1100 || message.errorCode === 1300) {
+  console.log(new Date(), '[ServerError]', message);
+  if (message.errorCode === 1100 || message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleClientError = function(message) {
-  console.log('[ClientError]', message);
-  if (message.errorCode === 1100 || message.errorCode === 1300) {
+  console.log(new Date(), '[ClientError]', message);
+  if (message.errorCode === 1100 || message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleDisconnected = function(message) {
-  console.log('[Disconnected]', message);
-  if (message.errorCode === 1100 || message.errorCode === 1300) {
+  console.log(new Date(), '[Disconnected]', message);
+  if (message.errorCode === 1100 || message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
@@ -140,6 +140,7 @@ var handleRealTimeBar = function(realtimeBar) {
   //var lastOrder = (minute > 36 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition, lastOrder);
   company.resetLowHighCloseOpen();
+  console.log(realtimeBar, new Date());
 
   // check if there are shares to sell / money to buy fisrt
   var position = company.position;
