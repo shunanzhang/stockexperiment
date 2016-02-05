@@ -32,7 +32,6 @@ TradeController.prototype.reset = function() {
 TradeController.prototype.clear = function() {
   this.lastPos = HOLD;
   this.lastEntry = 0;
-  this.minHold = 0;
 };
 
 TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder) {
@@ -51,12 +50,14 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   }
   var takeProfit = 0.00578;
   var cutLoss = 0.00160;
-  var cutLossR = 0.00158;
+  var cutLossR = 0.00159;
+  var reEntry = 0.00382;
+  var reEntryR = 0.00364;
+  var systemHalt = 0.026;
   var lastPos = this.lastPos;
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
   var barCount = this.barCount;
-  var minHold = --this.minHold;
   if (lastBar < 0) {
     if (barCount > 0) {
       barCount = 0;
@@ -71,32 +72,35 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
   if (lastBar) { // lastBar !== 0
     var ratio = (close * close) / (lastEntry * lastEntry) - 1.0;
     var entryBar = close * 0.0007;
-    if ((lastPos === HOLD && (lastBar < -entryBar || lastBar > entryBar)) || (lastPos === BUY && (ratio >= takeProfit || ratio <= -cutLoss || barCount < -5)) || (lastPos === SELL && (ratio <= -takeProfit || ratio >= cutLossR || barCount > 6))) {
+    var contLoss = this.contLoss;
+    if ((lastPos === HOLD && contLoss === 0 && (lastBar < -entryBar || lastBar > entryBar)) ||
+        (lastPos === BUY && (ratio >= takeProfit || ((ratio <= -cutLoss || barCount < -5) && contLoss < 4))) ||
+        (lastPos === SELL && (ratio <= -takeProfit || ((ratio >= cutLossR || barCount > 6) && contLoss < 4)))) {
       if ((lastPos === BUY && close < lastEntry) || (lastPos === SELL && close > lastEntry)) {
         this.contLoss += 1;
       } else if (lastPos !== HOLD) {
         this.contLoss = 0;
       }
-      if (this.contLoss > 8) {
-        this.clear();
-      } else if (lastOrder) {
+      if (lastOrder) {
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
         }
-      } else if (minHold > 0 && this.contLoss > 5) {
-        // do nothing
       } else if (lastBar > 1) {
         this.lastPos = BUY;
         this.lastEntry = close;
-        this.minHold = 2;
       } else if (lastBar < 0) { // biasing to sell rather than < -1
         this.lastPos = SELL;
         this.lastEntry = close;
-        this.minHold = 2;
+      }
+    } else if (contLoss > 3) {
+      if ((lastPos === BUY && ratio >= reEntry) || (lastPos === SELL && ratio <= -reEntryR)) {
+        //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString());
+        return HOLD; // exit early without updating this.lastBar
+      } else if ((lastPos === BUY && ratio <= -systemHalt) || (lastPos === SELL && ratio >= systemHalt)) {
+        this.lastPos = HOLD;
       }
     }
   }
   this.lastBar = close - open;
-  //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), close, lastEntry, lastPos);
   return this.lastPos;
 };
