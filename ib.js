@@ -164,7 +164,7 @@ var handleRealTimeBar = function(realtimeBar) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
   }
-  var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
+  var orderType = (noPosition || qty < maxPosition || result === SELL) ? 'MKT' : 'REL';
   placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
   console.log(result, noPosition, position, realtimeBar, new Date());
 };
