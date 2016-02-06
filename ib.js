@@ -134,11 +134,13 @@ var handleRealTimeBar = function(realtimeBar) {
   var tradeController = company.tradeController;
   var minute = date.minutes();
   var hour = date.hours();
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 35 && hour === 9) || (minute > 49 && hour === 15); // always sell a the end of the day
-  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 35 && hour === 9) || (minute > 49 && hour === 12); // for thanksgiving and christmas
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 34 && hour === 9) || (minute > 55 && hour === 15); // always sell a the end of the day
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 34 && hour === 9) || (minute > 55 && hour === 12); // for thanksgiving and christmas
+  var giveup = (minute > 52 && hour === 15);
+  //var giveup = (minute > 52 && hour === 12); // for thanksgiving and christmas
   var lastOrder = (minute > 36 && hour === 15);
   //var lastOrder = (minute > 36 && hour === 12); // for thanksgiving and christmas
-  var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition, lastOrder);
+  var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition, lastOrder, giveup);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
 

@@ -34,14 +34,14 @@ TradeController.prototype.clear = function() {
   this.lastEntry = 0;
 };
 
-TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder) {
+TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder, giveup) {
   var datum = [0, 0, 0, 0, 0]; // contiguous keys starting at 0 for performance
   datum[this.closeColumnIndex] = toCent(realtimeBar.close);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
-  return this.trade(datum, forceHold, lastOrder);
+  return this.trade(datum, forceHold, lastOrder, giveup);
 };
 
-TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
+TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) {
   var close = datum[this.closeColumnIndex];
   var open = datum[this.openColumnIndex];
   if (forceHold) {
@@ -93,8 +93,16 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
         this.lastEntry = close;
       }
     } else if (contLoss > 3) {
+      if (giveup) {
+        this.clear();
+      } else
       if ((lastPos === BUY && ratio >= reEntry) || (lastPos === SELL && ratio <= -reEntryR)) {
         //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString());
+        if (close > lastEntry + 36) {
+          return BUY;
+        } else if (close < lastEntry - 39) {
+          return SELL;
+        }
         return HOLD; // exit early without updating this.lastBar
       } else if ((lastPos === BUY && ratio <= -systemHalt) || (lastPos === SELL && ratio >= systemHalt)) {
         this.lastPos = HOLD;
