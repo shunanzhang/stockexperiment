@@ -107,9 +107,9 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
         this.lastPos = HOLD;
       }
     } else if (lastEntry && close > lastEntry + 50) {
-      this.lastEntry -= 1;
+      this.lastEntry -= 1 - this.contLoss;
     } else if (lastEntry && close < lastEntry - 49) {
-      this.lastEntry += 1;
+      this.lastEntry += 1 + this.contLoss;
     }
   }
   this.lastBar = close - open;
