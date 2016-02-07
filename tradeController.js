@@ -26,6 +26,7 @@ TradeController.prototype.reset = function() {
   this.lastBar = 0;
   this.barCount = 0;
   this.contLoss = 0;
+  this.ddCount = 0;
   this.clear();
 };
 
@@ -51,9 +52,10 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
   var takeProfit = 0.00578;
   var cutLoss = 0.00160;
   var cutLossR = 0.00159;
-  var reEntry = 0.00382;
-  var reEntryR = 0.00369;
+  var reEntry = 0.00413;
   var systemHalt = 0.026;
+  var ddCoutLimit = 144;
+  var ddCoutLimitR = 153;
   var lastPos = this.lastPos;
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
@@ -92,24 +94,29 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
         this.lastPos = SELL;
         this.lastEntry = close;
       }
+      this.ddCount = 0;
     } else if (contLoss > 3) {
       if (giveup) {
-        this.clear();
-      } else if ((lastPos === BUY && ratio >= reEntry) || (lastPos === SELL && ratio <= -reEntryR)) {
-        //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString());
-        if (lastEntry && close > lastEntry + 36) {
-          return BUY;
-        } else if (lastEntry && close < lastEntry - 39) {
+        if (lastPos === BUY) {
           return SELL;
+        } else {
+          return BUY;
         }
-        return HOLD; // exit early without updating this.lastBar
+      } else if (lastPos === BUY && ratio >= reEntry && lastEntry) {
+        return BUY;
+      } else if (lastPos === SELL && ratio <= -reEntry && lastEntry) {
+        //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString());
+        return SELL;
+      } else if (lastPos === BUY && this.ddCount > ddCoutLimit) {
+        return SELL;
+      } else if (lastPos === SELL && this.ddCount > ddCoutLimitR) {
+        return BUY;
       } else if ((lastPos === BUY && ratio <= -systemHalt) || (lastPos === SELL && ratio >= systemHalt)) {
         this.lastPos = HOLD;
       }
+      this.ddCount += 1;
     } else if (lastEntry && close > lastEntry + 50 && contLoss > 1) {
       this.lastEntry -= 1 - contLoss;
-    //} else if (lastEntry && close > lastEntry + 53 && contLoss > 1) {
-    //  this.lastEntry -= 1 + contLoss;
     } else if (lastEntry && close < lastEntry - 49 && contLoss > 1) {
       this.lastEntry += 2 + contLoss;
     }
