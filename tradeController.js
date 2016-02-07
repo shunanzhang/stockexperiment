@@ -102,15 +102,15 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
         } else {
           return BUY;
         }
+      } else if (lastPos === BUY && this.ddCount > ddCoutLimit) {
+        return SELL;
+      } else if (lastPos === SELL && this.ddCount > ddCoutLimitR) {
+        return BUY;
       } else if (lastPos === BUY && ratio >= reEntry && lastEntry) {
         return BUY;
       } else if (lastPos === SELL && ratio <= -reEntry && lastEntry) {
         //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString());
         return SELL;
-      } else if (lastPos === BUY && this.ddCount > ddCoutLimit) {
-        return SELL;
-      } else if (lastPos === SELL && this.ddCount > ddCoutLimitR) {
-        return BUY;
       } else if ((lastPos === BUY && ratio <= -systemHalt) || (lastPos === SELL && ratio >= systemHalt)) {
         this.lastPos = HOLD;
       }
