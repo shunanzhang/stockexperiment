@@ -92,7 +92,7 @@ var backtest = function() {
   var ng = 0;
   var maxGain = MIN_INT;
   var maxDd = 0;
-  for (i = gains.length; i--;) {
+  for (i = 0; i < gains.length; i++) {
     aveGain += gains[i];
     if (gains[i] > 0) {
       pg += gains[i];
@@ -101,6 +101,7 @@ var backtest = function() {
     }
     maxGain = Math.max(aveGain, maxGain);
     maxDd = Math.min(aveGain - maxGain, maxDd);
+    //console.log(i, aveGain, maxGain, maxDd);
   }
   aveGain /= gains.length;
   for (i = gains.length; i--;) {
