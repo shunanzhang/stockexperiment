@@ -83,6 +83,7 @@ var backtest = function() {
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
       console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString());
       console.log('=====');
+      //console.log(gain);
     }
   }
   var aveGain = 0;
