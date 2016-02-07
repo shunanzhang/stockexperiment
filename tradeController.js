@@ -106,9 +106,9 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
       } else if ((lastPos === BUY && ratio <= -systemHalt) || (lastPos === SELL && ratio >= systemHalt)) {
         this.lastPos = HOLD;
       }
-    } else if (lastEntry && close > lastEntry + 50) {
+    } else if (lastEntry && close > lastEntry + 50 && contLoss > 1) {
       this.lastEntry -= 1 - contLoss;
-    } else if (lastEntry && close < lastEntry - 49) {
+    } else if (lastEntry && close < lastEntry - 49 && contLoss > 1) {
       this.lastEntry += 1 + contLoss;
     }
   }
