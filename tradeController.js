@@ -95,18 +95,21 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
     } else if (contLoss > 3) {
       if (giveup) {
         this.clear();
-      } else
-      if ((lastPos === BUY && ratio >= reEntry) || (lastPos === SELL && ratio <= -reEntryR)) {
+      } else if ((lastPos === BUY && ratio >= reEntry) || (lastPos === SELL && ratio <= -reEntryR)) {
         //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString());
-        if (close > lastEntry + 36) {
+        if (lastEntry && close > lastEntry + 36) {
           return BUY;
-        } else if (close < lastEntry - 39) {
+        } else if (lastEntry && close < lastEntry - 39) {
           return SELL;
         }
         return HOLD; // exit early without updating this.lastBar
       } else if ((lastPos === BUY && ratio <= -systemHalt) || (lastPos === SELL && ratio >= systemHalt)) {
         this.lastPos = HOLD;
       }
+    } else if (lastEntry && close > lastEntry + 50) {
+      this.lastEntry -= 1;
+    } else if (lastEntry && close < lastEntry - 49) {
+      this.lastEntry += 1;
     }
   }
   this.lastBar = close - open;

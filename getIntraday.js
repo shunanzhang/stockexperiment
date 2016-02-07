@@ -38,7 +38,7 @@ var backtest = function() {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
     var newClose = closes[i];
-    var noPosition = (i_MINUTES_DAY < 4) || (i_MINUTES_DAY >= MINUTES_DAY - 4);
+    var noPosition = (i_MINUTES_DAY < 4) || (i_MINUTES_DAY >= MINUTES_DAY - 5);
     var giveup = (i_MINUTES_DAY >= MINUTES_DAY - 7);
     var lastOrder = (i_MINUTES_DAY >= MINUTES_DAY - 23);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
