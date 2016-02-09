@@ -33,6 +33,7 @@ TradeController.prototype.reset = function() {
 TradeController.prototype.clear = function() {
   this.lastPos = HOLD;
   this.lastEntry = 0;
+  this.minHold = 0;
 };
 
 TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder, giveup) {
@@ -52,10 +53,13 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
   var takeProfit = 0.00578;
   var cutLoss = 0.00160;
   var cutLossR = 0.00159;
-  var reEntry = 0.00413;
+  var reEntry = 0.00387;
   var systemHalt = 0.026;
   var ddCoutLimit = 144;
   var ddCoutLimitR = 153;
+  var holdingTime = 5;
+  var holdingTimeR = 2;
+  var minHold = --this.minHold;
   var lastPos = this.lastPos;
   var lastEntry = this.lastEntry;
   var lastBar = this.lastBar;
@@ -87,23 +91,32 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
         if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
           this.clear();
         }
+      } else if (minHold > 0) {
+        this.lastEntry = close;
       } else if (lastBar > 1) {
         this.lastPos = BUY;
         this.lastEntry = close;
+        if (lastPos === SELL && ratio <= -takeProfit) {
+          this.minHold = holdingTime;
+        }
       } else if (lastBar < 0) { // biasing to sell rather than < -1
         this.lastPos = SELL;
         this.lastEntry = close;
+        if (lastPos === BUY && ratio >= takeProfit) {
+          this.minHold = holdingTimeR;
+        }
       }
       this.ddCount = 0;
     } else if (contLoss > 3) {
       //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), this.ddCount, ratio);
-      if (giveup) {
-        if (lastPos === BUY) {
-          return SELL;
-        } else {
-          return BUY;
-        }
-      } else if (lastPos === BUY && this.ddCount > ddCoutLimit) {
+      //if (giveup) {
+      //  if (lastPos === BUY) {
+      //    return SELL;
+      //  } else {
+      //    return BUY;
+      //  }
+      //} else
+      if (lastPos === BUY && this.ddCount > ddCoutLimit) {
         return SELL;
       } else if (lastPos === SELL && this.ddCount > ddCoutLimitR) {
         return BUY;
