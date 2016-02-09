@@ -96,6 +96,7 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
       }
       this.ddCount = 0;
     } else if (contLoss > 3) {
+      //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), this.ddCount, ratio);
       if (giveup) {
         if (lastPos === BUY) {
           return SELL;
@@ -109,7 +110,6 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
       } else if (lastPos === BUY && ratio >= reEntry && lastEntry) {
         return BUY;
       } else if (lastPos === SELL && ratio <= -reEntry && lastEntry) {
-        //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString());
         return SELL;
       } else if ((lastPos === BUY && ratio <= -systemHalt) || (lastPos === SELL && ratio >= systemHalt)) {
         this.lastPos = HOLD;
