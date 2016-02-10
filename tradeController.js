@@ -96,14 +96,19 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
       } else if (lastBar > 1) {
         this.lastPos = BUY;
         this.lastEntry = close;
-        if (lastPos === SELL && ratio <= -takeProfit) {
-          this.minHold = holdingTime;
+        if (lastPos === SELL) {
+          if (ratio <= -takeProfit) {
+            this.minHold = holdingTime;
+          }
         }
       } else if (lastBar < 0) { // biasing to sell rather than < -1
         this.lastPos = SELL;
         this.lastEntry = close;
-        if (lastPos === BUY && ratio >= takeProfit) {
-          this.minHold = holdingTimeR;
+        if (lastPos === BUY) {
+          this.minHold = 3;
+          if (ratio >= takeProfit) {
+            this.minHold = holdingTimeR;
+          }
         }
       }
       this.ddCount = 0;
