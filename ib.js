@@ -85,21 +85,21 @@ var cancelPrevOrder = function(prevOrderId) {
 
 var handleServerError = function(message) {
   console.log(new Date(), '[ServerError]', message);
-  if (message.errorCode === 1100 || message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
+  if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleClientError = function(message) {
   console.log(new Date(), '[ClientError]', message);
-  if (message.errorCode === 1100 || message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
+  if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleDisconnected = function(message) {
   console.log(new Date(), '[Disconnected]', message);
-  if (message.errorCode === 1100 || message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
+  if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
