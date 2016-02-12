@@ -36,14 +36,14 @@ TradeController.prototype.clear = function() {
   this.minHold = 0;
 };
 
-TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder) {
+TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder, giveup) {
   var datum = [0, 0, 0, 0, 0]; // contiguous keys starting at 0 for performance
   datum[this.closeColumnIndex] = toCent(realtimeBar.close);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
-  return this.trade(datum, forceHold, lastOrder);
+  return this.trade(datum, forceHold, lastOrder, giveup);
 };
 
-TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
+TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) {
   var close = datum[this.closeColumnIndex];
   var open = datum[this.openColumnIndex];
   if (forceHold) {
@@ -114,6 +114,13 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
       this.ddCount = 0;
     } else if (contLoss > 3) {
       //console.log(new Date((datum[0] + 60 * 60 * 3 - 60) * 1000).toLocaleTimeString(), this.ddCount, ratio);
+      if (giveup) {
+        if (lastPos === BUY) {
+          return SELL;
+        } else {
+          return BUY;
+        }
+      } else
       if (lastPos === BUY && this.ddCount > ddCoutLimit) {
         return SELL;
       } else if (lastPos === SELL && this.ddCount > ddCoutLimitR) {
