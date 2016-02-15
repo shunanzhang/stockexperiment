@@ -134,7 +134,7 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
       }
       this.ddCount += 1;
     } else if (lastEntry && close > lastEntry + 50 && contLoss > 1) {
-      this.lastEntry -= 0 - contLoss;
+      this.lastEntry -= 1 - contLoss;
     } else if (lastEntry && close < lastEntry - 49 && contLoss > 1) {
       this.lastEntry += 3 + contLoss;
     }
