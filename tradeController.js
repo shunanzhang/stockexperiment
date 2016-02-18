@@ -50,12 +50,12 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
     this.reset();
     return this.lastPos;
   }
-  var takeProfit = 0.00579;
-  var cutLoss = 0.00161;
+  var takeProfit = 0.00578;
+  var cutLoss = 0.00160;
   var cutLossR = 0.00159;
   var reEntry = 0.00387;
   var systemHalt = 0.036;
-  var ddCoutLimit = 139;
+  var ddCoutLimit = 144;
   var ddCoutLimitR = 153;
   var holdingTime = 2;
   var holdingTimeR = 2;
@@ -136,7 +136,7 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder, giveup) 
     } else if (lastEntry && close > lastEntry + 50 && contLoss > 1) {
       this.lastEntry -= 1 - contLoss;
     } else if (lastEntry && close < lastEntry - 49 && contLoss > 1) {
-      this.lastEntry += 3 + contLoss;
+      this.lastEntry += 2 + contLoss;
     }
   }
   this.lastBar = close - open;
