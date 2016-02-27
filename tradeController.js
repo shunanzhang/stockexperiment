@@ -41,6 +41,11 @@ TradeController.prototype.reset = function() {
 TradeController.prototype.clear = function() {
   this.lastPos = HOLD;
   this.lastEntry = 0;
+  this.driftCount = 0;
+  this.lastHigh = 0;
+  this.lastLow = 0;
+  this.boughtAbove = false;
+  this.soldBelow = false;
   this.lastTaller = false;
 };
 
@@ -82,6 +87,32 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
         sell = true;
       }
     }
+    var lastHigh = this.lastHigh;
+    var lastLow = this.lastLow;
+    var driftCount = this.driftCount;
+    if (lastLow === low && lastHigh === high) {
+      driftCount = 0;
+    } else if (lastLow <= low && lastHigh <= high) {
+      if (driftCount < 0) {
+        driftCount = 0;
+      }
+      driftCount += 1;
+    } else if (lastLow >= low && lastHigh >= high) {
+      if (driftCount > 0) {
+        driftCount = 0;
+      }
+      driftCount -= 1;
+    } else {
+      driftCount = 0;
+    }
+    if (driftCount > 8) {
+      sell = false;
+      buy = true;
+    } else if (driftCount < -8) {
+      buy = false;
+      sell = true;
+    }
+    this.driftCount = driftCount;
     var mid = (max(maxUpper, high) + min(minLower, low)) / 2.0;
     var lastPos = this.lastPos;
     var lastEntry = this.lastEntry;
@@ -89,25 +120,37 @@ TradeController.prototype.trade = function(datum, forceHold, lastOrder) {
       if ((lastPos === BUY && close > lastEntry) || (lastPos === SELL && close < lastEntry)) {
         this.clear();
       }
-    } else if ((lastPos === BUY && mid > low) || (lastPos === SELL && mid < high)) {
+    } else if ((lastPos === BUY && mid > low && this.boughtAbove) || (lastPos === SELL && mid < high && this.soldBelow)) {
       if ((lastPos === BUY && close < lastEntry) || (lastPos === SELL && close > lastEntry)) {
         this.contLoss += 1;
       }
+      this.boughtAbove = false;
+      this.soldBelow = false;
       this.lastPos = HOLD;
     } else if (buy && !sell) {
       if (lastPos !== BUY) {
         this.lastEntry = close;
+        this.boughtAbove = false;
       }
       this.lastPos = BUY;
     } else if (!buy && sell) {
       if (lastPos !== SELL) {
         this.lastEntry = close;
+        this.soldBelow = false;
       }
       this.lastPos = SELL;
+    }
+    if (this.lastPos === BUY && mid < low) {
+      this.boughtAbove = true;
+    }
+    if (this.lastPos === SELL && mid > high) {
+      this.soldBelow = true;
     }
     upper.shift();
     lower.shift();
   }
+  this.lastHigh = high;
+  this.lastLow = low;
   this.lastTaller = taller;
   this.sumBar += barHeight;
   this.barCount += 1;

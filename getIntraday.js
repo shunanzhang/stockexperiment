@@ -41,6 +41,8 @@ var backtest = function() {
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 5);
     var lastOrder = (i_MINUTES_DAY >= MINUTES_DAY - 20);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
+    var day = new Date((datum[0] + 60 * 60 * 3) * 1000).getDay();
+    noPosition |= day === 2 || day === 5;
     var result = tradeController.trade(datum, noPosition, lastOrder);
     if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
       if (bought < 0) {
