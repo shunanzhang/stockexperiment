@@ -52,8 +52,8 @@ TradeController.prototype.clear = function() {
 TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold, lastOrder) {
   var datum = [0, 0, 0, 0, 0]; // contiguous keys starting at 0 for performance
   datum[this.closeColumnIndex] = toCent(realtimeBar.close);
-  datum[this.highColumnIndex] = toCent(realtimeBar.close);
-  datum[this.lowColumnIndex] = toCent(realtimeBar.close);
+  datum[this.highColumnIndex] = toCent(realtimeBar.high);
+  datum[this.lowColumnIndex] = toCent(realtimeBar.low);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
   return this.trade(datum, forceHold, lastOrder);
 };
