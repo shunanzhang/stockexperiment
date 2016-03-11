@@ -16,14 +16,14 @@ var MIN_PRICES = {
   NFLX: 85.00,
   AAPL: 80.00,
   AMZN: 500.00,
-  SPY:  150.00
+  SPY:  160.00
 };
 
 var MAX_POSITIONS = {
   NFLX: 200,
   AAPL: 600,
   AMZN: 100,
-  SPY: 98
+  SPY: 100
 };
 
 var cancelId = 0;
@@ -42,6 +42,8 @@ var Company = module.exports = function(symbol) {
   this.high = MIN_INT;
   this.close = 0.0;
   this.open = 0.0;
+  this.last = 0.0;
+  this.positioning = false;
   var contract = this.contract = createContract();
   contract.symbol = symbol;
   contract.secType = 'STK';
