@@ -9,7 +9,7 @@ var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
 var FIRST_OFFSET = 0.04;
-var SECOND_OFFSET = 0.08;
+var SECOND_OFFSET = 0.10;
 
 var cancelIds = {};
 var symbols = {};
