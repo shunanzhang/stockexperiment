@@ -3,6 +3,8 @@ var request = require('request');
 var ByLineStream = require('./byLineStream');
 var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
+var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
+var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var TradeController = require('./tradeController');
 var MIN_INT = require('./utils').MIN_INT;
 
@@ -13,6 +15,9 @@ var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
+var SECOND_OFFSET = TradeController.SECOND_OFFSET;
+var L = TradeController.L;
+var S = TradeController.S;
 
 /**
  * argument parsing
@@ -27,9 +32,12 @@ var backtest = function() {
   var data = googleCSVReader.data;
   var dataLen = data.length;
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
-  var tradeController = new TradeController(googleCSVReader.columns);
+  var highs = googleCSVReader.getColumnData(HIGH_COLUMN);
+  var lows = googleCSVReader.getColumnData(LOW_COLUMN);
+  var tradeController = new TradeController(googleCSVReader.columns, L);
 
   var bought = 0;
+  var target = 0.0;
   var gain = 0;
   var gains = [];
   var pGain = 0;
@@ -38,48 +46,41 @@ var backtest = function() {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
     var newClose = closes[i];
+    var newHigh = highs[i];
+    var newLow = lows[i];
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 5);
-    var lastOrder = (i_MINUTES_DAY >= MINUTES_DAY - 20);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
-    var day = new Date((datum[0] + 60 * 60 * 3) * 1000).getDay();
-    noPosition |= day === 2 || day === 5;
-    var result = tradeController.trade(datum, noPosition, lastOrder);
-    if ((result === BUY && bought <= 0) || (result === HOLD && bought < 0)) {
-      if (bought < 0) {
-        gains.push(-(bought + newClose) - 2); // take 1 cent off for round trip commission
-        gain -= bought + newClose + 2;
-        if (gains[gains.length - 1] > 0) {
-          pGain += 1;
-        } else {
-          nGain += 1;
-        }
-        //console.log(gain);
-        console.log('  ', BUY, displayTime, newClose, -(bought + newClose), gain, pGain / (pGain + nGain));
-      }
-      if (result === BUY) {
-        bought = newClose;
-        console.log('bought', displayTime, newClose);
+    var result = tradeController.trade(datum, noPosition);
+    if (result === BUY && bought <= 0) {
+      bought = newClose;
+      target = Math.round(bought * (1.0 + SECOND_OFFSET));
+      console.log('bought', displayTime, newClose);
+    } else if (result === SELL && bought >= 0) {
+      bought = -newClose;
+      target = Math.round(bought * (1.0 - SECOND_OFFSET));
+      console.log(' ', 'sold', displayTime, newClose);
+    } else if (result === HOLD && bought < 0 && target >= newLow) {
+      gains.push(-(bought + target) - 2); // take 2 cents off for round trip commission
+      gain -= bought + target + 2;
+      if (gains[gains.length - 1] > 0) {
+        pGain += 1;
       } else {
-        bought = 0;
+        nGain += 1;
       }
-    } else if ((result === SELL && bought >= 0) || (result === HOLD && bought > 0)) {
-      if (bought > 0) {
-        gains.push(newClose - bought - 2); // take 1 cent off for round trip commission
-        gain += newClose - bought - 2;
-        if (gains[gains.length - 1] > 0) {
-          pGain += 1;
-        } else {
-          nGain += 1;
-        }
-        //console.log(gain);
-        console.log(' ', SELL, displayTime, newClose, newClose - bought, gain, pGain / (pGain + nGain));
-      }
-      if (result === SELL) {
-        bought = -newClose;
-        console.log(' ', 'sold', displayTime, newClose);
+      //console.log(gain);
+      console.log('  ', BUY, displayTime, newClose, -(bought + target), gain, pGain / (pGain + nGain));
+      bought = 0;
+    } else if (result === HOLD && bought > 0 && target <= newHigh) {
+      gains.push(target - bought - 2); // take 2 cents off for round trip commission
+      gain += target - bought - 2;
+      if (gains[gains.length - 1] > 0) {
+        pGain += 1;
       } else {
-        bought = 0;
+        nGain += 1;
       }
+      //console.log(gain);
+      console.log(' ', SELL, displayTime, newClose, target - bought, gain, pGain / (pGain + nGain));
+      bought = 0;
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
       console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString());

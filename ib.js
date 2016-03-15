@@ -9,10 +9,11 @@ var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
+var FIRST_OFFSET = TradeController.FIRST_OFFSET;
+var SECOND_OFFSET = TradeController.SECOND_OFFSET;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
-var abs = Math.abs;
 var max = Math.max;
 var min = Math.min;
 
@@ -56,8 +57,9 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.lmtPrice = roundCent(lmtPrice); // roundCent is required to place a correct order
   newOrder.auxPrice = roundCent(auxPrice);
   newOrder.hidden = true;
+  newOrder.tif = 'GTC';
   newOrder.percentOffset = 0; // bug workaround
-  setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
+  //setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', company.symbol, newOrder);
 };
@@ -121,9 +123,9 @@ var handleRealTimeBar = function(realtimeBar) {
       company.resetLowHighClose();
     } else {
       company.open = open || realtimeBar.open;
-      if (second > 52 && company.lastOrderStatus !== 'Filled') {
-        cancelPrevOrder(company.orderId);
-      }
+      //if (second > 52 && company.lastOrderStatus !== 'Filled') {
+      //  cancelPrevOrder(company.orderId);
+      //}
     }
     return; // skip if it is not the end of minutes
   }
@@ -136,37 +138,32 @@ var handleRealTimeBar = function(realtimeBar) {
   var hour = date.hours();
   var noPosition = (hour < 9) || (hour >= 16) || (minute < 31 && hour === 9) || (minute > 54 && hour === 15); // always sell a the end of the day
   //var noPosition = (hour < 9) || (hour >= 13) || (minute < 31 && hour === 9) || (minute > 54 && hour === 12); // for thanksgiving and christmas
-  var lastOrder = (minute > 39 && hour === 15);
-  //var lastOrder = (minute > 36 && hour === 12); // for thanksgiving and christmas
-  var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition, lastOrder);
+  var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
-
-  // check if there are shares to sell / money to buy fisrt
-  var position = company.position;
-  var maxPosition = company.maxPosition;
-  var cancelId = company.cancelId;
-  var notHold = (result === BUY || result === SELL);
-  var qty = abs(position);
-  if (result === HOLD && position < 0) {
-    result = BUY;
-  } else if (result === HOLD && position > 0) {
-    result = SELL;
-  } else if ((result === BUY && position < 0) || (result === SELL && position > 0)) {
-    qty += maxPosition;
-  } else if (notHold && maxPosition > qty) {
-    qty = maxPosition - qty;
-  } else {
+  if (company.positioning || result === HOLD) {
     return;
   }
-  var limitPrice = close + close * (result === BUY ? 0.00237 : -0.00237);
+  company.positioning = true;
+
+  // check if there are shares to sell / money to buy fisrt
+  var qty = company.maxPosition;
+  var limitPrice = close + close * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
   }
-  var orderType = (noPosition || qty < maxPosition) ? 'MKT' : 'REL';
+  var orderType = 'REL';
   placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
-  console.log(result, noPosition, position, realtimeBar, new Date());
+  limitPrice = close + close * (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
+  if (result === BUY) {
+    result = SELL;
+  } else if (result === SELL) {
+    result = BUY;
+  } else {
+    return;
+  }
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
 };
 
 var handleTickPrice = function(tickPrice) {
@@ -189,6 +186,9 @@ var handleOrderStatus = function(message) {
   var company = orderIds[message.orderId];
   if (company) {
     company.lastOrderStatus = message.status;
+    if (company.positioning && message.status === 'Filled' && !company.position) {
+      company.positioning = false;
+    }
   }
 };
 
@@ -198,6 +198,9 @@ var handlePosition = function(message) {
     var company = symbols[message.contract.symbol];
     if (company) {
       company.position = message.position;
+      if (company.position) {
+        company.positioning = true;
+      }
     }
   }
 };

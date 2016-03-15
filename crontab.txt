@@ -5,6 +5,4 @@ workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
 12 14 * * 1-5 PATH=/usr/local/bin:$PATH /usr/local/bin/forever stopall
 14 14 * * 1-5 pkill node || true
 55 14 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
-00 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js NFLX true 2>&1 | tee ${workdir}/nflx.log
 02 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js SPY true 2>&1 | tee ${workdir}/spy.log
-04 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js IWM true 2>&1 | tee ${workdir}/iwm.log

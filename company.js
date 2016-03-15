@@ -1,6 +1,8 @@
 var createContract = require('ibapi').contract.createContract;
 var GoogleCSVReader = require('./googleCSVReader');
 var TradeController = require('./tradeController');
+var L = TradeController.L;
+var S = TradeController.S;
 var utils = require('./utils');
 var MAX_INT = utils.MAX_INT;
 var MIN_INT = utils.MIN_INT;
@@ -26,6 +28,10 @@ var MAX_POSITIONS = {
   SPY: 100
 };
 
+var COMMANDS = {
+  SPY: L
+};
+
 var cancelId = 0;
 
 var Company = module.exports = function(symbol) {
@@ -33,10 +39,11 @@ var Company = module.exports = function(symbol) {
     return new Company(symbol);
   }
   this.symbol = symbol;
+  this.command = COMMANDS[symbol] || L;
   this.minPrice = MIN_PRICES[symbol] || MAX_INT; // for flash crash
   this.maxPosition = MAX_POSITIONS[symbol] || 0;
   var googleCSVReader = new GoogleCSVReader(symbol);
-  this.tradeController = new TradeController(googleCSVReader.columns);
+  this.tradeController = new TradeController(googleCSVReader.columns, this.command);
   this.position = 0;
   this.low = MAX_INT;
   this.high = MIN_INT;

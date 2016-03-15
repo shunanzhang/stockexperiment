@@ -5,11 +5,12 @@ var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
+var FIRST_OFFSET = TradeController.FIRST_OFFSET;
+var SECOND_OFFSET = TradeController.SECOND_OFFSET;
+var L = TradeController.L;
+var S = TradeController.S;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
-
-var FIRST_OFFSET = 0.04;
-var SECOND_OFFSET = 0.10;
 
 var cancelIds = {};
 var symbols = {};
@@ -99,32 +100,31 @@ var takePosition = function(company) {
     console.log('[WARNING] Unknown company', company);
     return;
   }
+  var result = HOLD;
   var last = company.last;
   if (company.positioning || !last) {
     return;
   }
   company.positioning = true;
-  var result = HOLD;
-  var command = process.argv[2];
-  if (command === 'L') {
+  if (company.command === L) {
     result = BUY;
-  } else if (command === 'S') {
+  } else if (company.command === S) {
     result = SELL;
   } else {
-    console.log('[WARNING] Unknown command', command);
+    console.log('[WARNING] Unknown command', company.command);
     return;
   }
 
   // check if there are shares to sell / money to buy fisrt
   var qty = company.maxPosition;
-  var limitPrice = last + (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
+  var limitPrice = last + last * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
   }
   var orderType = 'REL';
   placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
-  limitPrice = last + (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
+  limitPrice = last + last * (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
   if (result === BUY) {
     result = SELL;
   } else if (result === SELL) {
