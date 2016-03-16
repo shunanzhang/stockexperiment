@@ -59,7 +59,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.hidden = true;
   newOrder.tif = 'GTC';
   newOrder.percentOffset = 0; // bug workaround
-  //setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
+  setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', company.symbol, newOrder);
 };

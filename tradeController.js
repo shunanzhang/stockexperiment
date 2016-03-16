@@ -14,7 +14,6 @@ var S = 'S';
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var FIRST_OFFSET = 0.04 / 200;
 var SECOND_OFFSET = 0.14 / 200;
-var abs = Math.abs;
 var max = Math.max;
 var min = Math.min;
 
