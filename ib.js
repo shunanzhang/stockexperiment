@@ -14,7 +14,6 @@ var SECOND_OFFSET = TradeController.SECOND_OFFSET;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
-var abs = Math.abs;
 var max = Math.max;
 var min = Math.min;
 
@@ -143,7 +142,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
-  if (result === HOLD || abs(company.position) > company.maxPosition) {
+  if (result === HOLD || (company.position >= company.maxPosition && result === BUY) || (company.position <= -company.maxPosition && result === SELL)) {
     return;
   }
 
