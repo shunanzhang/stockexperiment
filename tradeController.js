@@ -51,10 +51,10 @@ TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold
   datum[this.highColumnIndex] = toCent(realtimeBar.high);
   datum[this.lowColumnIndex] = toCent(realtimeBar.low);
   datum[this.openColumnIndex] = toCent(realtimeBar.open);
-  return this.trade(datum, forceHold);
+  return this.trade(datum, forceHold, true);
 };
 
-TradeController.prototype.trade = function(datum, forceHold) {
+TradeController.prototype.trade = function(datum, forceHold, debug) {
   var close = datum[this.closeColumnIndex];
   var high = datum[this.highColumnIndex];
   var low = datum[this.lowColumnIndex];
@@ -77,7 +77,9 @@ TradeController.prototype.trade = function(datum, forceHold) {
     ks.push(k);
     if (ks.length > 6) {
       var d = (ks[0] + 2.0 * ks[1] + 3.0 * ks[2] + 4.0 * ks[3] + 3.0 * ks[4] + 2.0 * ks[5] + ks[6]) / 16.0;
-      console.log('k:', k, 'd:', d);
+      if (debug) {
+        console.log('k:', k, 'd:', d);
+      }
       var command = this.command;
       if (command === S && this.above && d <= 80.0) {
         result = SELL;

@@ -24,6 +24,7 @@ var S = TradeController.S;
  */
 var tickerId = process.argv[2] || 'SPY';
 var readNewData = process.argv[3];
+var command = L;
 
 var googleCSVReader = new GoogleCSVReader(tickerId);
 var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', tickerId.toUpperCase()].join('');
@@ -34,14 +35,13 @@ var backtest = function() {
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
   var highs = googleCSVReader.getColumnData(HIGH_COLUMN);
   var lows = googleCSVReader.getColumnData(LOW_COLUMN);
-  var tradeController = new TradeController(googleCSVReader.columns, L);
+  var tradeController = new TradeController(googleCSVReader.columns, command);
 
-  var bought = 0;
-  var target = 0.0;
   var gain = 0;
   var gains = [];
   var pGain = 0;
   var nGain = 0;
+  var targets = [];
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
@@ -51,39 +51,40 @@ var backtest = function() {
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 5);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition);
-    if (result === BUY && bought <= 0) {
-      bought = newClose;
-      target = Math.round(bought * (1.0 + SECOND_OFFSET));
+    if (result === BUY && targets.length < 2) {
+      targets.push(Math.round(newClose * (1.0 + SECOND_OFFSET)));
       console.log('bought', displayTime, newClose);
-    } else if (result === SELL && bought >= 0) {
-      bought = -newClose;
-      target = Math.round(bought * (1.0 - SECOND_OFFSET));
+    } else if (result === SELL && targets.length < 2) {
+      targets.push(Math.round(newClose * (1.0 - SECOND_OFFSET)));
       console.log(' ', 'sold', displayTime, newClose);
-    } else if (result === HOLD && bought < 0 && target >= newLow) {
-      gains.push(-(bought + target) - 2); // take 2 cents off for round trip commission
-      gain -= bought + target + 2;
-      if (gains[gains.length - 1] > 0) {
-        pGain += 1;
-      } else {
-        nGain += 1;
+    } else if (result === HOLD) {
+      for (var j = targets.length; j--;) {
+        var target = targets[j];
+        var diff = 0;
+        if ((target >= newLow && command === S) || (target <= newHigh && command === L)) {
+          if (command === S) {
+            diff = Math.round(target * SECOND_OFFSET / (1.0 - SECOND_OFFSET));
+          } else if (command === L) {
+            diff = Math.round(target * SECOND_OFFSET / (1.0 + SECOND_OFFSET));
+          }
+          gains.push(diff - 3); // take 3 cents off for round trip commission
+          gain += diff - 3;
+          if (gains[gains.length - 1] > 0) {
+            pGain += 1;
+          } else {
+            nGain += 1;
+          }
+          if (command === S) {
+            console.log('  ', BUY, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
+          } else if (command === L) {
+            console.log(' ', SELL, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
+          }
+          targets.splice(j, 1);
+        }
       }
-      //console.log(gain);
-      console.log('  ', BUY, displayTime, newClose, -(bought + target), gain, pGain / (pGain + nGain));
-      bought = 0;
-    } else if (result === HOLD && bought > 0 && target <= newHigh) {
-      gains.push(target - bought - 2); // take 2 cents off for round trip commission
-      gain += target - bought - 2;
-      if (gains[gains.length - 1] > 0) {
-        pGain += 1;
-      } else {
-        nGain += 1;
-      }
-      //console.log(gain);
-      console.log(' ', SELL, displayTime, newClose, target - bought, gain, pGain / (pGain + nGain));
-      bought = 0;
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
-      console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString());
+      console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString(), targets);
       console.log('=====');
       //console.log(gain);
     }

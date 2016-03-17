@@ -25,6 +25,10 @@ var MAX_POSITIONS = {
   NFLX: 200,
   AAPL: 600,
   AMZN: 100,
+  SPY: 200
+};
+
+var ONE_POSITIONS = {
   SPY: 100
 };
 
@@ -42,6 +46,7 @@ var Company = module.exports = function(symbol) {
   this.command = COMMANDS[symbol] || L;
   this.minPrice = MIN_PRICES[symbol] || MAX_INT; // for flash crash
   this.maxPosition = MAX_POSITIONS[symbol] || 0;
+  this.onePosition = ONE_POSITIONS[symbol] || 0;
   var googleCSVReader = new GoogleCSVReader(symbol);
   this.tradeController = new TradeController(googleCSVReader.columns, this.command);
   this.position = 0;

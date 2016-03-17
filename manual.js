@@ -12,6 +12,8 @@ var S = TradeController.S;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
+var abs = Math.abs;
+
 var cancelIds = {};
 var symbols = {};
 var orderIds = {};
@@ -102,7 +104,7 @@ var takePosition = function(company) {
   }
   var result = HOLD;
   var last = company.last;
-  if (company.positioning || !last) {
+  if (company.positioning || !last || abs(company.position) > company.maxPosition) {
     return;
   }
   company.positioning = true;
@@ -116,7 +118,7 @@ var takePosition = function(company) {
   }
 
   // check if there are shares to sell / money to buy fisrt
-  var qty = company.maxPosition;
+  var qty = company.onePosition;
   var limitPrice = last + last * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);

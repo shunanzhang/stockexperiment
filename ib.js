@@ -14,6 +14,7 @@ var SECOND_OFFSET = TradeController.SECOND_OFFSET;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
+var abs = Math.abs;
 var max = Math.max;
 var min = Math.min;
 
@@ -58,6 +59,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.auxPrice = roundCent(auxPrice);
   newOrder.hidden = true;
   newOrder.tif = 'GTC';
+  newOrder.outsideRth = true;
   newOrder.percentOffset = 0; // bug workaround
   setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   console.log('Next valid order Id: %d', oldId);
@@ -141,13 +143,12 @@ var handleRealTimeBar = function(realtimeBar) {
   var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
-  if (company.positioning || result === HOLD) {
+  if (result === HOLD || abs(company.position) > company.maxPosition) {
     return;
   }
-  company.positioning = true;
 
   // check if there are shares to sell / money to buy fisrt
-  var qty = company.maxPosition;
+  var qty = company.onePosition;
   var limitPrice = close + close * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
@@ -186,9 +187,6 @@ var handleOrderStatus = function(message) {
   var company = orderIds[message.orderId];
   if (company) {
     company.lastOrderStatus = message.status;
-    if (company.positioning && message.status === 'Filled' && !company.position) {
-      company.positioning = false;
-    }
   }
 };
 
@@ -198,9 +196,6 @@ var handlePosition = function(message) {
     var company = symbols[message.contract.symbol];
     if (company) {
       company.position = message.position;
-      if (company.position) {
-        company.positioning = true;
-      }
     }
   }
 };
