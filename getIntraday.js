@@ -67,8 +67,8 @@ var backtest = function() {
           } else if (command === L) {
             diff = Math.round(target * SECOND_OFFSET / (1.0 + SECOND_OFFSET));
           }
-          gains.push(diff - 3); // take 3 cents off for round trip commission
-          gain += diff - 3;
+          gains.push(diff - 2); // take 2 cents off for round trip commission
+          gain += diff - 2;
           if (gains[gains.length - 1] > 0) {
             pGain += 1;
           } else {

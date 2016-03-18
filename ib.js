@@ -11,6 +11,8 @@ var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 var FIRST_OFFSET = TradeController.FIRST_OFFSET;
 var SECOND_OFFSET = TradeController.SECOND_OFFSET;
+var L = TradeController.L;
+var S = TradeController.S;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
@@ -47,9 +49,11 @@ var getMktData = function(company) {
   api.reqMktData(company.cancelId, company.contract, '', false);
 };
 
-var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice) {
+var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice, track) {
   var oldId = company.orderId = orderId++;
-  orderIds[oldId] = company;
+  if (track) {
+    orderIds[oldId] = company;
+  }
   var newOrder = createOrder();
   newOrder.action = action;
   newOrder.totalQuantity = quantity;
@@ -124,9 +128,9 @@ var handleRealTimeBar = function(realtimeBar) {
       company.resetLowHighClose();
     } else {
       company.open = open || realtimeBar.open;
-      //if (second > 52 && company.lastOrderStatus !== 'Filled') {
-      //  cancelPrevOrder(company.orderId);
-      //}
+      if (second > 52 && company.lastOrderStatus !== 'Filled') {
+        cancelPrevOrder(company.orderId);
+      }
     }
     return; // skip if it is not the end of minutes
   }
@@ -142,7 +146,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
-  if (result === HOLD || (company.position >= company.maxPosition && result === BUY) || (company.position <= -company.maxPosition && result === SELL)) {
+  if (result === HOLD || (company.position + company.onePosition > company.maxPosition && result === BUY) || (company.position - company.onePosition < -company.maxPosition && result === SELL)) {
     return;
   }
 
@@ -154,16 +158,7 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var orderType = 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
-  limitPrice = close + close * (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
-  if (result === BUY) {
-    result = SELL;
-  } else if (result === SELL) {
-    result = BUY;
-  } else {
-    return;
-  }
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
+  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01, true);
 };
 
 var handleTickPrice = function(tickPrice) {
@@ -180,12 +175,29 @@ var handleTickPrice = function(tickPrice) {
 
 var handleOrderStatus = function(message) {
   console.log('OrderStatus:', JSON.stringify(message));
+  var oId = message.orderId;
   if (message.status === 'Inactive') {
-    cancelPrevOrder(message.orderId);
+    cancelPrevOrder(oId);
   }
-  var company = orderIds[message.orderId];
+  var company = orderIds[oId];
   if (company) {
     company.lastOrderStatus = message.status;
+    if (message.status === 'Filled') {
+      orderIds[oId] = undefined;
+      var orderType = 'REL';
+      var result = HOLD;
+      if (company.command === L) {
+        result = SELL;
+      } else if (command.command === S) {
+        result = BUY;
+      } else {
+        return;
+      }
+      var avgFillPrice = message.avgFillPrice;
+      var limitPrice = avgFillPrice + avgFillPrice * (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
+      var qty = message.filled;
+      placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01, false);
+    }
   }
 };
 
