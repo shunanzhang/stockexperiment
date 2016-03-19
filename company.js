@@ -21,11 +21,15 @@ var MIN_PRICES = {
   SPY:  160.00
 };
 
+var MAX_PRICES = {
+  SPY:  204.86
+};
+
 var MAX_POSITIONS = {
   NFLX: 200,
   AAPL: 600,
   AMZN: 100,
-  SPY: 220
+  SPY: 330
 };
 
 var ONE_POSITIONS = {
@@ -45,6 +49,7 @@ var Company = module.exports = function(symbol) {
   this.symbol = symbol;
   this.command = COMMANDS[symbol] || L;
   this.minPrice = MIN_PRICES[symbol] || MAX_INT; // for flash crash
+  this.maxPrice = MAX_PRICES[symbol] || MIN_INT;
   this.maxPosition = MAX_POSITIONS[symbol] || 0;
   this.onePosition = ONE_POSITIONS[symbol] || 0;
   var googleCSVReader = new GoogleCSVReader(symbol);

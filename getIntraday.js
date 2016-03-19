@@ -51,10 +51,10 @@ var backtest = function() {
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 5);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition);
-    if (result === BUY && targets.length < 2) {
+    if (result === BUY && targets.length < 3) {
       targets.push(Math.round(newClose * (1.0 + SECOND_OFFSET)));
       console.log('bought', displayTime, newClose);
-    } else if (result === SELL && targets.length < 2) {
+    } else if (result === SELL && targets.length < 3) {
       targets.push(Math.round(newClose * (1.0 - SECOND_OFFSET)));
       console.log(' ', 'sold', displayTime, newClose);
     } else if (result === HOLD) {

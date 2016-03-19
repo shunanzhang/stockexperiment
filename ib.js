@@ -8,7 +8,6 @@ var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
-var MINUTES_DAY = TradeController.MINUTES_DAY;
 var FIRST_OFFSET = TradeController.FIRST_OFFSET;
 var SECOND_OFFSET = TradeController.SECOND_OFFSET;
 var L = TradeController.L;
@@ -141,8 +140,8 @@ var handleRealTimeBar = function(realtimeBar) {
   var tradeController = company.tradeController;
   var minute = date.minutes();
   var hour = date.hours();
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 31 && hour === 9) || (minute > 54 && hour === 15); // always sell a the end of the day
-  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 31 && hour === 9) || (minute > 54 && hour === 12); // for thanksgiving and christmas
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 26 && hour === 9) || (minute > 54 && hour === 15); // starts earlier than regular trading hours
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 26 && hour === 9) || (minute > 54 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
@@ -153,8 +152,8 @@ var handleRealTimeBar = function(realtimeBar) {
   // check if there are shares to sell / money to buy fisrt
   var qty = company.onePosition;
   var limitPrice = close + close * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
-  if (limitPrice < company.minPrice) {
-    console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
+  if (limitPrice < company.minPrice || limitPrice > company.maxPrice) {
+    console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is', ((limitPrice < company.minPrice) ? 'less' : 'more'), 'than the threshold', ((limitPrice < company.minPrice) ? company.minPrice : limitPrice < company.maxPrice));
     return;
   }
   var orderType = 'REL';
@@ -184,7 +183,6 @@ var handleOrderStatus = function(message) {
     company.lastOrderStatus = message.status;
     if (message.status === 'Filled') {
       orderIds[oId] = undefined;
-      var orderType = 'REL';
       var result = HOLD;
       if (company.command === L) {
         result = SELL;
@@ -193,9 +191,10 @@ var handleOrderStatus = function(message) {
       } else {
         return;
       }
-      var avgFillPrice = message.avgFillPrice;
-      var limitPrice = avgFillPrice + avgFillPrice * (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
       var qty = message.filled;
+      var avgFillPrice = message.avgFillPrice;
+      var limitPrice = avgFillPrice + avgFillPrice * (result === SELL ? SECOND_OFFSET : -SECOND_OFFSET);
+      var orderType = 'REL';
       placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01, false);
     }
   }
