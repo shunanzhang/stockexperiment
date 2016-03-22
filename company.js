@@ -29,11 +29,11 @@ var MAX_POSITIONS = {
   NFLX: 200,
   AAPL: 600,
   AMZN: 100,
-  SPY: 360
+  SPY: 390
 };
 
 var ONE_POSITIONS = {
-  SPY: 120
+  SPY: 130
 };
 
 var COMMANDS = {

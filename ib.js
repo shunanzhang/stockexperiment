@@ -153,7 +153,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var qty = company.onePosition;
   var limitPrice = close + close * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
   if (limitPrice < company.minPrice || limitPrice > company.maxPrice) {
-    console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is', ((limitPrice < company.minPrice) ? 'less' : 'more'), 'than the threshold', ((limitPrice < company.minPrice) ? company.minPrice : limitPrice < company.maxPrice));
+    console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is', ((limitPrice < company.minPrice) ? 'less' : 'more'), 'than the threshold', ((limitPrice < company.minPrice) ? company.minPrice : company.maxPrice));
     return;
   }
   var orderType = 'REL';
