@@ -40,8 +40,8 @@ var api = new ibapi.NodeIbapi();
 var orderId = -1;
 
 var getRealtimeBars = function(company) {
-  // only 5 sec is supported, only regular trading ours == true
-  api.reqRealtimeBars(company.cancelId, company.contract, 5, 'TRADES', true);
+  // only 5 sec is supported, only regular trading ours == false
+  api.reqRealtimeBars(company.cancelId, company.contract, 5, 'TRADES', false);
 };
 
 var getMktData = function(company) {
