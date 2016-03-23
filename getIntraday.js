@@ -16,8 +16,6 @@ var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 var SECOND_OFFSET = TradeController.SECOND_OFFSET;
-var L = TradeController.L;
-var S = TradeController.S;
 
 /**
  * argument parsing
@@ -51,10 +49,10 @@ var backtest = function() {
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 5);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition);
-    if (result === BUY && (lTargets.length < 3 || lTargets.length - sTargets.length < 1)) {
+    if (result === BUY && (lTargets.length < 3 || (lTargets.length - sTargets.length < 1 && lTargets.length < 6))) {
       lTargets.push(Math.round(newClose * (1.0 + SECOND_OFFSET)));
       console.log('bought', displayTime, newClose);
-    } else if (result === SELL && (sTargets.length < 3 || sTargets.length - lTargets.length < 1)) {
+    } else if (result === SELL && (sTargets.length < 3 || (sTargets.length - lTargets.length < 1 && sTargets.length < 6))) {
       sTargets.push(Math.round(newClose * (1.0 - SECOND_OFFSET)));
       console.log(' ', 'sold', displayTime, newClose);
     } else if (result === HOLD) {

@@ -18,22 +18,23 @@ var MIN_PRICES = {
   NFLX: 85.00,
   AAPL: 80.00,
   AMZN: 500.00,
-  SPY:  160.00
+  SPY:  200.14
 };
 
 var MAX_PRICES = {
   SPY:  204.86
 };
 
-var MAX_POSITIONS = {
-  NFLX: 200,
-  AAPL: 600,
-  AMZN: 100,
-  SPY: 390
+var MAX_LOTS = {
+  SPY: 3
+};
+
+var HARD_MAX_LOTS = {
+  SPY: 6
 };
 
 var ONE_POSITIONS = {
-  SPY: 130
+  SPY: 131
 };
 
 var COMMANDS = {
@@ -48,12 +49,14 @@ var Company = module.exports = function(symbol) {
   }
   this.symbol = symbol;
   this.command = COMMANDS[symbol] || L;
-  this.minPrice = MIN_PRICES[symbol] || MAX_INT; // for flash crash
+  this.minPrice = MIN_PRICES[symbol] || MAX_INT;
   this.maxPrice = MAX_PRICES[symbol] || MIN_INT;
-  this.maxPosition = MAX_POSITIONS[symbol] || 0;
-  this.onePosition = ONE_POSITIONS[symbol] || 0;
+  var onePosition = this.onePosition = ONE_POSITIONS[symbol] || 0;
+  var maxLot = this.maxLot = MAX_LOTS[symbol] || 0;
+  this.hardMaxLot = HARD_MAX_LOTS[symbol] || 0;
+  this.maxPosition = onePosition * maxLot || 0;
   var googleCSVReader = new GoogleCSVReader(symbol);
-  this.tradeController = new TradeController(googleCSVReader.columns, this.command);
+  this.tradeController = new TradeController(googleCSVReader.columns);
   this.position = 0;
   this.low = MAX_INT;
   this.high = MIN_INT;
@@ -61,6 +64,8 @@ var Company = module.exports = function(symbol) {
   this.open = 0.0;
   this.last = 0.0;
   this.positioning = false;
+  this.lLots = {};
+  this.sLots = {};
   var contract = this.contract = createContract();
   contract.symbol = symbol;
   contract.secType = 'STK';

@@ -10,8 +10,6 @@ var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var FIRST_OFFSET = TradeController.FIRST_OFFSET;
 var SECOND_OFFSET = TradeController.SECOND_OFFSET;
-var L = TradeController.L;
-var S = TradeController.S;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
@@ -20,7 +18,9 @@ var min = Math.min;
 
 var cancelIds = {};
 var symbols = {};
-var orderIds = {};
+var entryOrderIds = {};
+var exitOrderIds = {};
+var actions = {};
 
 var createCompanies = function() {
   var companies = [new Company('SPY')];
@@ -48,10 +48,11 @@ var getMktData = function(company) {
   api.reqMktData(company.cancelId, company.contract, '', false);
 };
 
-var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice, track) {
+var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice, entry) {
   var oldId = company.orderId = orderId++;
-  if (track) {
-    orderIds[oldId] = company;
+  if (entry) {
+    entryOrderIds[oldId] = company;
+    actions[oldId] = action;
   }
   var newOrder = createOrder();
   newOrder.action = action;
@@ -76,7 +77,8 @@ var handleValidOrderId = function(message) {
   var companies = createCompanies();
   orderId = message.orderId;
   console.log('next order Id is', orderId);
-  api.reqPositions();
+  api.reqAllOpenOrders();
+  api.reqAutoOpenOrders(true);
   for (var i = companies.length; i--;) {
     var company = companies[i];
     getRealtimeBars(company);
@@ -140,24 +142,27 @@ var handleRealTimeBar = function(realtimeBar) {
   var tradeController = company.tradeController;
   var minute = date.minutes();
   var hour = date.hours();
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 21 && hour === 9) || (minute > 54 && hour === 15); // starts earlier than regular trading hours
-  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 21 && hour === 9) || (minute > 54 && hour === 12); // for thanksgiving and christmas
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 20 && hour === 9) || (minute > 54 && hour === 15); // starts earlier than regular trading hours
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 20 && hour === 9) || (minute > 54 && hour === 12); // for thanksgiving and christmas
   var result = tradeController.tradeWithRealtimeBar(realtimeBar, noPosition);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
-  if (result === HOLD || (company.position + company.onePosition > company.maxPosition && result === BUY) || (company.position - company.onePosition < -company.maxPosition && result === SELL)) {
+  var lLotsLength = Object.keys(company.lLots).length;
+  var sLotsLength = Object.keys(company.sLots).length;
+  var lengthDiff = lLotsLength - sLotsLength;
+  if (result === HOLD || (result === BUY && ((lLotsLength >= company.maxLot && lengthDiff >= 1) || lLotsLength >= company.hardMaxLot)) || (result === SELL && ((sLotsLength >= company.maxLot && lengthDiff <= -1) || sLotsLength >= company.hardMaxLot))) {
     return;
   }
 
   // check if there are shares to sell / money to buy fisrt
   var qty = company.onePosition;
   var limitPrice = close + close * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
-  if (limitPrice < company.minPrice || limitPrice > company.maxPrice) {
-    console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is', ((limitPrice < company.minPrice) ? 'less' : 'more'), 'than the threshold', ((limitPrice < company.minPrice) ? company.minPrice : company.maxPrice));
+  if (result === BUY ? (limitPrice > company.maxPrice) : (limitPrice < company.minPrice)) {
+    console.log('[WARNING]', result, 'order ignored since the limit price is', limitPrice, ', which is', ((limitPrice < company.minPrice) ? 'less' : 'more'), 'than the threshold', ((limitPrice < company.minPrice) ? company.minPrice : company.maxPrice));
     return;
   }
   var orderType = 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01, true);
+  placeMyOrder(company, result, qty, orderType, limitPrice, 0.01, true);
 };
 
 var handleTickPrice = function(tickPrice) {
@@ -178,34 +183,44 @@ var handleOrderStatus = function(message) {
   if (message.status === 'Inactive') {
     cancelPrevOrder(oId);
   }
-  var company = orderIds[oId];
+  var company = entryOrderIds[oId];
   if (company) {
     company.lastOrderStatus = message.status;
     if (message.status === 'Filled') {
-      orderIds[oId] = undefined;
-      var result = HOLD;
-      if (company.command === L) {
-        result = SELL;
-      } else if (command.command === S) {
-        result = BUY;
-      } else {
-        return;
-      }
+      entryOrderIds[oId] = undefined;
+      var result = actions[oId] === BUY ? SELL : BUY;
       var qty = message.filled;
       var avgFillPrice = message.avgFillPrice;
       var limitPrice = avgFillPrice + avgFillPrice * (result === SELL ? SECOND_OFFSET : -SECOND_OFFSET);
       var orderType = 'REL';
-      placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01, false);
+      placeMyOrder(company, result, qty, orderType, limitPrice, 0.01, false);
+    }
+  } else {
+    company = exitOrderIds[oId];
+    if (company && message.status === 'Filled') {
+      exitOrderIds[oId] = undefined;
+      delete company.sLots[oId];
+      delete company.lLots[oId];
+      console.log('[Delete lots]', company.lLots, company.sLots);
     }
   }
 };
 
-var handlePosition = function(message) {
-  console.log('Position:', JSON.stringify(message));
-  if (message.contract) {
-    var company = symbols[message.contract.symbol];
-    if (company) {
-      company.position = message.position;
+var handleOpenOrder = function(message) {
+  console.log('OpenOrder:', JSON.stringify(message));
+  var oId = message.orderId;
+  var company = entryOrderIds[oId];
+  if (!company) {
+    company = symbols[message.contract.symbol];
+    if (company && message.orderState.status !== 'Filled') {
+      exitOrderIds[oId] = company;
+      var action = message.order.action;
+      if (action === BUY) {
+        company.sLots[oId] = true;
+      } else if (action === SELL) {
+        company.lLots[oId] = true;
+      }
+      console.log('[Append lots]', company.lLots, company.sLots);
     }
   }
 };
@@ -219,7 +234,7 @@ api.handlers[messageIds.disconnected] = handleDisconnected;
 api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
 api.handlers[messageIds.tickPrice] = handleTickPrice;
 api.handlers[messageIds.orderStatus] = handleOrderStatus;
-api.handlers[messageIds.position] = handlePosition;
+api.handlers[messageIds.openOrder] = handleOpenOrder;
 
 // Connect to the TWS client or IB Gateway
 var connected = api.connect('127.0.0.1', 7496, 0);

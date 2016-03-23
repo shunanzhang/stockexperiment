@@ -125,7 +125,7 @@ var takePosition = function(company) {
     return;
   }
   var orderType = 'REL';
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
+  placeMyOrder(company, result, qty, orderType, limitPrice, 0.01);
   limitPrice = last + last * (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
   if (result === BUY) {
     result = SELL;
@@ -134,7 +134,7 @@ var takePosition = function(company) {
   } else {
     return;
   }
-  placeMyOrder(company, result.toUpperCase(), qty, orderType, limitPrice, 0.01);
+  placeMyOrder(company, result, qty, orderType, limitPrice, 0.01);
 };
 
 var handleTickPrice = function(tickPrice) {

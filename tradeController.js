@@ -5,9 +5,9 @@ var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
 var toCent = require('./utils').toCent;
 
-var BUY = 'buy';
-var SELL = 'sell';
-var HOLD = 'hold';
+var BUY = 'BUY';
+var SELL = 'SELL';
+var HOLD = 'HOLD';
 var L = 'L';
 var S = 'S';
 
@@ -17,15 +17,14 @@ var SECOND_OFFSET = 0.14 / 200;
 var max = Math.max;
 var min = Math.min;
 
-var TradeController = module.exports = function(columns, command) {
+var TradeController = module.exports = function(columns) {
   if (! (this instanceof TradeController)) { // enforcing new
-    return new TradeController(columns, command);
+    return new TradeController(columns);
   }
   this.closeColumnIndex = columns[CLOSE_COLUMN];
   this.highColumnIndex = columns[HIGH_COLUMN];
   this.lowColumnIndex = columns[LOW_COLUMN];
   this.openColumnIndex = columns[OPEN_COLUMN];
-  this.command = command;
   this.reset();
 };
 TradeController.BUY = BUY;
@@ -80,10 +79,9 @@ TradeController.prototype.trade = function(datum, forceHold, debug) {
       if (debug) {
         console.log('k:', k, 'd:', d);
       }
-      var command = this.command;
-      if ((command === S || !command) && this.above && d <= 80.0) {
+      if (this.above && d <= 80.0) {
         result = SELL;
-      } else if ((command === L || !command) && this.below && d >= 20.0) {
+      } else if (this.below && d >= 20.0) {
         result = BUY;
       }
       if (d < 20.0) {
