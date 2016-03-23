@@ -81,9 +81,9 @@ TradeController.prototype.trade = function(datum, forceHold, debug) {
         console.log('k:', k, 'd:', d);
       }
       var command = this.command;
-      if (command === S && this.above && d <= 80.0) {
+      if ((command === S || !command) && this.above && d <= 80.0) {
         result = SELL;
-      } else if (command === L && this.below && d >= 20.0) {
+      } else if ((command === L || !command) && this.below && d >= 20.0) {
         result = BUY;
       }
       if (d < 20.0) {

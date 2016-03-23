@@ -24,7 +24,6 @@ var S = TradeController.S;
  */
 var tickerId = process.argv[2] || 'SPY';
 var readNewData = process.argv[3];
-var command = L;
 
 var googleCSVReader = new GoogleCSVReader(tickerId);
 var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD, 'd&f=d,o,h,l,c,v&df=cpct&q=', tickerId.toUpperCase()].join('');
@@ -35,13 +34,14 @@ var backtest = function() {
   var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
   var highs = googleCSVReader.getColumnData(HIGH_COLUMN);
   var lows = googleCSVReader.getColumnData(LOW_COLUMN);
-  var tradeController = new TradeController(googleCSVReader.columns, command);
+  var tradeController = new TradeController(googleCSVReader.columns);
 
   var gain = 0;
   var gains = [];
   var pGain = 0;
   var nGain = 0;
-  var targets = [];
+  var lTargets = [];
+  var sTargets = [];
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
@@ -51,22 +51,21 @@ var backtest = function() {
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 5);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition);
-    if (result === BUY && targets.length < 3) {
-      targets.push(Math.round(newClose * (1.0 + SECOND_OFFSET)));
+    if (result === BUY && (lTargets.length < 3 || lTargets.length - sTargets.length < 1)) {
+      lTargets.push(Math.round(newClose * (1.0 + SECOND_OFFSET)));
       console.log('bought', displayTime, newClose);
-    } else if (result === SELL && targets.length < 3) {
-      targets.push(Math.round(newClose * (1.0 - SECOND_OFFSET)));
+    } else if (result === SELL && (sTargets.length < 3 || sTargets.length - lTargets.length < 1)) {
+      sTargets.push(Math.round(newClose * (1.0 - SECOND_OFFSET)));
       console.log(' ', 'sold', displayTime, newClose);
     } else if (result === HOLD) {
-      for (var j = targets.length; j--;) {
-        var target = targets[j];
-        var diff = 0;
-        if ((target >= newLow && command === S) || (target <= newHigh && command === L)) {
-          if (command === S) {
-            diff = Math.round(target * SECOND_OFFSET / (1.0 - SECOND_OFFSET));
-          } else if (command === L) {
-            diff = Math.round(target * SECOND_OFFSET / (1.0 + SECOND_OFFSET));
-          }
+      var j = 0;
+      var target = 0;
+      var diff = 0;
+      for (j = lTargets.length; j--;) {
+        target = lTargets[j];
+        diff = 0;
+        if (target <= newHigh) {
+          diff = Math.round(target * SECOND_OFFSET / (1.0 + SECOND_OFFSET));
           gains.push(diff - 2); // take 2 cents off for round trip commission
           gain += diff - 2;
           if (gains[gains.length - 1] > 0) {
@@ -74,17 +73,29 @@ var backtest = function() {
           } else {
             nGain += 1;
           }
-          if (command === S) {
-            console.log('  ', BUY, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
-          } else if (command === L) {
-            console.log(' ', SELL, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
+          console.log(' ', SELL, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
+          lTargets.splice(j, 1);
+        }
+      }
+      for (j = sTargets.length; j--;) {
+        target = sTargets[j];
+        diff = 0;
+        if (target >= newLow) {
+          diff = Math.round(target * SECOND_OFFSET / (1.0 - SECOND_OFFSET));
+          gains.push(diff - 2); // take 2 cents off for round trip commission
+          gain += diff - 2;
+          if (gains[gains.length - 1] > 0) {
+            pGain += 1;
+          } else {
+            nGain += 1;
           }
-          targets.splice(j, 1);
+          console.log('  ', BUY, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
+          sTargets.splice(j, 1);
         }
       }
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
-      console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString(), targets);
+      console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString(), lTargets, sTargets);
       console.log('=====');
       //console.log(gain);
     }
