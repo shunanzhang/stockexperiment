@@ -15,14 +15,11 @@ var EXCHANGES = {
 };
 
 var MIN_PRICES = {
-  NFLX: 85.00,
-  AAPL: 80.00,
-  AMZN: 500.00,
-  SPY:  200.14
+  SPY:  204.14
 };
 
 var MAX_PRICES = {
-  SPY:  204.86
+  SPY:  205.86
 };
 
 var MAX_LOTS = {
