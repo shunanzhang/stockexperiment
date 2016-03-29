@@ -19,7 +19,6 @@ var min = Math.min;
 var cancelIds = {};
 var symbols = {};
 var entryOrderIds = {};
-var exitOrderIds = {};
 var actions = {};
 
 var createCompanies = function() {
@@ -180,13 +179,14 @@ var handleTickPrice = function(tickPrice) {
 var handleOrderStatus = function(message) {
   console.log('OrderStatus:', JSON.stringify(message));
   var oId = message.orderId;
-  if (message.status === 'Inactive') {
+  var orderStatus = message.status;
+  if (orderStatus === 'Inactive') {
     cancelPrevOrder(oId);
   }
   var company = entryOrderIds[oId];
   if (company) {
-    company.lastOrderStatus = message.status;
-    if (message.status === 'Filled') {
+    company.lastOrderStatus = orderStatus;
+    if (orderStatus === 'Filled') {
       entryOrderIds[oId] = undefined;
       var result = actions[oId] === BUY ? SELL : BUY;
       var qty = message.filled;
@@ -195,32 +195,33 @@ var handleOrderStatus = function(message) {
       var orderType = 'REL';
       placeMyOrder(company, result, qty, orderType, limitPrice, 0.01, false);
     }
-  } else {
-    company = exitOrderIds[oId];
-    if (company && message.status === 'Filled') {
-      exitOrderIds[oId] = undefined;
-      delete company.sLots[oId];
-      delete company.lLots[oId];
-      console.log('[Delete lots]', company.lLots, company.sLots);
-    }
   }
 };
 
 var handleOpenOrder = function(message) {
   console.log('OpenOrder:', JSON.stringify(message));
   var oId = message.orderId;
+  var orderStatus = message.orderState.status;
   var company = entryOrderIds[oId];
-  if (!company) {
+  if (!company) { // if exiting the position
     company = symbols[message.contract.symbol];
-    if (company && message.orderState.status !== 'Filled') {
-      exitOrderIds[oId] = company;
+    if (company) {
       var action = message.order.action;
-      if (action === BUY) {
-        company.sLots[oId] = true;
-      } else if (action === SELL) {
-        company.lLots[oId] = true;
+      if (orderStatus === 'Filled') {
+        if (action === BUY) {
+          delete company.sLots[oId];
+        } else if (action === SELL) {
+          delete company.lLots[oId];
+        }
+        console.log('[Delete lots]', company.lLots, company.sLots);
+      } else if (orderStatus !== 'Inactive') {
+        if (action === BUY) {
+          company.sLots[oId] = true;
+        } else if (action === SELL) {
+          company.lLots[oId] = true;
+        }
+        console.log('[Append lots]', company.lLots, company.sLots);
       }
-      console.log('[Append lots]', company.lLots, company.sLots);
     }
   }
 };
