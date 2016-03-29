@@ -31,7 +31,7 @@ var HARD_MAX_LOTS = {
 };
 
 var ONE_POSITIONS = {
-  SPY: 132
+  SPY: 133
 };
 
 var COMMANDS = {
