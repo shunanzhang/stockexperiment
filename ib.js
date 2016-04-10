@@ -8,8 +8,10 @@ var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
-var FIRST_OFFSET = TradeController.FIRST_OFFSET;
-var SECOND_OFFSET = TradeController.SECOND_OFFSET;
+var FIRST_OFFSET_POS = TradeController.FIRST_OFFSET_POS;
+var FIRST_OFFSET_NEG = TradeController.FIRST_OFFSET_NEG;
+var SECOND_OFFSET_POS = TradeController.SECOND_OFFSET_POS;
+var SECOND_OFFSET_NEG = TradeController.SECOND_OFFSET_NEG;
 var Company = require('./company');
 var roundCent = require('./utils').roundCent;
 
@@ -64,7 +66,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.outsideRth = true;
   newOrder.percentOffset = 0; // bug workaround
   setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
-  console.log('Next valid order Id: %d', oldId);
+  //console.log('Next valid order Id: %d', oldId);
   console.log('Placing order for', company.symbol, newOrder);
 };
 
@@ -75,7 +77,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
 var handleValidOrderId = function(message) {
   var companies = createCompanies();
   orderId = message.orderId;
-  console.log('next order Id is', orderId);
+  //console.log('next order Id is', orderId);
   api.reqAllOpenOrders();
   api.reqAutoOpenOrders(true);
   for (var i = companies.length; i--;) {
@@ -87,7 +89,9 @@ var handleValidOrderId = function(message) {
 
 var cancelPrevOrder = function(prevOrderId) {
   setImmediate(api.cancelOrder.bind(api, prevOrderId));
-  console.log('canceling order: %d', prevOrderId);
+  if (prevOrderId > -1) { // cannot cancel negative order id
+    console.log('canceling order: %d', prevOrderId);
+  }
 };
 
 var handleServerError = function(message) {
@@ -155,7 +159,7 @@ var handleRealTimeBar = function(realtimeBar) {
 
   // check if there are shares to sell / money to buy fisrt
   var qty = company.onePosition;
-  var limitPrice = close + close * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
+  var limitPrice = close * (result === BUY ? FIRST_OFFSET_POS : FIRST_OFFSET_NEG);
   if (result === BUY ? (limitPrice > company.maxPrice) : (limitPrice < company.minPrice)) {
     console.log('[WARNING]', result, 'order ignored since the limit price is', limitPrice, ', which is', ((limitPrice < company.minPrice) ? 'less' : 'more'), 'than the threshold', ((limitPrice < company.minPrice) ? company.minPrice : company.maxPrice));
     return;
@@ -191,7 +195,7 @@ var handleOrderStatus = function(message) {
       var result = actions[oId] === BUY ? SELL : BUY;
       var qty = message.filled;
       var avgFillPrice = message.avgFillPrice;
-      var limitPrice = avgFillPrice + avgFillPrice * (result === SELL ? SECOND_OFFSET : -SECOND_OFFSET);
+      var limitPrice = avgFillPrice * (result === SELL ? SECOND_OFFSET_POS : SECOND_OFFSET_NEG);
       var orderType = 'REL';
       placeMyOrder(company, result, qty, orderType, limitPrice, 0.01, false);
     }

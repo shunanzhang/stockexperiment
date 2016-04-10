@@ -33,6 +33,10 @@ TradeController.HOLD = HOLD;
 TradeController.MINUTES_DAY = MINUTES_DAY;
 TradeController.FIRST_OFFSET = FIRST_OFFSET;
 TradeController.SECOND_OFFSET = SECOND_OFFSET;
+TradeController.FIRST_OFFSET_POS = 1.0 + FIRST_OFFSET;
+TradeController.FIRST_OFFSET_NEG = 1.0 - FIRST_OFFSET;
+TradeController.SECOND_OFFSET_POS = 1.0 + SECOND_OFFSET;
+TradeController.SECOND_OFFSET_NEG = 1.0 - SECOND_OFFSET;
 TradeController.L = L;
 TradeController.S = S;
 
@@ -72,10 +76,10 @@ TradeController.prototype.trade = function(datum, forceHold, debug) {
   if (upper.length > 5 && lower.length > 5) {
     var maxUpper = max.apply(null, upper);
     var minLower = min.apply(null, lower);
-    var k = 100.0 * (close - minLower) / (maxUpper - minLower);
+    var k = 6.25 * (close - minLower) / (maxUpper - minLower); // 100 / 16 = 6.25
     ks.push(k);
     if (ks.length > 6) {
-      var d = (ks[0] + 2.0 * ks[1] + 3.0 * ks[2] + 4.0 * ks[3] + 3.0 * ks[4] + 2.0 * ks[5] + ks[6]) / 16.0;
+      var d = ks[0] + ks[6] + 2.0 * (ks[1] + ks[5]) + 3.0 * (ks[2] + ks[4]) + 4.0 * ks[3];
       if (debug) {
         console.log('k:', k, 'd:', d);
       }

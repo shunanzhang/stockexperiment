@@ -16,6 +16,8 @@ var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
 var SECOND_OFFSET = TradeController.SECOND_OFFSET;
+var SECOND_OFFSET_POS = TradeController.SECOND_OFFSET_POS;
+var SECOND_OFFSET_NEG = TradeController.SECOND_OFFSET_NEG;
 
 /**
  * argument parsing
@@ -50,10 +52,10 @@ var backtest = function() {
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition);
     if (result === BUY && (lTargets.length < 3 || (lTargets.length - sTargets.length < 1 && lTargets.length < 6))) {
-      lTargets.push(Math.round(newClose * (1.0 + SECOND_OFFSET)));
+      lTargets.push(Math.round(newClose * SECOND_OFFSET_POS));
       console.log('bought', displayTime, newClose);
     } else if (result === SELL && (sTargets.length < 3 || (sTargets.length - lTargets.length < 1 && sTargets.length < 6))) {
-      sTargets.push(Math.round(newClose * (1.0 - SECOND_OFFSET)));
+      sTargets.push(Math.round(newClose * SECOND_OFFSET_NEG));
       console.log(' ', 'sold', displayTime, newClose);
     } else if (result === HOLD) {
       var j = 0;
@@ -63,7 +65,7 @@ var backtest = function() {
         target = lTargets[j];
         diff = 0;
         if (target <= newHigh) {
-          diff = Math.round(target * SECOND_OFFSET / (1.0 + SECOND_OFFSET));
+          diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_POS);
           gains.push(diff - 2); // take 2 cents off for round trip commission
           gain += diff - 2;
           if (gains[gains.length - 1] > 0) {
@@ -79,7 +81,7 @@ var backtest = function() {
         target = sTargets[j];
         diff = 0;
         if (target >= newLow) {
-          diff = Math.round(target * SECOND_OFFSET / (1.0 - SECOND_OFFSET));
+          diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_NEG);
           gains.push(diff - 2); // take 2 cents off for round trip commission
           gain += diff - 2;
           if (gains[gains.length - 1] > 0) {

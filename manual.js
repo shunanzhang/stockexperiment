@@ -5,8 +5,10 @@ var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
-var FIRST_OFFSET = TradeController.FIRST_OFFSET;
-var SECOND_OFFSET = TradeController.SECOND_OFFSET;
+var FIRST_OFFSET_POS = TradeController.FIRST_OFFSET_POS;
+var FIRST_OFFSET_NEG = TradeController.FIRST_OFFSET_NEG;
+var SECOND_OFFSET_POS = TradeController.SECOND_OFFSET_POS;
+var SECOND_OFFSET_NEG = TradeController.SECOND_OFFSET_NEG;
 var L = TradeController.L;
 var S = TradeController.S;
 var Company = require('./company');
@@ -119,14 +121,14 @@ var takePosition = function(company) {
 
   // check if there are shares to sell / money to buy fisrt
   var qty = company.onePosition;
-  var limitPrice = last + last * (result === BUY ? FIRST_OFFSET : -FIRST_OFFSET);
+  var limitPrice = last * (result === BUY ? FIRST_OFFSET_POS : FIRST_OFFSET_NEG);
   if (limitPrice < company.minPrice) {
     console.log('[WARNING] order ignored since the limit price is', limitPrice, ', which is less than the threshold', company.minPrice);
     return;
   }
   var orderType = 'REL';
   placeMyOrder(company, result, qty, orderType, limitPrice, 0.01);
-  limitPrice = last + last * (result === BUY ? SECOND_OFFSET : -SECOND_OFFSET);
+  limitPrice = last * (result === BUY ? SECOND_OFFSET_POS : SECOND_OFFSET_NEG);
   if (result === BUY) {
     result = SELL;
   } else if (result === SELL) {
