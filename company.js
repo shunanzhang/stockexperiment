@@ -15,18 +15,22 @@ var EXCHANGES = {
 };
 
 var MIN_PRICES = {
-  SPY:  206.14
+  SPY:  209.64
 };
 
 var MAX_PRICES = {
-  SPY:  206.36
+  SPY:  209.36
 };
 
 var MAX_LOTS = {
   SPY: 3
 };
 
-var HARD_MAX_LOTS = {
+var HARD_L_MAX_LOTS = {
+  SPY: 1
+};
+
+var HARD_S_MAX_LOTS = {
   SPY: 4
 };
 
@@ -50,7 +54,8 @@ var Company = module.exports = function(symbol) {
   this.maxPrice = MAX_PRICES[symbol] || MIN_INT;
   var onePosition = this.onePosition = ONE_POSITIONS[symbol] || 0;
   var maxLot = this.maxLot = MAX_LOTS[symbol] || 0;
-  this.hardMaxLot = HARD_MAX_LOTS[symbol] || 0;
+  this.hardLMaxLot = HARD_L_MAX_LOTS[symbol] || 0;
+  this.hardSMaxLot = HARD_S_MAX_LOTS[symbol] || 0;
   this.maxPosition = onePosition * maxLot || 0;
   var googleCSVReader = new GoogleCSVReader(symbol);
   this.tradeController = new TradeController(googleCSVReader.columns);
