@@ -19,7 +19,7 @@ var MIN_PRICES = {
 };
 
 var MAX_PRICES = {
-  SPY:  208.36
+  SPY:  212.36
 };
 
 var MAX_LOTS = {
