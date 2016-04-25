@@ -3,9 +3,8 @@ var GoogleCSVReader = require('./googleCSVReader');
 var TradeController = require('./tradeController');
 var L = TradeController.L;
 var S = TradeController.S;
-var utils = require('./utils');
-var MAX_INT = utils.MAX_INT;
-var MIN_INT = utils.MIN_INT;
+var MAX_VALUE = Number.MAX_VALUE;
+var MIN_VALUE = Number.MIN_VALUE;
 
 var EXCHANGES = {
   NFLX: 'NASDAQ',
@@ -50,8 +49,8 @@ var Company = module.exports = function(symbol) {
   }
   this.symbol = symbol;
   this.command = COMMANDS[symbol] || L;
-  this.minPrice = MIN_PRICES[symbol] || MAX_INT;
-  this.maxPrice = MAX_PRICES[symbol] || MIN_INT;
+  this.minPrice = MIN_PRICES[symbol] || MAX_VALUE;
+  this.maxPrice = MAX_PRICES[symbol] || MIN_VALUE;
   var onePosition = this.onePosition = ONE_POSITIONS[symbol] || 0;
   var maxLot = this.maxLot = MAX_LOTS[symbol] || 0;
   this.hardLMaxLot = HARD_L_MAX_LOTS[symbol] || 0;
@@ -60,8 +59,8 @@ var Company = module.exports = function(symbol) {
   var googleCSVReader = new GoogleCSVReader(symbol);
   this.tradeController = new TradeController(googleCSVReader.columns);
   this.position = 0;
-  this.low = MAX_INT;
-  this.high = MIN_INT;
+  this.low = MAX_VALUE;
+  this.high = MIN_VALUE;
   this.close = 0.0;
   this.open = 0.0;
   this.last = 0.0;
@@ -80,8 +79,8 @@ var Company = module.exports = function(symbol) {
 };
 
 Company.prototype.resetLowHighClose = function() {
-  this.low = MAX_INT;
-  this.high = MIN_INT;
+  this.low = MAX_VALUE;
+  this.high = MIN_VALUE;
   this.close = 0.0;
 };
 

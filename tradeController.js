@@ -48,20 +48,15 @@ TradeController.prototype.reset = function() {
   this.below = false;
 };
 
-TradeController.prototype.tradeWithRealtimeBar = function(realtimeBar, forceHold) {
-  var datum = [0, 0, 0, 0, 0]; // contiguous keys starting at 0 for performance
-  datum[this.closeColumnIndex] = toCent(realtimeBar.close);
-  datum[this.highColumnIndex] = toCent(realtimeBar.high);
-  datum[this.lowColumnIndex] = toCent(realtimeBar.low);
-  datum[this.openColumnIndex] = toCent(realtimeBar.open);
-  return this.trade(datum, forceHold, true);
-};
-
-TradeController.prototype.trade = function(datum, forceHold, debug) {
+TradeController.prototype.trade = function(datum, forceHold) {
   var close = datum[this.closeColumnIndex];
   var high = datum[this.highColumnIndex];
   var low = datum[this.lowColumnIndex];
   var open = datum[this.openColumnIndex];
+  return this.tradeLogic(close, high, low, open, forceHold, false);
+};
+
+TradeController.prototype.tradeLogic = function(close, high, low, open, forceHold, debug) {
   var result = HOLD;
   if (forceHold) {
     this.reset();
