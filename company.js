@@ -26,7 +26,7 @@ var MAX_LOTS = {
 };
 
 var HARD_L_MAX_LOTS = {
-  SPY: 2
+  SPY: 1
 };
 
 var HARD_S_MAX_LOTS = {
