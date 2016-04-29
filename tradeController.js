@@ -41,11 +41,13 @@ TradeController.L = L;
 TradeController.S = S;
 
 TradeController.prototype.reset = function() {
-  this.upper = [];
-  this.lower = [];
-  this.ks = [];
+  this.upper = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // length 8
+  this.lower = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // length 8
+  this.ks = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // length 8
   this.above = false;
   this.below = false;
+  this.i = 0;
+  this.d = 0.0;
 };
 
 TradeController.prototype.trade = function(datum, forceHold) {
@@ -62,19 +64,30 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
     this.reset();
     return result;
   }
+  var i = this.i + 1;
+  this.i = i;
+  var i_0 = (i - 7) & 7;
+  var i_1 = (i - 6) & 7;
+  var i_2 = (i - 5) & 7;
+  var i_3 = (i - 4) & 7;
+  var i_4 = (i - 3) & 7;
+  var i_5 = (i - 2) & 7;
+  var i_6 = (i - 1) & 7;
+  var i_7 = i & 7;
   var upper = this.upper;
   var lower = this.lower;
   var ks = this.ks;
-  upper.push(high);
-  lower.push(low);
+  upper[i_5] = high;
+  lower[i_5] = low;
   // 6-4-4 Stochastic Oscillator
-  if (upper.length > 5 && lower.length > 5) {
-    var maxUpper = max.apply(null, upper);
-    var minLower = min.apply(null, lower);
+  if (i > 5) {
+    var maxUpper = max(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], upper[i_5]);
+    var minLower = min(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], lower[i_5]);
     var k = 6.25 * (close - minLower) / (maxUpper - minLower); // 100 / 16 = 6.25
-    ks.push(k);
-    if (ks.length > 6) {
-      var d = ks[0] + ks[6] + 2.0 * (ks[1] + ks[5]) + 3.0 * (ks[2] + ks[4]) + 4.0 * ks[3];
+    ks[i_7] = k;
+    var d = this.d - ks[i_0] - ks[i_1] - ks[i_2] - ks[i_3] + ks[i_4] + ks[i_5] + ks[i_6] + k;
+    this.d = d;
+    if (i > 12) {
       if (debug) {
         console.log('k:', k, 'd:', d);
       }
@@ -93,10 +106,7 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
         this.above = false;
         this.below = false;
       }
-      ks.shift();
     }
-    upper.shift();
-    lower.shift();
   }
   return result;
 };
