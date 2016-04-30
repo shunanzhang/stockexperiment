@@ -224,7 +224,7 @@ var handleOpenOrder = function(message) {
             company.lLotsLength -= 1;
           }
         }
-        console.log('[Delete lots]', company.lLots, company.sLots);
+        console.log('[Delete lots]', company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
       } else if (orderStatus !== 'Inactive') {
         if (action === BUY) {
           if (!company.sLots[oId]) {

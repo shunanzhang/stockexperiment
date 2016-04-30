@@ -14,11 +14,11 @@ var EXCHANGES = {
 };
 
 var MIN_PRICES = {
-  SPY:  209.64
+  SPY:  207.64
 };
 
 var MAX_PRICES = {
-  SPY:  212.36
+  SPY:  207.36
 };
 
 var MAX_LOTS = {
@@ -26,7 +26,7 @@ var MAX_LOTS = {
 };
 
 var HARD_L_MAX_LOTS = {
-  SPY: 2
+  SPY: 3
 };
 
 var HARD_S_MAX_LOTS = {
