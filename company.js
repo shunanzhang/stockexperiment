@@ -67,6 +67,8 @@ var Company = module.exports = function(symbol) {
   this.positioning = false;
   this.lLots = {};
   this.sLots = {};
+  this.lLotsLength = 0;
+  this.sLotsLength = 0;
   var contract = this.contract = createContract();
   contract.symbol = symbol;
   contract.secType = 'STK';

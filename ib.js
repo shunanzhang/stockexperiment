@@ -150,10 +150,11 @@ var handleRealTimeBar = function(realtimeBar) {
   var result = tradeController.tradeLogic(close, high, low, open, noPosition, true);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
-  var lLotsLength = Object.keys(company.lLots).length;
-  var sLotsLength = Object.keys(company.sLots).length;
+  var lLotsLength = company.lLotsLength;
+  var sLotsLength = company.sLotsLength;
   var lengthDiff = lLotsLength - sLotsLength;
-  if (result === HOLD || (result === BUY && ((lLotsLength >= company.maxLot && lengthDiff >= 1) || lLotsLength >= company.hardLMaxLot)) || (result === SELL && ((sLotsLength >= company.maxLot && lengthDiff <= -1) || sLotsLength >= company.hardSMaxLot))) {
+  var maxLot = company.maxLot;
+  if (result === HOLD || (result === BUY && ((lLotsLength >= maxLot && lengthDiff >= 1) || lLotsLength >= company.hardLMaxLot)) || (result === SELL && ((sLotsLength >= maxLot && lengthDiff <= -1) || sLotsLength >= company.hardSMaxLot))) {
     return;
   }
 
@@ -213,18 +214,30 @@ var handleOpenOrder = function(message) {
       var action = message.order.action;
       if (orderStatus === 'Filled') {
         if (action === BUY) {
-          delete company.sLots[oId];
+          if (company.sLots[oId]) {
+            company.sLots[oId] = false;
+            company.sLotsLength -= 1;
+          }
         } else if (action === SELL) {
-          delete company.lLots[oId];
+          if (company.lLots[oId]) {
+            company.lLots[oId] = false;
+            company.lLotsLength -= 1;
+          }
         }
         console.log('[Delete lots]', company.lLots, company.sLots);
       } else if (orderStatus !== 'Inactive') {
         if (action === BUY) {
-          company.sLots[oId] = true;
+          if (!company.sLots[oId]) {
+            company.sLots[oId] = true;
+            company.sLotsLength += 1;
+          }
         } else if (action === SELL) {
-          company.lLots[oId] = true;
+          if (!company.lLots[oId]) {
+            company.lLots[oId] = true;
+            company.lLotsLength += 1;
+          }
         }
-        console.log('[Append lots]', company.lLots, company.sLots);
+        console.log('[Append lots]', company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
       }
     }
   }
