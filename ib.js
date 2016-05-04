@@ -115,6 +115,11 @@ var handleDisconnected = function(message) {
   }
 };
 
+var handleConnectionClosed = function(message) {
+  console.log(new Date(), '[ConnectionClosed]', message);
+  process.exit(1);
+};
+
 var handleRealTimeBar = function(realtimeBar) {
   var company = cancelIds[realtimeBar.reqId];
   if (!company) {
@@ -249,6 +254,7 @@ api.handlers[messageIds.nextValidId] = handleValidOrderId;
 api.handlers[messageIds.error] = handleServerError;
 api.handlers[messageIds.clientError] = handleClientError;
 api.handlers[messageIds.disconnected] = handleDisconnected;
+api.handlers[messageIds.connectionClosed] = handleConnectionClosed;
 api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
 api.handlers[messageIds.tickPrice] = handleTickPrice;
 api.handlers[messageIds.orderStatus] = handleOrderStatus;
