@@ -57,41 +57,40 @@ var backtest = function() {
     } else if (result === SELL && (sTargets.length < 3 || (sTargets.length - lTargets.length < 1 && sTargets.length < 6))) {
       sTargets.push(Math.round(newClose * SECOND_OFFSET_NEG));
       console.log(' ', 'sold', displayTime, newClose);
-    } else if (result === HOLD) {
-      var j = 0;
-      var target = 0;
-      var diff = 0;
-      for (j = lTargets.length; j--;) {
-        target = lTargets[j];
-        diff = 0;
-        if (target <= newHigh) {
-          diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_POS);
-          gains.push(diff - 2); // take 2 cents off for round trip commission
-          gain += diff - 2;
-          if (gains[gains.length - 1] > 0) {
-            pGain += 1;
-          } else {
-            nGain += 1;
-          }
-          console.log(' ', SELL, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
-          lTargets.splice(j, 1);
+    }
+    var j = 0;
+    var target = 0;
+    var diff = 0;
+    for (j = lTargets.length; j--;) {
+      target = lTargets[j];
+      diff = 0;
+      if (target <= newHigh) {
+        diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_POS);
+        gains.push(diff - 2); // take 2 cents off for round trip commission
+        gain += diff - 2;
+        if (gains[gains.length - 1] > 0) {
+          pGain += 1;
+        } else {
+          nGain += 1;
         }
+        console.log(' ', SELL, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
+        lTargets.splice(j, 1);
       }
-      for (j = sTargets.length; j--;) {
-        target = sTargets[j];
-        diff = 0;
-        if (target >= newLow) {
-          diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_NEG);
-          gains.push(diff - 2); // take 2 cents off for round trip commission
-          gain += diff - 2;
-          if (gains[gains.length - 1] > 0) {
-            pGain += 1;
-          } else {
-            nGain += 1;
-          }
-          console.log('  ', BUY, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
-          sTargets.splice(j, 1);
+    }
+    for (j = sTargets.length; j--;) {
+      target = sTargets[j];
+      diff = 0;
+      if (target >= newLow) {
+        diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_NEG);
+        gains.push(diff - 2); // take 2 cents off for round trip commission
+        gain += diff - 2;
+        if (gains[gains.length - 1] > 0) {
+          pGain += 1;
+        } else {
+          nGain += 1;
         }
+        console.log('  ', BUY, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
+        sTargets.splice(j, 1);
       }
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
