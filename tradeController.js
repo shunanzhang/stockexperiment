@@ -8,8 +8,6 @@ var toCent = require('./utils').toCent;
 var BUY = 'BUY';
 var SELL = 'SELL';
 var HOLD = 'HOLD';
-var L = 'L';
-var S = 'S';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var FIRST_OFFSET = 0.04 / 200;
@@ -37,8 +35,6 @@ TradeController.FIRST_OFFSET_POS = 1.0 + FIRST_OFFSET;
 TradeController.FIRST_OFFSET_NEG = 1.0 - FIRST_OFFSET;
 TradeController.SECOND_OFFSET_POS = 1.0 + SECOND_OFFSET;
 TradeController.SECOND_OFFSET_NEG = 1.0 - SECOND_OFFSET;
-TradeController.L = L;
-TradeController.S = S;
 
 TradeController.prototype.reset = function() {
   this.upper = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // length 8
