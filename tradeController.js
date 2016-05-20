@@ -4,6 +4,7 @@ var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
 var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
 var toCent = require('./utils').toCent;
+var Sma = require('./sma');
 
 var BUY = 'BUY';
 var SELL = 'SELL';
@@ -11,7 +12,7 @@ var HOLD = 'HOLD';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var FIRST_OFFSET = 0.04 / 200;
-var SECOND_OFFSET = 0.14 / 200;
+var SECOND_OFFSET = 0.17 / 200;
 var max = Math.max;
 var min = Math.min;
 
@@ -44,6 +45,7 @@ TradeController.prototype.reset = function() {
   this.below = false;
   this.i = 0;
   this.d = 0.0;
+  this.sma = new Sma(30);
 };
 
 TradeController.prototype.trade = function(datum, forceHold) {
@@ -51,10 +53,10 @@ TradeController.prototype.trade = function(datum, forceHold) {
   var high = datum[this.highColumnIndex];
   var low = datum[this.lowColumnIndex];
   var open = datum[this.openColumnIndex];
-  return this.tradeLogic(close, high, low, open, forceHold, false);
+  return this.tradeLogic(close, high, low, open, forceHold, this.i < 283, false);
 };
 
-TradeController.prototype.tradeLogic = function(close, high, low, open, forceHold, debug) {
+TradeController.prototype.tradeLogic = function(close, high, low, open, forceHold, noSma, debug) {
   var result = HOLD;
   if (forceHold) {
     this.reset();
@@ -75,6 +77,8 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
   var ks = this.ks;
   upper[i_5] = high;
   lower[i_5] = low;
+  var sma = this.sma;
+  sma.push(close);
   // 6-4-4 Stochastic Oscillator
   if (i > 5) {
     var maxUpper = max(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], upper[i_5]);
@@ -87,9 +91,9 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
       if (debug) {
         console.log('k:', k, 'd:', d);
       }
-      if (this.above && d <= 80.0) {
+      if (this.above && d <= 80.0 && (noSma || sma.down)) {
         result = SELL;
-      } else if (this.below && d >= 20.0) {
+      } else if (this.below && d >= 20.0 && (noSma || sma.up)) {
         result = BUY;
       }
       if (d < 20.0) {
