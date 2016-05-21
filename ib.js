@@ -150,8 +150,8 @@ var handleRealTimeBar = function(realtimeBar) {
   var tradeController = company.tradeController;
   var minute = date.minutes();
   var hour = date.hours();
-  var noPosition = (hour < 9) || (hour >= 16) || (minute < 19 && hour === 9) || (minute > 54 && hour === 15); // starts earlier than regular trading hours
-  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 19 && hour === 9) || (minute > 54 && hour === 12); // for thanksgiving and christmas
+  var noPosition = (hour < 9) || (hour >= 16) || (minute < 19 && hour === 9) || (minute > 28 && hour === 15); // starts earlier than regular trading hours
+  //var noPosition = (hour < 9) || (hour >= 13) || (minute < 19 && hour === 9) || (minute > 28 && hour === 12); // for thanksgiving and christmas
   var noSma = (hour < 14) || (minute < 24 && hour === 14);
   var result = tradeController.tradeLogic(close, high, low, open, noPosition, noSma, true);
   company.resetLowHighCloseOpen();
@@ -160,7 +160,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var sLotsLength = company.sLotsLength;
   var lengthDiff = lLotsLength - sLotsLength;
   var maxLot = company.maxLot;
-  if (result === HOLD || (result === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= company.hardLMaxLot)) || (result === SELL && ((sLotsLength >= maxLot && lengthDiff < -1) || sLotsLength >= company.hardSMaxLot))) {
+  if (result === HOLD || (result === BUY && ((lLotsLength >= maxLot && lengthDiff > 0) || lLotsLength >= company.hardLMaxLot)) || (result === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= company.hardSMaxLot))) {
     return;
   }
 

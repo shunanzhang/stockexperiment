@@ -12,7 +12,7 @@ var HOLD = 'HOLD';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var FIRST_OFFSET = 0.04 / 200;
-var SECOND_OFFSET = 0.17 / 200;
+var SECOND_OFFSET = 0.18 / 200;
 var max = Math.max;
 var min = Math.min;
 

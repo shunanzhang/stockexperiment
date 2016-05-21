@@ -20,7 +20,7 @@ var MAX_PRICES = {
 };
 
 var MAX_LOTS = {
-  SPY: 3
+  SPY: 2
 };
 
 var HARD_L_MAX_LOTS = {
