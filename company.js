@@ -24,11 +24,11 @@ var MAX_LOTS = {
 };
 
 var HARD_L_MAX_LOTS = {
-  SPY: 3
+  SPY: 4//5
 };
 
 var HARD_S_MAX_LOTS = {
-  SPY: 4
+  SPY: 3
 };
 
 var ONE_POSITIONS = {

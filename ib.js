@@ -160,7 +160,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var sLotsLength = company.sLotsLength;
   var lengthDiff = lLotsLength - sLotsLength;
   var maxLot = company.maxLot;
-  if (result === HOLD || (result === BUY && ((lLotsLength >= maxLot && lengthDiff > 0) || lLotsLength >= company.hardLMaxLot)) || (result === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= company.hardSMaxLot))) {
+  if (result === HOLD || (result === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= company.hardLMaxLot)) || (result === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= company.hardSMaxLot))) {
     return;
   }
 
