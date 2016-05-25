@@ -16,7 +16,7 @@ var MIN_PRICES = {
 };
 
 var MAX_PRICES = {
-  SPY:  208.36
+  SPY:  210.36
 };
 
 var MAX_LOTS = {
@@ -24,7 +24,7 @@ var MAX_LOTS = {
 };
 
 var HARD_L_MAX_LOTS = {
-  SPY: 4//5
+  SPY: 3//5
 };
 
 var HARD_S_MAX_LOTS = {
