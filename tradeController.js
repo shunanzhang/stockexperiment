@@ -95,6 +95,8 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
         result = SELL;
       } else if (this.below && d >= 20.0 && (noSma || sma.up)) {
         result = BUY;
+      //} else if (!this.below && d <= 20) {
+      //  result = SELL;
       }
       if (d < 20.0) {
         this.above = false;
