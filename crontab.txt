@@ -6,3 +6,6 @@ workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
 14 14 * * 1-5 pkill node || true
 55 14 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
 02 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js SPY true 2>&1 | tee ${workdir}/spy.log
+04 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js IWM true 2>&1 | tee ${workdir}/iwm.log
+06 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js QQQ true 2>&1 | tee ${workdir}/qqq.log
+08 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js TLT true 2>&1 | tee ${workdir}/tlt.log
