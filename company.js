@@ -24,7 +24,7 @@ var MAX_LOTS = {
 };
 
 var HARD_L_MAX_LOTS = {
-  SPY: 3//5
+  SPY: 4//5
 };
 
 var HARD_S_MAX_LOTS = {
@@ -32,7 +32,7 @@ var HARD_S_MAX_LOTS = {
 };
 
 var ONE_POSITIONS = {
-  SPY: 148 // 162 176
+  SPY: 162 // 176
 };
 
 var cancelId = 0;

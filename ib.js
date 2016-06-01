@@ -152,7 +152,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var hour = date.hours();
   var noPosition = (hour < 9) || (hour >= 16) || (minute < 19 && hour === 9) || (minute > 28 && hour === 15); // starts earlier than regular trading hours
   //var noPosition = (hour < 9) || (hour >= 13) || (minute < 19 && hour === 9) || (minute > 28 && hour === 12); // for thanksgiving and christmas
-  var noSma = (hour < 14) || (minute < 24 && hour === 14);
+  var noSma = (hour < 14) || (minute < 14 && hour === 14);
   var result = tradeController.tradeLogic(close, high, low, open, noPosition, noSma, true);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, new Date());
