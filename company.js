@@ -32,7 +32,7 @@ var HARD_S_MAX_LOTS = {
 };
 
 var ONE_POSITIONS = {
-  SPY: 162 // 176
+  SPY: 176
 };
 
 var cancelId = 0;
