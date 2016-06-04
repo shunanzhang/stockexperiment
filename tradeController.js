@@ -81,13 +81,13 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
   sma.push(close);
   // 6-4-4 Stochastic Oscillator
   if (i > 5) {
-    var maxUpper = max(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], upper[i_5]);
-    var minLower = min(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], lower[i_5]);
+    var maxUpper = max(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], high);
+    var minLower = min(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], low);
     var k = 6.25 * (close - minLower) / (maxUpper - minLower); // 100 / 16 = 6.25
     ks[i_7] = k;
     var d = this.d - ks[i_0] - ks[i_1] - ks[i_2] - ks[i_3] + ks[i_4] + ks[i_5] + ks[i_6] + k;
     this.d = d;
-    if (i > 12) {
+    if (i > 11) {
       if (debug) {
         console.log('k:', k, 'd:', d);
       }
