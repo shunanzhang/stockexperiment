@@ -44,11 +44,10 @@ var Company = module.exports = function(symbol) {
   this.symbol = symbol;
   this.minPrice = MIN_PRICES[symbol] || MAX_VALUE;
   this.maxPrice = MAX_PRICES[symbol] || MIN_VALUE;
-  var onePosition = this.onePosition = ONE_POSITIONS[symbol] || 0;
-  var maxLot = this.maxLot = MAX_LOTS[symbol] || 0;
+  this.onePosition = ONE_POSITIONS[symbol] || 0;
+  this.maxLot = MAX_LOTS[symbol] || 0;
   this.hardLMaxLot = HARD_L_MAX_LOTS[symbol] || 0;
   this.hardSMaxLot = HARD_S_MAX_LOTS[symbol] || 0;
-  this.maxPosition = onePosition * maxLot || 0;
   var googleCSVReader = new GoogleCSVReader(symbol);
   this.tradeController = new TradeController(googleCSVReader.columns);
   this.low = MAX_VALUE;

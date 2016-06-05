@@ -3,7 +3,6 @@ var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
 var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
-var toCent = require('./utils').toCent;
 var Sma = require('./sma');
 
 var BUY = 'BUY';
@@ -53,7 +52,7 @@ TradeController.prototype.trade = function(datum, forceHold) {
   var high = datum[this.highColumnIndex];
   var low = datum[this.lowColumnIndex];
   var open = datum[this.openColumnIndex];
-  return this.tradeLogic(close, high, low, open, forceHold, this.i < 283, false);
+  return this.tradeLogic(close, high, low, open, forceHold, this.i < 203, false);
 };
 
 TradeController.prototype.tradeLogic = function(close, high, low, open, forceHold, noSma, debug) {
