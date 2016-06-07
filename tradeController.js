@@ -52,7 +52,7 @@ TradeController.prototype.trade = function(datum, forceHold) {
   var high = datum[this.highColumnIndex];
   var low = datum[this.lowColumnIndex];
   var open = datum[this.openColumnIndex];
-  return this.tradeLogic(close, high, low, open, forceHold, this.i < 203, false);
+  return this.tradeLogic(close, high, low, open, forceHold, this.i < 217, false);
 };
 
 TradeController.prototype.tradeLogic = function(close, high, low, open, forceHold, noSma, debug) {
