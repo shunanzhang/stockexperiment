@@ -88,9 +88,9 @@ var handleValidOrderId = function(message) {
 };
 
 var cancelPrevOrder = function(prevOrderId) {
-  setImmediate(api.cancelOrder.bind(api, prevOrderId));
   if (prevOrderId > -1) { // cannot cancel negative order id
     console.log('canceling order: %d', prevOrderId);
+    setImmediate(api.cancelOrder.bind(api, prevOrderId));
   }
 };
 
