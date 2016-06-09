@@ -4,6 +4,9 @@ var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
 var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
 var Sma = require('./sma');
+var utils = require('./utils');
+var max6 = utils.max6;
+var min6 = utils.min6;
 
 var BUY = 'BUY';
 var SELL = 'SELL';
@@ -12,8 +15,6 @@ var HOLD = 'HOLD';
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var FIRST_OFFSET = 0.04 / 200;
 var SECOND_OFFSET = 0.19 / 200;
-var max = Math.max;
-var min = Math.min;
 
 var TradeController = module.exports = function(columns) {
   if (! (this instanceof TradeController)) { // enforcing new
@@ -80,8 +81,8 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
   sma.push(close);
   // 6-4-4 Stochastic Oscillator
   if (i > 5) {
-    var maxUpper = max(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], high);
-    var minLower = min(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], low);
+    var maxUpper = max6(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], high);
+    var minLower = min6(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], low);
     var k = 6.25 * (close - minLower) / (maxUpper - minLower); // 100 / 16 = 6.25
     ks[i_7] = k;
     var d = this.d - ks[i_0] - ks[i_1] - ks[i_2] - ks[i_3] + ks[i_4] + ks[i_5] + ks[i_6] + k;
