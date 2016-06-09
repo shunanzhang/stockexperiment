@@ -34,7 +34,6 @@ Sma.prototype.push = function(value) {
   var data = this.data;
   var sum = this.sum;
   var i = this.i;
-  this.i = i + 1;
   var i_first = (i - length) & maxI;
   var i_last = i & maxI;
   sum -= data[i_first] || 0.0;
@@ -44,7 +43,8 @@ Sma.prototype.push = function(value) {
   var aveOld = this.ave;
   var ave = sum / length;
   this.ave = ave;
-  if (i >= maxI) {
+  this.i = ++i;
+  if (i >= length) {
     this.up = (ave > aveOld);
     this.down = (ave < aveOld);
   }
