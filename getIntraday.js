@@ -48,7 +48,7 @@ var backtest = function() {
     var newClose = closes[i];
     var newHigh = highs[i];
     var newLow = lows[i];
-    var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 31);
+    var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 99);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
     var result = tradeController.trade(datum, noPosition);
     var j = 0;

@@ -14,7 +14,7 @@ var HOLD = 'HOLD';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var FIRST_OFFSET = 0.04 / 200;
-var SECOND_OFFSET = 0.19 / 200;
+var SECOND_OFFSET = 0.20 / 200;
 
 var TradeController = module.exports = function(columns) {
   if (! (this instanceof TradeController)) { // enforcing new
@@ -53,7 +53,7 @@ TradeController.prototype.trade = function(datum, forceHold) {
   var high = datum[this.highColumnIndex];
   var low = datum[this.lowColumnIndex];
   var open = datum[this.openColumnIndex];
-  return this.tradeLogic(close, high, low, open, forceHold, this.i < 217, false);
+  return this.tradeLogic(close, high, low, open, forceHold, this.i < 127, false);
 };
 
 TradeController.prototype.tradeLogic = function(close, high, low, open, forceHold, noSma, debug) {
@@ -79,15 +79,15 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
   lower[i_5] = low;
   var sma = this.sma;
   sma.push(close);
-  // 6-4-4 Stochastic Oscillator
+  // 6-3-3 Stochastic Oscillator
   if (i > 5) {
     var maxUpper = max6(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], high);
     var minLower = min6(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], low);
-    var k = 6.25 * (close - minLower) / (maxUpper - minLower); // 100 / 16 = 6.25
+    var k = 11.111111 * (close - minLower) / (maxUpper - minLower); // 100 / 3 / 3 = 11.11111
     ks[i_7] = k;
-    var d = this.d - ks[i_0] - ks[i_1] - ks[i_2] - ks[i_3] + ks[i_4] + ks[i_5] + ks[i_6] + k;
+    var d = this.d - ks[i_2] - ks[i_3] - ks[i_4] + ks[i_5] + ks[i_6] + k;
     this.d = d;
-    if (i > 11) {
+    if (i > 9) {
       if (debug) {
         console.log('k:', k, 'd:', d);
       }
@@ -95,7 +95,7 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
         result = SELL;
       } else if (this.below && d >= 20.0 && (noSma || sma.up)) {
         result = BUY;
-      } else if (!this.below && d < 20) {
+      } else if (!this.below && d < 20.0) {
         result = SELL;
       }
       if (d < 20.0) {
