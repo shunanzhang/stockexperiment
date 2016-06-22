@@ -161,14 +161,16 @@ var handleRealTimeBar = function(realtimeBar) {
   var lengthDiff = lLotsLength - sLotsLength;
   var maxLot = company.maxLot;
   var hardLMaxPrices = company.hardLMaxPrices;
+  var hardLMinPrices = company.hardLMinPrices;
   var hardSMinPrices = company.hardSMinPrices;
+  var hardSMaxPrices = company.hardSMaxPrices;
   if (result === HOLD || (result === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= hardLMaxPrices.length)) || (result === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= hardSMinPrices.length))) {
     return;
   }
   var qty = company.onePosition;
   var limitPrice = close * (result === BUY ? FIRST_OFFSET_POS : FIRST_OFFSET_NEG);
-  if (result === BUY ? (limitPrice > hardLMaxPrices[lLotsLength]) : (limitPrice < hardSMinPrices[sLotsLength])) {
-    console.log('[WARNING]', result, 'order ignored since the limit price is', limitPrice, ', which is', (result === SELL ? 'less' : 'more'), 'than the threshold', (result === SELL ? hardSMinPrices[sLotsLength] : hardLMaxPrices[lLotsLength]));
+  if (result === BUY ? (limitPrice > hardLMaxPrices[lLotsLength] || limitPrice < hardLMinPrices[lLotsLength]) : (limitPrice < hardSMinPrices[sLotsLength] || limitPrice > hardSMaxPrices[sLotsLength])) {
+    console.log('[WARNING]', result, 'order ignored since the limit price is', limitPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
   }
   var orderType = 'REL';
