@@ -20,19 +20,19 @@ var HARD_L_MAX_PRICES = {
 };
 
 var HARD_L_MIN_PRICES = {
-  SPY: [207.87, 207.87, 207.87, 207.87, 207.87]
+  SPY: [203.87, 202.87, 201.87, 200.87, 199.87]
 };
 
 var HARD_S_MIN_PRICES = {
-  SPY: [196.17, 200.17, 204.17]
+  SPY: [196.17, 200.17, 202.17]
 };
 
 var HARD_S_MAX_PRICES = {
-  SPY: [206.13, 206.13, 206.13]
+  SPY: [201.13, 203.13, 208.13]
 };
 
 var ONE_POSITIONS = {
-  SPY: 178
+  SPY: 179
 };
 
 var cancelId = 0;
