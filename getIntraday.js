@@ -86,17 +86,17 @@ var backtest = function() {
         sTargets.splice(j, 1);
       }
     }
-    if (i_MINUTES_DAY === MINUTES_DAY - 1) {
-      console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString(), lTargets, sTargets);
-      console.log('=====');
-      //console.log(gain);
-    }
     if (result === BUY && (lTargets.length < 2 || (lTargets.length - sTargets.length < 2 && lTargets.length < 5))) {
       lTargets.push(Math.round(newClose * SECOND_OFFSET_POS));
       console.log('bought', displayTime, newClose);
     } else if (result === SELL && (sTargets.length < 2 || (sTargets.length - lTargets.length < 1 && sTargets.length < 3))) {
       sTargets.push(Math.round(newClose * SECOND_OFFSET_NEG));
       console.log(' ', 'sold', displayTime, newClose);
+    }
+    if (i_MINUTES_DAY === MINUTES_DAY - 1) {
+      console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString(), lTargets, sTargets);
+      console.log('=====');
+      //console.log(gain);
     }
   }
   var aveGain = 0;
