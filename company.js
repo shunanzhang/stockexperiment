@@ -16,7 +16,7 @@ var MAX_LOTS = {
 };
 
 var HARD_L_MAX_PRICES = {
-  SPY: [213.83, 212.83, 211.83, 210.83, 209.83]
+  SPY: [213.83, 204.83, 203.83, 202.83, 201.83]
 };
 
 var HARD_L_MIN_PRICES = {
