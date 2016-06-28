@@ -54,6 +54,8 @@ var Company = module.exports = function(symbol) {
   this.high = MIN_VALUE;
   this.close = 0.0;
   this.open = 0.0;
+  this.bid = 0.0;
+  this.ask = 0.0;
   this.lLots = {};
   this.sLots = {};
   this.lLotsLength = 0;

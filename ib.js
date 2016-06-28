@@ -67,7 +67,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.percentOffset = 0; // bug workaround
   setImmediate(api.placeOrder.bind(api, oldId, company.contract, newOrder));
   //console.log('Next valid order Id: %d', oldId);
-  console.log('Placing order for', company.symbol, newOrder);
+  console.log('Placing order for', company.symbol, newOrder, company.bid, company.ask);
 };
 
 // Here we specify the event handlers.
@@ -181,11 +181,17 @@ var handleTickPrice = function(tickPrice) {
   var company = cancelIds[tickPrice.tickerId];
   var field = tickPrice.field;
   var price = tickPrice.price;
-  if (field === 4 && company) { // last price
-    company.low = min2(price, company.low);
-    company.high = max2(price, company.high);
-    company.close = price;
-    company.open = company.open || price;
+  if (company) {
+    if (field === 4) { // last price
+      company.low = min2(price, company.low);
+      company.high = max2(price, company.high);
+      company.close = price;
+      company.open = company.open || price;
+    } else if (field === 1) { // bid price
+      company.bid = price;
+    } else if (field === 2) { // ask price
+      company.ask = price;
+    }
   }
 };
 
