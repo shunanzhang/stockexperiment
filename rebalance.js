@@ -25,4 +25,11 @@ if (!module.parent) {
   targets = [212.60, 210.84, 210.90, 210.91];
   rebalance(targets, 213);
   console.log(targets);
+  targets = [];
+  for (var i = 3; i < process.argv.length; i++) {
+    targets.push(parseFloat(process.argv[i]));
+  }
+  console.log(targets);
+  rebalance(targets, parseFloat(process.argv[2]));
+  console.log(targets);
 }
