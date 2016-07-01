@@ -11,12 +11,16 @@ var EXCHANGES = {
   SPY: 'ARCA'
 };
 
+var SEC_TYPE = {
+  SPY: 'STK'
+};
+
 var MAX_LOTS = {
   SPY: 2
 };
 
 var HARD_L_MAX_PRICES = {
-  SPY: [213.83, 210.83, 209.83, 208.83, 207.83]
+  SPY: [213.83, 212.83, 211.83, 210.83, 209.83]
 };
 
 var HARD_L_MIN_PRICES = {
@@ -32,7 +36,7 @@ var HARD_S_MAX_PRICES = {
 };
 
 var ONE_POSITIONS = {
-  SPY: 179
+  SPY: 180
 };
 
 var cancelId = 0;
@@ -62,7 +66,7 @@ var Company = module.exports = function(symbol) {
   this.sLotsLength = 0;
   var contract = this.contract = createContract();
   contract.symbol = symbol;
-  contract.secType = 'STK';
+  contract.secType = SEC_TYPE[symbol] || 'STK';
   contract.exchange = 'SMART';
   contract.primaryExchange = EXCHANGES[symbol];
   contract.currency = 'USD';
