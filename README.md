@@ -5,6 +5,8 @@ Copyright (c) 2015 Kazuyuki Tanimura. All rights reserved.
 * turn off the readonly mode
 
 ### TODO
+- Backtest ES
+-- Get the data from IB API
 - Passive execution
 -- Limit order at bid price for long and ask price for short
 -- If the tick moves against the order

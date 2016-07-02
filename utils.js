@@ -5,9 +5,9 @@ module.exports.toCent = function(flt) {
   return round(flt * 100) | 0;
 };
 
-module.exports.roundCent = function(flt) {
+module.exports.roundCent = function(flt, tickInverse) {
   //http://stackoverflow.com/questions/9453421/how-to-round-float-numbers-in-javascript
-  return round(flt * 100) / 100;
+  return round(flt * tickInverse) / tickInverse;
 };
 
 module.exports.MAX_INT = 0x7FFFFFFF; // max 31 bit
