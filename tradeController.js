@@ -4,9 +4,8 @@ var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
 var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
 var Sma = require('./sma');
-var utils = require('./utils');
-var max6 = utils.max6;
-var min6 = utils.min6;
+var max = Math.max;
+var min = Math.min;
 
 var BUY = 'BUY';
 var SELL = 'SELL';
@@ -81,8 +80,8 @@ TradeController.prototype.tradeLogic = function(close, high, low, open, forceHol
   sma.push(close);
   // 6-3-3 Stochastic Oscillator
   if (i > 5) {
-    var maxUpper = max6(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], high);
-    var minLower = min6(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], low);
+    var maxUpper = max(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], high);
+    var minLower = min(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], low);
     var k = 11.111111 * (close - minLower) / (maxUpper - minLower); // 100 / 3 / 3 = 11.11111
     ks[i_7] = k;
     var d = this.d - ks[i_2] - ks[i_3] - ks[i_4] + ks[i_5] + ks[i_6] + k;

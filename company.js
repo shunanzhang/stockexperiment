@@ -103,13 +103,12 @@ var Company = module.exports = function(symbol) {
   this.orderId = -1; // last order id
 };
 
-Company.prototype.resetLowHighClose = function() {
+Company.prototype.resetLowHigh = function() {
   this.low = MAX_VALUE;
   this.high = MIN_VALUE;
-  this.close = 0.0;
 };
 
 Company.prototype.resetLowHighCloseOpen = function() {
-  this.resetLowHighClose();
+  this.resetLowHigh();
   this.open = 0.0;
 };

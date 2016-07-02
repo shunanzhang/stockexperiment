@@ -13,10 +13,9 @@ var FIRST_OFFSET_NEG = TradeController.FIRST_OFFSET_NEG;
 var SECOND_OFFSET_POS = TradeController.SECOND_OFFSET_POS;
 var SECOND_OFFSET_NEG = TradeController.SECOND_OFFSET_NEG;
 var Company = require('./company');
-var utils = require('./utils');
-var roundCent = utils.roundCent;
-var max2 = utils.max2;
-var min2 = utils.min2;
+var max = Math.max;
+var min = Math.min;
+var round = Math.round;
 
 var cancelIds = {};
 var symbols = {};
@@ -56,11 +55,12 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
     actions[oldId] = action;
   }
   var newOrder = createOrder();
+  var tickInverse = company.oneTickInverse;
   newOrder.action = action;
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
-  newOrder.lmtPrice = roundCent(lmtPrice, company.oneTickInverse); // roundCent is required to place a correct order
-  newOrder.auxPrice = roundCent(auxPrice, company.oneTickInverse);
+  newOrder.lmtPrice = round(lmtPrice * tickInverse) / tickInverse; // required to place a correct order
+  newOrder.auxPrice = round(auxPrice * tickInverse) / tickInverse;
   newOrder.hidden = true;
   newOrder.tif = 'GTC';
   newOrder.outsideRth = true;
@@ -127,14 +127,14 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
-  var low = company.low = min2(realtimeBar.low, company.low);
-  var high = company.high = max2(realtimeBar.high, company.high);
+  var low = company.low = min(realtimeBar.low, company.low);
+  var high = company.high = max(realtimeBar.high, company.high);
   var close = company.close = company.close || realtimeBar.close;
   var open = company.open;
   var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second <= 7) {
-      company.resetLowHighClose();
+      company.resetLowHigh();
     } else {
       company.open = open || realtimeBar.open;
       if (second > 52 && company.lastOrderStatus !== 'Filled') {
@@ -183,8 +183,8 @@ var handleTickPrice = function(tickPrice) {
   var price = tickPrice.price;
   if (company) {
     if (field === 4) { // last price
-      company.low = min2(price, company.low);
-      company.high = max2(price, company.high);
+      company.low = min(price, company.low);
+      company.high = max(price, company.high);
       company.close = price;
       company.open = company.open || price;
     } else if (field === 1) { // bid price
