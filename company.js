@@ -1,8 +1,8 @@
 var moment = require('moment-timezone');
 var createContract = require('ibapi').contract.createContract;
 var GoogleCSVReader = require('./googleCSVReader');
-var TradeController = require('./tradeController');
 var TIMEZONE = GoogleCSVReader.TIMEZONE;
+var TradeController = require('./tradeController');
 var MAX_VALUE = Number.MAX_VALUE;
 var MIN_VALUE = Number.MIN_VALUE;
 
@@ -90,14 +90,23 @@ var Company = module.exports = function(symbol) {
   var expir = EXPIRIES[symbol];
   if (expir) {
     var date = moment.tz(TIMEZONE);
+    var rollWeek = ((date.date() - (date.day() + 3) % 7 + 1) / 7) | 0; // === 1 between Thursday 2nd week of month and Wednewsay 3rd week of month
     var diff = expir - (date.month() + 1) % expir;
-    contract.expiry = date.clone().add(diff, 'month').format('YYYYMM');
-    if (diff === expir) {
-      this.oldExpiry = date.format('YYYYMM');
+    if (diff === expir && rollWeek < 2) {
+      if (rollWeek < 1) {
+        this.oldExpiry = this.newExpiry = contract.expiry = date.format('YYYYMM');
+      } else {
+        // The roll date is the second Thursday http://www.cmegroup.com/trading/equity-index/rolldates.html
+        this.oldExpiry = date.format('YYYYMM');
+        this.newExpiry = contract.expiry = date.add(diff, 'month').format('YYYYMM');
+      }
     } else {
-      this.oldExpiry = contract.expiry;
+      this.oldExpiry = this.newExpiry = contract.expiry = date.add(diff, 'month').format('YYYYMM');
     }
+  } else {
+    this.oldExpiry = this.newExpiry = contract.expiry;
   }
+  this.oldExpiryPosition = 0;
   this.cancelId = ++cancelId;
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id

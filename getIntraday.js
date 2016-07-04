@@ -15,9 +15,9 @@ var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var MINUTES_DAY = TradeController.MINUTES_DAY;
-var SECOND_OFFSET = TradeController.SECOND_OFFSET;
-var SECOND_OFFSET_POS = TradeController.SECOND_OFFSET_POS;
-var SECOND_OFFSET_NEG = TradeController.SECOND_OFFSET_NEG;
+var OFFSET = TradeController.OFFSET;
+var OFFSET_POS = TradeController.OFFSET_POS;
+var OFFSET_NEG = TradeController.OFFSET_NEG;
 
 /**
  * argument parsing
@@ -58,7 +58,7 @@ var backtest = function() {
       target = lTargets[j];
       diff = 0;
       if (target <= newHigh) {
-        diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_POS);
+        diff = Math.round(target * OFFSET / OFFSET_POS);
         gains.push(diff - 2); // take 2 cents off for round trip commission
         gain += diff - 2;
         if (gains[gains.length - 1] > 0) {
@@ -74,7 +74,7 @@ var backtest = function() {
       target = sTargets[j];
       diff = 0;
       if (target >= newLow) {
-        diff = Math.round(target * SECOND_OFFSET / SECOND_OFFSET_NEG);
+        diff = Math.round(target * OFFSET / OFFSET_NEG);
         gains.push(diff - 2); // take 2 cents off for round trip commission
         gain += diff - 2;
         if (gains[gains.length - 1] > 0) {
@@ -87,10 +87,10 @@ var backtest = function() {
       }
     }
     if (result === BUY && (lTargets.length < 2 || (lTargets.length - sTargets.length < 2 && lTargets.length < 5))) {
-      lTargets.push(Math.round(newClose * SECOND_OFFSET_POS));
+      lTargets.push(Math.round(newClose * OFFSET_POS));
       console.log('bought', displayTime, newClose);
     } else if (result === SELL && (sTargets.length < 2 || (sTargets.length - lTargets.length < 1 && sTargets.length < 3))) {
-      sTargets.push(Math.round(newClose * SECOND_OFFSET_NEG));
+      sTargets.push(Math.round(newClose * OFFSET_NEG));
       console.log(' ', 'sold', displayTime, newClose);
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {

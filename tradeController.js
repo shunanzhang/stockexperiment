@@ -12,8 +12,7 @@ var SELL = 'SELL';
 var HOLD = 'HOLD';
 
 var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
-var FIRST_OFFSET = 0.04 / 200;
-var SECOND_OFFSET = 0.20 / 200;
+var OFFSET = 0.20 / 200;
 
 var TradeController = module.exports = function(columns) {
   if (! (this instanceof TradeController)) { // enforcing new
@@ -29,12 +28,9 @@ TradeController.BUY = BUY;
 TradeController.SELL = SELL;
 TradeController.HOLD = HOLD;
 TradeController.MINUTES_DAY = MINUTES_DAY;
-TradeController.FIRST_OFFSET = FIRST_OFFSET;
-TradeController.SECOND_OFFSET = SECOND_OFFSET;
-TradeController.FIRST_OFFSET_POS = 1.0 + FIRST_OFFSET;
-TradeController.FIRST_OFFSET_NEG = 1.0 - FIRST_OFFSET;
-TradeController.SECOND_OFFSET_POS = 1.0 + SECOND_OFFSET;
-TradeController.SECOND_OFFSET_NEG = 1.0 - SECOND_OFFSET;
+TradeController.OFFSET = OFFSET;
+TradeController.OFFSET_POS = 1.0 + OFFSET;
+TradeController.OFFSET_NEG = 1.0 - OFFSET;
 
 TradeController.prototype.reset = function() {
   this.upper = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // length 8

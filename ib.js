@@ -8,10 +8,8 @@ var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
-var FIRST_OFFSET_POS = TradeController.FIRST_OFFSET_POS;
-var FIRST_OFFSET_NEG = TradeController.FIRST_OFFSET_NEG;
-var SECOND_OFFSET_POS = TradeController.SECOND_OFFSET_POS;
-var SECOND_OFFSET_NEG = TradeController.SECOND_OFFSET_NEG;
+var OFFSET_POS = TradeController.OFFSET_POS;
+var OFFSET_NEG = TradeController.OFFSET_NEG;
 var Company = require('./company');
 var max = Math.max;
 var min = Math.min;
@@ -39,6 +37,14 @@ var api = new ibapi.NodeIbapi();
 //  Make sure you keep track of this.
 var orderId = -1;
 
+// Singleton order object
+var newOrder = createOrder();
+newOrder.auxPrice = 0.0;
+newOrder.hidden = true;
+newOrder.tif = 'GTC';
+newOrder.outsideRth = true;
+newOrder.percentOffset = 0; // bug workaround
+
 var getRealtimeBars = function(company) {
   // only 5 sec is supported, only regular trading ours == false
   api.reqRealtimeBars(company.cancelId, company.contract, 5, 'TRADES', false);
@@ -48,26 +54,23 @@ var getMktData = function(company) {
   api.reqMktData(company.cancelId, company.contract, '', false);
 };
 
-var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice, entry) {
-  var oldId = company.orderId = orderId++;
-  if (entry) {
-    entryOrderIds[oldId] = company;
-    actions[oldId] = action;
+var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entry, modify) {
+  var oldId = -1;
+  if (modify) {
+    oldId = company.orderId;
+  } else {
+    oldId = company.orderId = orderId++;
+    if (entry) {
+      entryOrderIds[oldId] = company;
+      actions[oldId] = action;
+    }
   }
-  var newOrder = createOrder();
-  var tickInverse = company.oneTickInverse;
   newOrder.action = action;
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
-  newOrder.lmtPrice = round(lmtPrice * tickInverse) / tickInverse; // required to place a correct order
-  newOrder.auxPrice = round(auxPrice * tickInverse) / tickInverse;
-  newOrder.hidden = true;
-  newOrder.tif = 'GTC';
-  newOrder.outsideRth = true;
-  newOrder.percentOffset = 0; // bug workaround
+  newOrder.lmtPrice = lmtPrice;
   api.placeOrder(oldId, company.contract, newOrder);
-  //console.log('Next valid order Id: %d', oldId);
-  console.log('Placing order for', company.symbol, newOrder, company.bid, company.ask);
+  console.log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
 };
 
 // Here we specify the event handlers.
@@ -167,30 +170,45 @@ var handleRealTimeBar = function(realtimeBar) {
   if (result === HOLD || (result === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= hardLMaxPrices.length)) || (result === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= hardSMinPrices.length))) {
     return;
   }
-  var qty = company.onePosition;
-  var limitPrice = close * (result === BUY ? FIRST_OFFSET_POS : FIRST_OFFSET_NEG);
+  var limitPrice = result === BUY ? company.bid : company.ask;
   if (result === BUY ? (limitPrice > hardLMaxPrices[lLotsLength] || limitPrice < hardLMinPrices[lLotsLength]) : (limitPrice < hardSMinPrices[sLotsLength] || limitPrice > hardSMaxPrices[sLotsLength])) {
     console.log('[WARNING]', result, 'order ignored since the limit price is', limitPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
   }
-  var orderType = 'REL';
-  placeMyOrder(company, result, qty, orderType, limitPrice, 0.01, true);
+  var oldExpiryPosition = company.oldExpiryPosition;
+  if (result === BUY ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
+    company.contract.expiry = company.oldExpiry;
+  } else {
+    company.contract.expiry = company.newExpiry;
+  }
+  placeMyOrder(company, result, company.onePosition, 'LMT', limitPrice, true, false);
 };
 
 var handleTickPrice = function(tickPrice) {
   var company = cancelIds[tickPrice.tickerId];
   var field = tickPrice.field;
   var price = tickPrice.price;
-  if (company) {
+  if (company && price) {
     if (field === 4) { // last price
       company.low = min(price, company.low);
       company.high = max(price, company.high);
       company.close = price;
       company.open = company.open || price;
-    } else if (field === 1) { // bid price
-      company.bid = price;
-    } else if (field === 2) { // ask price
-      company.ask = price;
+    } else {
+      var result = actions[company.orderId];
+      if (field === 1) { // bid price
+        var bid = company.bid;
+        if (company.lastOrderStatus === 'Submitted' && result === SELL && bid > price) { // to aggresive mode
+          placeMyOrder(company, result, company.onePosition, 'LMT', price, false, true); // modify order
+        }
+        company.bid = price;
+      } else if (field === 2) { // ask price
+        var ask = company.ask;
+        if (company.lastOrderStatus === 'Submitted' && result === BUY && ask < price) { // to aggresive mode
+          placeMyOrder(company, result, company.onePosition, 'LMT', price, false, true); // modify order
+        }
+        company.ask = price;
+      }
     }
   }
 };
@@ -199,20 +217,24 @@ var handleOrderStatus = function(message) {
   console.log('OrderStatus:', JSON.stringify(message));
   var oId = message.orderId;
   var orderStatus = message.status;
-  if (orderStatus === 'Inactive') {
-    cancelPrevOrder(oId);
-  }
   var company = entryOrderIds[oId];
   if (company) {
     company.lastOrderStatus = orderStatus;
-    if (orderStatus === 'Filled') {
+    if (orderStatus === 'Inactive') {
+      cancelPrevOrder(oId);
+    } else if (orderStatus === 'Filled') {
       entryOrderIds[oId] = undefined;
       var result = actions[oId] === BUY ? SELL : BUY;
-      var qty = message.filled;
-      var avgFillPrice = message.avgFillPrice;
-      var limitPrice = avgFillPrice * (result === SELL ? SECOND_OFFSET_POS : SECOND_OFFSET_NEG);
-      var orderType = 'REL';
-      placeMyOrder(company, result, qty, orderType, limitPrice, 0.01, false);
+      var limitPrice = message.avgFillPrice * (result === SELL ? OFFSET_POS : OFFSET_NEG);
+      var tickInverse = company.oneTickInverse;
+      limitPrice = round(limitPrice * tickInverse) / tickInverse; // required to place a correct order
+      var oldExpiryPosition = company.oldExpiryPosition;
+      if (result === BUY ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
+        company.contract.expiry = company.oldExpiry;
+      } else {
+        company.contract.expiry = company.newExpiry;
+      }
+      placeMyOrder(company, result, message.filled, 'LMT', limitPrice, false, false);
     }
   }
 };
@@ -226,32 +248,51 @@ var handleOpenOrder = function(message) {
     company = symbols[message.contract.symbol];
     if (company) {
       var action = message.order.action;
+      var expiry = message.contract.expiry;
+      var oldExpiry = company.oldExpiry;
+      var newExpiry = company.newExpiry;
       if (orderStatus === 'Filled') {
         if (action === BUY) {
           if (company.sLots[oId]) {
             company.sLots[oId] = false;
             company.sLotsLength -= 1;
+            if (expiry === oldExpiry) {
+              company.oldExpiryPosition += 1;
+            }
           }
         } else if (action === SELL) {
           if (company.lLots[oId]) {
             company.lLots[oId] = false;
             company.lLotsLength -= 1;
+            if (expiry === oldExpiry) {
+              company.oldExpiryPosition -= 1;
+            }
           }
         }
-        console.log('[Delete lots]', company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
+        console.log('[Delete lots]', company.symbol, company.oldExpiryPosition, company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
       } else if (orderStatus !== 'Inactive') {
-        if (action === BUY) {
+        if (oldExpiry === newExpiry && newExpiry !== expiry) {
+          cancelPrevOrder(oId);
+          company.contract.expiry = newExpiry;
+          placeMyOrder(company, action, message.order.totalQuantity, 'LMT', message.order.lmtPrice, false, false);
+        } else if (action === BUY) {
           if (!company.sLots[oId]) {
             company.sLots[oId] = true;
             company.sLotsLength += 1;
+            if (expiry === oldExpiry) {
+              company.oldExpiryPosition -= 1;
+            }
           }
         } else if (action === SELL) {
           if (!company.lLots[oId]) {
             company.lLots[oId] = true;
             company.lLotsLength += 1;
+            if (expiry === oldExpiry) {
+              company.oldExpiryPosition += 1;
+            }
           }
         }
-        console.log('[Append lots]', company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
+        console.log('[Append lots]', company.symbol, company.oldExpiryPosition, company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
       }
     }
   }
