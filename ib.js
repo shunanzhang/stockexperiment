@@ -98,28 +98,28 @@ var cancelPrevOrder = function(prevOrderId) {
 };
 
 var handleServerError = function(message) {
-  console.log(new Date(), '[ServerError]', message);
+  console.log(Date(), '[ServerError]', message);
   if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleClientError = function(message) {
-  console.log(new Date(), '[ClientError]', message);
+  console.log(Date(), '[ClientError]', message);
   if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleDisconnected = function(message) {
-  console.log(new Date(), '[Disconnected]', message);
+  console.log(Date(), '[Disconnected]', message);
   if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleConnectionClosed = function(message) {
-  console.log(new Date(), '[ConnectionClosed]', message);
+  console.log(Date(), '[ConnectionClosed]', message);
   process.exit(1);
 };
 
@@ -158,7 +158,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var noSma = (hour < 11) || (minute < 38 && hour === 11);
   var result = tradeController.tradeLogic(close, high, low, open, noPosition, noSma, true);
   company.resetLowHighCloseOpen();
-  console.log(realtimeBar, new Date());
+  console.log(realtimeBar, Date());
   var lLotsLength = company.lLotsLength;
   var sLotsLength = company.sLotsLength;
   var lengthDiff = lLotsLength - sLotsLength;
@@ -198,16 +198,16 @@ var handleTickPrice = function(tickPrice) {
       var result = actions[company.orderId];
       if (field === 1) { // bid price
         var bid = company.bid;
+        company.bid = price;
         if (company.lastOrderStatus === 'Submitted' && result === SELL && bid > price) { // to aggresive mode
           placeMyOrder(company, result, company.onePosition, 'LMT', price, false, true); // modify order
         }
-        company.bid = price;
       } else if (field === 2) { // ask price
         var ask = company.ask;
+        company.ask = price;
         if (company.lastOrderStatus === 'Submitted' && result === BUY && ask < price) { // to aggresive mode
           placeMyOrder(company, result, company.onePosition, 'LMT', price, false, true); // modify order
         }
-        company.ask = price;
       }
     }
   }
@@ -251,7 +251,7 @@ var handleOpenOrder = function(message) {
       var expiry = message.contract.expiry;
       var oldExpiry = company.oldExpiry;
       var newExpiry = company.newExpiry;
-      if (orderStatus === 'Filled') {
+      if (orderStatus === 'Filled' || orderStatus === 'Cancelled') {
         if (action === BUY) {
           if (company.sLots[oId]) {
             company.sLots[oId] = false;

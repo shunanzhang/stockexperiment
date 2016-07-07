@@ -11,6 +11,11 @@ var EXCHANGES = {
   ES: 'GLOBEX'
 };
 
+var DESTINATIONS = {
+  SPY: 'SMART',
+  ES: 'GLOBEX'
+};
+
 var SEC_TYPES = {
   SPY: 'STK',
   ES: 'FUT'
@@ -84,7 +89,7 @@ var Company = module.exports = function(symbol) {
   var contract = this.contract = createContract();
   contract.symbol = symbol;
   contract.secType = SEC_TYPES[symbol] || 'STK';
-  contract.exchange = 'SMART';
+  contract.exchange = DESTINATIONS[symbol] || 'SMART';
   contract.primaryExchange = EXCHANGES[symbol];
   contract.currency = 'USD';
   var expir = EXPIRIES[symbol];
