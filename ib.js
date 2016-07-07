@@ -223,7 +223,7 @@ var handleOrderStatus = function(message) {
     if (orderStatus === 'Inactive') {
       cancelPrevOrder(oId);
     } else if (orderStatus === 'Filled') {
-      entryOrderIds[oId] = undefined;
+      entryOrderIds[oId] = null;
       var result = actions[oId] === BUY ? SELL : BUY;
       var limitPrice = message.avgFillPrice * (result === SELL ? OFFSET_POS : OFFSET_NEG);
       var tickInverse = company.oneTickInverse;
@@ -244,7 +244,7 @@ var handleOpenOrder = function(message) {
   var oId = message.orderId;
   var orderStatus = message.orderState.status;
   var company = entryOrderIds[oId];
-  if (!company) { // if exiting the position
+  if (company === undefined) { // if exiting the position
     company = symbols[message.contract.symbol];
     if (company) {
       var action = message.order.action;
