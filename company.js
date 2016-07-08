@@ -112,9 +112,26 @@ var Company = module.exports = function(symbol) {
     this.oldExpiry = this.newExpiry = contract.expiry;
   }
   this.oldExpiryPosition = 0;
+  this.lExLots = {};
+  this.sExLots = {};
   this.cancelId = ++cancelId;
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id
+};
+
+Company.prototype.getExLot = function() {
+  var oldExpiryPosition = this.oldExpiryPosition;
+  if (oldExpiryPosition === 0) {
+    return undefined;
+  }
+  var exLots = (oldExpiryPosition > 0) ? this.lExLots : this.sExLots;
+  for (var oId in exLots) {
+    var order = exLots[oId];
+    if (order) {
+      return {oId: parseInt(oId, 10), order: order};
+    }
+  }
+  return undefined;
 };
 
 Company.prototype.resetLowHigh = function() {
@@ -126,3 +143,21 @@ Company.prototype.resetLowHighCloseOpen = function() {
   this.resetLowHigh();
   this.open = 0.0;
 };
+
+if (!module.parent) {
+  var company = new Company('ES');
+  company.lExLots[1] = '1';
+  company.oldExpiryPosition += 1;
+  company.lExLots[2] = '2';
+  company.oldExpiryPosition += 1;
+  company.sExLots[3] = '3';
+  company.oldExpiryPosition -= 1;
+  console.log(company);
+  console.log(company.getExLot());
+  company.lExLots[1] = null;
+  company.oldExpiryPosition -= 1;
+  console.log(company.getExLot());
+  company.lExLots[4] = '4';
+  company.oldExpiryPosition += 1;
+  console.log(company.getExLot());
+}

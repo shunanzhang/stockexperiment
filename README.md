@@ -22,12 +22,11 @@ Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
       - Short *new* month and limit *old* month
 - Active roll over
   - Roll over pending order expiry date
+  - Roll over existing position
 
 ### TODO
 - Backtest ES
   - Get the data from IB API
-- Active roll over
-  - Roll over existing position
 - More accurate execution timing
   - Use process.hrtime()
 - Test with futures contracts
