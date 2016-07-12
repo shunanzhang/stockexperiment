@@ -27,6 +27,8 @@ Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
 ### TODO
 - Backtest ES
   - Get the data from IB API
+  - Emulate TWS API interface
+- Automatic base up
+- Build a portfolio and diversity
 - More accurate execution timing
   - Use process.hrtime()
-- Test with futures contracts
