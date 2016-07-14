@@ -136,7 +136,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
   var low = company.low = min(realtimeBar.low, company.low);
   var high = company.high = max(realtimeBar.high, company.high);
-  var close = company.close = company.close || realtimeBar.close;
+  var close = company.close;
   var open = company.open;
   var second = date.seconds();
   if (second <= 57 && second > 3) {
@@ -154,13 +154,16 @@ var handleRealTimeBar = function(realtimeBar) {
   realtimeBar.high = high;
   realtimeBar.close = close;
   realtimeBar.open = open;
+  var bid = company.bid;
+  var ask = company.ask;
+  var mid = (bid + ask) / 2.0;
   var tradeController = company.tradeController;
   var minute = date.minutes();
   var hour = date.hours();
   var noPosition = (hour < 9) || (hour >= 15) || (minute < 21 && hour === 9) || (minute > 20 && hour === 14); // starts earlier than regular trading hours
   //var noPosition = (hour < 9) || (hour >= 12) || (minute < 21 && hour === 9) || (minute > 20 && hour === 11); // for thanksgiving and christmas
   var noSma = (hour < 11) || (minute < 38 && hour === 11);
-  var action = tradeController.tradeLogic(close, high, low, open, noPosition, noSma, true);
+  var action = tradeController.tradeLogic(mid, high, low, open, noPosition, noSma, true);
   company.resetLowHighCloseOpen();
   console.log(realtimeBar, Date());
   var lLotsLength = company.lLotsLength;
@@ -174,7 +177,7 @@ var handleRealTimeBar = function(realtimeBar) {
   if (action === HOLD || (action === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= hardLMaxPrices.length)) || (action === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= hardSMinPrices.length))) {
     return;
   }
-  var lmtPrice = action === BUY ? company.bid : company.ask;
+  var lmtPrice = action === BUY ? bid : ask;
   if (action === BUY ? (lmtPrice > hardLMaxPrices[lLotsLength] || lmtPrice < hardLMinPrices[lLotsLength]) : (lmtPrice < hardSMinPrices[sLotsLength] || lmtPrice > hardSMaxPrices[sLotsLength])) {
     console.log('[WARNING]', action, 'order ignored since the limit price is', lmtPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
@@ -212,6 +215,9 @@ var handleTickPrice = function(tickPrice) {
         if (company.lastOrderStatus === 'Submitted' && action === BUY && ask < price) { // to aggresive mode
           placeMyOrder(company, action, company.onePosition, 'LMT', price, 0.0, false, true); // modify order
         }
+      } else if (field === 9) { // last day close
+        company.lastDayClose = price;
+        console.log('last day close', price);
       }
     }
   }

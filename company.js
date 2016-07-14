@@ -32,7 +32,7 @@ var MAX_LOTS = {
 
 var HARD_L_MAX_PRICES = {
   SPY: [218.83, 217.83, 216.83, 215.83, 214.83],
-  ES: [2130.75, 2120.75, 2110.75, 2100.75, 2090.75]
+  ES: [2188.75, 2178.75, 2168.75, 2158.75, 2148.75]
 };
 
 var HARD_L_MIN_PRICES = {
@@ -82,6 +82,7 @@ var Company = module.exports = function(symbol) {
   this.open = 0.0;
   this.bid = 0.0;
   this.ask = 0.0;
+  this.lastDayClose = 0.0;
   this.lLots = {};
   this.sLots = {};
   this.lLotsLength = 0;

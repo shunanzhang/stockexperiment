@@ -28,7 +28,9 @@ Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
 - Backtest ES
   - Get the data from IB API
   - Emulate TWS API interface
+  - Bootstrapping
 - Automatic base up
+- Automatic upper and lower limit
 - Build a portfolio and diversity
 - More accurate execution timing
   - Use process.hrtime()
