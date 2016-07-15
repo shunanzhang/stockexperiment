@@ -37,6 +37,7 @@ var orderId = -1;
 
 // Singleton order object
 var newOrder = ibapi.order.createOrder();
+newOrder.auxPrice = 0.0;
 newOrder.hidden = true;
 newOrder.tif = 'GTC';
 newOrder.outsideRth = true;
@@ -51,7 +52,7 @@ var getMktData = function(company) {
   api.reqMktData(company.cancelId, company.contract, '', false);
 };
 
-var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice, entry, modify) {
+var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entry, modify) {
   var oldId = -1;
   if (modify) {
     oldId = company.orderId;
@@ -66,7 +67,6 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
   newOrder.lmtPrice = lmtPrice;
-  newOrder.auxPrice = auxPrice;
   api.placeOrder(oldId, company.contract, newOrder);
   console.log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
 };
@@ -98,7 +98,7 @@ var cancelPrevOrder = function(prevOrderId) {
 var modifyExpiry = function(company, oId, order) {
   cancelPrevOrder(oId);
   company.contract.expiry = company.newExpiry;
-  placeMyOrder(company, order.action, order.totalQuantity, 'LMT', order.lmtPrice, 0.0, false, false);
+  placeMyOrder(company, order.action, order.totalQuantity, 'LMT', order.lmtPrice, false, false);
 };
 
 var handleServerError = function(message) {
@@ -188,7 +188,7 @@ var handleRealTimeBar = function(realtimeBar) {
   } else {
     company.contract.expiry = company.newExpiry;
   }
-  placeMyOrder(company, action, company.onePosition, 'LMT', lmtPrice, 0.0, true, false);
+  placeMyOrder(company, action, company.onePosition, 'LMT', lmtPrice, true, false);
 };
 
 var handleTickPrice = function(tickPrice) {
@@ -207,13 +207,13 @@ var handleTickPrice = function(tickPrice) {
         var bid = company.bid;
         company.bid = price;
         if (company.lastOrderStatus === 'Submitted' && action === SELL && bid > price) { // to aggresive mode
-          placeMyOrder(company, action, company.onePosition, 'LMT', price, 0.0, false, true); // modify order
+          placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
         }
       } else if (field === 2) { // ask price
         var ask = company.ask;
         company.ask = price;
         if (company.lastOrderStatus === 'Submitted' && action === BUY && ask < price) { // to aggresive mode
-          placeMyOrder(company, action, company.onePosition, 'LMT', price, 0.0, false, true); // modify order
+          placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
         }
       } else if (field === 9) { // last day close
         company.lastDayClose = price;
@@ -252,7 +252,7 @@ var handleOrderStatus = function(message) {
       } else {
         company.contract.expiry = newExpiry;
       }
-      placeMyOrder(company, action, message.filled, 'LIT', lmtPrice, lmtPrice, false, false); // LIT order not to execute at bad price on open
+      placeMyOrder(company, action, message.filled, 'LMT', lmtPrice, false, false);
     }
   }
 };
@@ -299,7 +299,7 @@ var handleOpenOrder = function(message) {
           modifyExpiry(company, oId, order);
           company.contract.expiry = expiry;
           var lmtPrice = action === BUY ? company.bid : company.ask;
-          placeMyOrder(company, action, order.totalQuantity, 'LMT', lmtPrice, 0.0, true, false);
+          placeMyOrder(company, action, order.totalQuantity, 'LMT', lmtPrice, true, false);
         } else if (action === BUY) {
           if (!company.sLots[oId]) {
             company.sLots[oId] = true;
