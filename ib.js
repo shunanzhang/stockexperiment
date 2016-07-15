@@ -216,8 +216,8 @@ var handleTickPrice = function(tickPrice) {
           placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
         }
       } else if (field === 9) { // last day close
-        company.lastDayClose = price;
         console.log('last day close', price);
+        company.setCaps(price);
       }
     }
   }

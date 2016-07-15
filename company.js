@@ -30,24 +30,24 @@ var MAX_LOTS = {
   ES: 2
 };
 
-var HARD_L_MAX_PRICES = {
-  SPY: [219.83, 218.83, 217.83, 216.83, 215.83],
-  ES: [2198.75, 2188.75, 2178.75, 2168.75, 2158.75]
+var HARD_L_MAX_PERCENTS = {
+  SPY: [1.019, 1.014, 1.009, 1.004, 0.999],
+  ES: [1.019, 1.014, 1.009, 1.004, 0.999]
 };
 
-var HARD_L_MIN_PRICES = {
-  SPY: [201.87, 201.87, 201.87, 200.87, 199.87],
-  ES: [2020.00, 2020.00, 2020.00, 2010.00, 2000.00]
+var HARD_L_MIN_PERCENTS = {
+  SPY: [0.9, 0.9, 0.9, 0.9, 0.9],
+  ES: [0.9, 0.9, 0.9, 0.9, 0.9]
 };
 
-var HARD_S_MIN_PRICES = {
-  SPY: [196.17, 201.17, 203.17],
-  ES: [1960.25, 2010.25, 2030.25]
+var HARD_S_MIN_PERCENTS = {
+  SPY: [0.961, 0.971, 0.981],
+  ES: [0.961, 0.971, 0.981]
 };
 
-var HARD_S_MAX_PRICES = {
-  SPY: [202.13, 204.13, 210.13],
-  ES: [2020.00, 2040.00, 2100.00]
+var HARD_S_MAX_PERCENTS = {
+  SPY: [1.1, 1.1, 1.1],
+  ES: [1.1, 1.1, 1.1]
 };
 
 var ONE_POSITIONS = {
@@ -70,10 +70,10 @@ var Company = module.exports = function(symbol) {
   this.onePosition = ONE_POSITIONS[symbol] || 0;
   this.oneTickInverse = (1.0 / (ONE_TICKS[symbol] || 0.01));
   this.maxLot = MAX_LOTS[symbol] || 0;
-  this.hardLMaxPrices = (HARD_L_MAX_PRICES[symbol] || []).sort().reverse();
-  this.hardLMinPrices = (HARD_L_MIN_PRICES[symbol] || []).sort().reverse();
-  this.hardSMinPrices = (HARD_S_MIN_PRICES[symbol] || []).sort();
-  this.hardSMaxPrices = (HARD_S_MAX_PRICES[symbol] || []).sort();
+  this.hardLMaxPrices = [];
+  this.hardLMinPrices = [];
+  this.hardSMinPrices = [];
+  this.hardSMaxPrices = [];
   var googleCSVReader = new GoogleCSVReader(symbol);
   this.tradeController = new TradeController(googleCSVReader.columns);
   this.low = MAX_VALUE;
@@ -82,7 +82,6 @@ var Company = module.exports = function(symbol) {
   this.open = 0.0;
   this.bid = 0.0;
   this.ask = 0.0;
-  this.lastDayClose = 0.0;
   this.lLots = {};
   this.sLots = {};
   this.lLotsLength = 0;
@@ -118,6 +117,31 @@ var Company = module.exports = function(symbol) {
   this.cancelId = ++cancelId;
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id
+};
+
+Company.prototype.setCaps = function(dailyClose) {
+  var symbol = this.symbol;
+  var hardLMaxPercents = HARD_L_MAX_PERCENTS[symbol] || [];
+  var hardLMinPercents = HARD_L_MIN_PERCENTS[symbol] || [];
+  var hardSMinPercents = HARD_S_MIN_PERCENTS[symbol] || [];
+  var hardSMaxPercents = HARD_S_MAX_PERCENTS[symbol] || [];
+  var i = 0;
+  for (i = hardLMaxPercents.length; i--;) {
+    hardLMaxPercents[i] *= dailyClose;
+  }
+  for (i = hardLMinPercents.length; i--;) {
+    hardLMinPercents[i] *= dailyClose;
+  }
+  for (i = hardSMinPercents.length; i--;) {
+    hardSMinPercents[i] *= dailyClose;
+  }
+  for (i = hardSMaxPercents.length; i--;) {
+    hardSMaxPercents[i] *= dailyClose;
+  }
+  this.hardLMaxPrices = hardLMaxPercents;
+  this.hardLMinPrices = hardLMinPercents;
+  this.hardSMinPrices = hardSMinPercents;
+  this.hardSMaxPrices = hardSMaxPercents;
 };
 
 Company.prototype.getExLot = function() {

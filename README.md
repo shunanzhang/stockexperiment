@@ -23,6 +23,7 @@ Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
 - Active roll over
   - Roll over pending order expiry date
   - Roll over existing position
+- Automatic upper and lower limit
 
 ### TODO
 - Backtest ES
@@ -30,7 +31,6 @@ Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
   - Emulate TWS API interface
   - Bootstrapping
 - Automatic base up
-- Automatic upper and lower limit
 - Build a portfolio and diversity
 - More accurate execution timing
   - Use process.hrtime()
