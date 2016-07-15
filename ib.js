@@ -78,7 +78,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
 var handleValidOrderId = function(message) {
   var companies = createCompanies();
   orderId = message.orderId;
-  //console.log('next order Id is', orderId);
+  console.log('next order Id is', orderId);
   api.reqAllOpenOrders();
   api.reqAutoOpenOrders(true);
   for (var i = companies.length; i--;) {
