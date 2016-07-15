@@ -268,9 +268,9 @@ var handleOpenOrder = function(message) {
     if (company) {
       var order = message.order;
       var action = order.action;
-      var expiry = contract.expiry;
       var oldExpiry = company.oldExpiry;
       var newExpiry = company.newExpiry;
+      var expiry = contract.expiry.substring(0, newExpiry.length);
       if (orderStatus === 'Filled' || orderStatus === 'Cancelled') {
         if (action === BUY) {
           if (company.sLots[oId]) {
