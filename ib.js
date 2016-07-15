@@ -165,7 +165,7 @@ var handleRealTimeBar = function(realtimeBar) {
   var noSma = (hour < 11) || (minute < 38 && hour === 11);
   var action = tradeController.tradeLogic(mid, high, low, open, noPosition, noSma, true);
   company.resetLowHighCloseOpen();
-  console.log(realtimeBar, Date());
+  console.log(realtimeBar, bid, ask, mid, Date());
   var lLotsLength = company.lLotsLength;
   var sLotsLength = company.sLotsLength;
   var lengthDiff = lLotsLength - sLotsLength;
