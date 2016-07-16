@@ -61,8 +61,12 @@ var handleValidOrderId = function(message) {
 };
 
 var handleServerError = function(message) {
+  var errorCode = message.errorCode;
+  if (errorCode === 2109) { // ignore
+    return;
+  }
   console.log(Date(), '[ServerError]', message);
-  if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
+  if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
     process.exit(1);
   }
 };

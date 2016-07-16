@@ -19,7 +19,7 @@ var entryOrderIds = {};
 var actions = {};
 
 var createCompanies = function() {
-  var companies = [new Company('SPY')];
+  var companies = [new Company('ES')];
   for (var i = companies.length; i--;) {
     var company = companies[i];
     cancelIds[company.cancelId] = company;
@@ -102,8 +102,12 @@ var modifyExpiry = function(company, oId, order) {
 };
 
 var handleServerError = function(message) {
+  var errorCode = message.errorCode;
+  if (errorCode === 2109) { // ignore
+    return;
+  }
   console.log(Date(), '[ServerError]', message);
-  if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
+  if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
     process.exit(1);
   }
 };
@@ -216,8 +220,8 @@ var handleTickPrice = function(tickPrice) {
           placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
         }
       } else if (field === 9) { // last day close
-        console.log('last day close', price);
         company.setCaps(price);
+        console.log('last day close', price, company);
       }
     }
   }

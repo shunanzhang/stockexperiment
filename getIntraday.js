@@ -70,7 +70,7 @@ var backtest = function() {
         console.log(' ', SELL, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
         lTargets.splice(j, 1);
       } else if (sTargets.length && i_MINUTES_DAY === MINUTES_DAY - 1 && target / newClose > 1.15) {
-        lift = Math.round(target * 0.00125 / 25) * 25;
+        lift = Math.round((target - newClose * 1.0) / 25) * 25;
         lTargets[j] -= lift;
         sTargets[(j + 1) % sTargets.length] -= lift;
       }
@@ -90,7 +90,7 @@ var backtest = function() {
         console.log('  ', BUY, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
         sTargets.splice(j, 1);
       } else if (lTargets.length && i_MINUTES_DAY === MINUTES_DAY - 1 && newClose / target > 1.15) {
-        lift = Math.round(target * 0.00125 / 25) * 25;
+        lift = Math.round((newClose - target * 1.0) / 25) * 25;
         sTargets[j] += lift;
         lTargets[(j + 1) % lTargets.length] += lift;
       }
