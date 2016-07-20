@@ -54,7 +54,6 @@ var backtest = function() {
     var j = 0;
     var target = 0;
     var diff = 0;
-    var lift = 0;
     for (j = lTargets.length; j--;) {
       target = lTargets[j];
       diff = 0;
@@ -69,10 +68,6 @@ var backtest = function() {
         }
         console.log(' ', SELL, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
         lTargets.splice(j, 1);
-      } else if (sTargets.length && i_MINUTES_DAY === MINUTES_DAY - 1 && target / newClose > 1.15) {
-        lift = Math.round((target - newClose * 1.0) / 25) * 25;
-        lTargets[j] -= lift;
-        sTargets[(j + 1) % sTargets.length] -= lift;
       }
     }
     for (j = sTargets.length; j--;) {
@@ -89,10 +84,42 @@ var backtest = function() {
         }
         console.log('  ', BUY, displayTime, newClose, diff, gain, pGain / (pGain + nGain));
         sTargets.splice(j, 1);
-      } else if (lTargets.length && i_MINUTES_DAY === MINUTES_DAY - 1 && newClose / target > 1.15) {
-        lift = Math.round((newClose - target * 1.0) / 25) * 25;
-        sTargets[j] += lift;
-        lTargets[(j + 1) % lTargets.length] += lift;
+      }
+    }
+    if (i_MINUTES_DAY === MINUTES_DAY - 1) {
+      var lLift = 0;
+      var sLift = 0;
+      var threshold = 1.15;
+      var pad = Math.round(newClose * 0.02);
+      if (sTargets.length > 0) {
+        for (j = lTargets.length; j--;) {
+          target = lTargets[j];
+          if (target / newClose > threshold) {
+            lLift += target - newClose - pad;
+            lTargets[j] = newClose + pad;
+          }
+        }
+      }
+      if (lTargets.length > 0) {
+        lLift = Math.ceil(lLift / sTargets.length / 25) * 25;
+        for (j = sTargets.length; j--;) {
+          target = sTargets[j] - lLift;
+          if (newClose / target > threshold) {
+            sLift += newClose - target - pad;
+            sTargets[j] = newClose - pad;
+          } else if (target < 0) {
+            sLift += lLift;
+          } else if (lLift) {
+            sTargets[j] = target;
+          }
+        }
+      }
+      if (sLift) {
+        sLift = Math.ceil(sLift / lTargets.length / 25) * 25;
+        for (j = lTargets.length; j--;) {
+          target = lTargets[j] + sLift;
+          lTargets[j] = target;
+        }
       }
     }
     if (result === BUY && (lTargets.length < 2 || (lTargets.length - sTargets.length < 2 && lTargets.length < 5))) {

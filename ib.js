@@ -221,7 +221,66 @@ var handleTickPrice = function(tickPrice) {
         }
       } else if (field === 9) { // last day close
         company.setCaps(price);
-        console.log('last day close', price, company);
+        console.log('last day close', price);
+        var tickInverse = company.oneTickInverse;
+        var lLots = company.lLots;
+        var sLots = company.sLots;
+        var lLotsLength = company.lLotsLength;
+        var sLotsLength = company.sLotsLength;
+        var lLotKeys = Object.keys(lLots);
+        var sLotKeys = Object.keys(sLots);
+        var i = 0;
+        var lLift = 0.0;
+        var sLift = 0.0;
+        var oId = 0;
+        var order;
+        var lmtPrice = 0.0;
+        var threshold = 1.15;
+        var pad = round(price * 0.02);
+        if (sLotsLength > 0) {
+          for (i = 0; i < lLotsLength; i++) {
+            oId = lLotKeys[i];
+            order = lLots[oId];
+            lmtPrice = order.lmtPrice;
+            if (lmtPrice / price > threshold) { // lmtPrice is too far from last close
+              lLift += lmtPrice - price - pad;
+              company.orderId = oId;
+              placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price + pad, false, true); // modify order
+              order.lmtPrice = price + pad;
+            }
+          }
+        }
+        if (lLotsLength > 0) {
+          lLift = Math.ceil(lLift / sLotsLength * tickInverse) / tickInverse; // averaged lift amount
+          for (i = 0; i < sLotsLength; i++) {
+            oId = sLotKeys[i];
+            order = sLots[oId];
+            lmtPrice = order.lmtPrice - lLift; // after lift of lLots
+            company.orderId = oId;
+            if (price / lmtPrice> threshold) { // lmtPrice is too far from last close
+              sLift += price - lmtPrice - pad;
+              placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price - pad, false, true); // modify order
+              order.lmtPrice = price - pad;
+            } else if (lmtPrice < 0.0) {
+              sLift += lLift;
+            } else if (lLift) {
+              placeMyOrder(company, order.action, order.totalQuantity, 'LMT', lmtPrice, false, true); // modify order
+              order.lmtPrice = lmtPrice;
+            }
+          }
+        }
+        if (sLift) {
+          sLift = Math.ceil(sLift / lLotsLength * tickInverse) / tickInverse; // averaged lift amount
+          for (i = 0; i < lLotsLength; i++) {
+            oId = lLotKeys[i];
+            order = lLots[oId];
+            lmtPrice = order.lmtPrice + sLift; // after lift of sLots
+            company.orderId = oId;
+            placeMyOrder(company, order.action, order.totalQuantity, 'LMT', lmtPrice, false, true); // modify order
+            order.lmtPrice = lmtPrice;
+          }
+        }
+        console.log('after baseup', company);
       }
     }
   }
@@ -280,7 +339,7 @@ var handleOpenOrder = function(message) {
       if (orderStatus === 'Filled' || orderStatus === 'Cancelled') {
         if (action === BUY) {
           if (sLots[oId]) {
-            sLots[oId] = false;
+            sLots[oId] = null;
             company.sLotsLength -= 1;
             if (newExpiry !== expiry) {
               company.oldExpiryPosition += 1;
@@ -289,7 +348,7 @@ var handleOpenOrder = function(message) {
           }
         } else if (action === SELL) {
           if (lLots[oId]) {
-            lLots[oId] = false;
+            lLots[oId] = null;
             company.lLotsLength -= 1;
             if (newExpiry !== expiry) {
               company.oldExpiryPosition -= 1;
@@ -297,7 +356,7 @@ var handleOpenOrder = function(message) {
             }
           }
         }
-        console.log('[Delete lots]', company.symbol, company.oldExpiryPosition, lLots, company.lLotsLength, sLots, company.sLotsLength);
+        console.log('[Delete lots]', company.symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
       } else if (orderStatus !== 'Inactive') {
         var oldExpiryPosition = company.oldExpiryPosition;
         var exLot = null;
@@ -308,7 +367,7 @@ var handleOpenOrder = function(message) {
           placeMyOrder(company, action, order.totalQuantity, (lmtPrice ? 'LMT' : 'MKT'), lmtPrice, true, false);
         } else if (action === BUY) {
           if (!sLots[oId]) {
-            sLots[oId] = true;
+            sLots[oId] = order;
             company.sLotsLength += 1;
             if (newExpiry !== expiry) {
               if (oldExpiryPosition > 0) {
@@ -325,7 +384,7 @@ var handleOpenOrder = function(message) {
           }
         } else if (action === SELL) {
           if (!lLots[oId]) {
-            lLots[oId] = true;
+            lLots[oId] = order;
             company.lLotsLength += 1;
             if (newExpiry !== expiry) {
               if (oldExpiryPosition < 0) {
@@ -341,7 +400,7 @@ var handleOpenOrder = function(message) {
             }
           }
         }
-        console.log('[Append lots]', company.symbol, company.oldExpiryPosition, lLots, company.lLotsLength, sLots, company.sLotsLength);
+        console.log('[Append lots]', company.symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
       }
     }
   }
