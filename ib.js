@@ -89,7 +89,7 @@ var handleValidOrderId = function(message) {
 };
 
 var cancelPrevOrder = function(prevOrderId) {
-  if (prevOrderId > -1) { // cannot cancel negative order id
+  if (prevOrderId > 0) { // cannot cancel negative order id or zero
     console.log('canceling order: %d', prevOrderId);
     setImmediate(api.cancelOrder.bind(api, prevOrderId));
   }
@@ -303,7 +303,7 @@ var handleOpenOrder = function(message) {
           modifyExpiry(company, oId, order);
           company.contract.expiry = expiry;
           var lmtPrice = action === BUY ? company.bid : company.ask;
-          placeMyOrder(company, action, order.totalQuantity, 'LMT', lmtPrice, true, false);
+          placeMyOrder(company, action, order.totalQuantity, (lmtPrice ? 'LMT' : 'MKT'), lmtPrice, true, false);
         } else if (action === BUY) {
           if (!company.sLots[oId]) {
             company.sLots[oId] = true;
