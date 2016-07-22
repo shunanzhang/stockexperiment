@@ -78,7 +78,8 @@ TradeController.prototype.tradeLogic = function(mid, high, low, open, forceHold,
   if (i > 5) {
     var maxUpper = max(upper[i_0], upper[i_1], upper[i_2], upper[i_3], upper[i_4], high);
     var minLower = min(lower[i_0], lower[i_1], lower[i_2], lower[i_3], lower[i_4], low);
-    var k = 11.111111 * (mid - minLower) / (maxUpper - minLower); // 100 / 3 / 3 = 11.11111
+    var k = (mid - minLower) / (maxUpper - minLower);
+    k = 11.111111 * (k < 0.0 ? 0.0 : (k > 1.0 ? 1.0 : k)); // 100 / 3 / 3 = 11.11111
     ks[i_7] = k;
     var d = this.d - ks[i_2] - ks[i_3] - ks[i_4] + ks[i_5] + ks[i_6] + k;
     this.d = d;
