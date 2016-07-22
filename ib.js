@@ -275,10 +275,12 @@ var handleOpenOrder = function(message) {
       var oldExpiry = company.oldExpiry;
       var newExpiry = company.newExpiry;
       var expiry = contract.expiry.substring(0, newExpiry.length);
+      var sLots = company.sLots;
+      var lLots = company.lLots;
       if (orderStatus === 'Filled' || orderStatus === 'Cancelled') {
         if (action === BUY) {
-          if (company.sLots[oId]) {
-            company.sLots[oId] = false;
+          if (sLots[oId]) {
+            sLots[oId] = false;
             company.sLotsLength -= 1;
             if (newExpiry !== expiry) {
               company.oldExpiryPosition += 1;
@@ -286,8 +288,8 @@ var handleOpenOrder = function(message) {
             }
           }
         } else if (action === SELL) {
-          if (company.lLots[oId]) {
-            company.lLots[oId] = false;
+          if (lLots[oId]) {
+            lLots[oId] = false;
             company.lLotsLength -= 1;
             if (newExpiry !== expiry) {
               company.oldExpiryPosition -= 1;
@@ -295,7 +297,7 @@ var handleOpenOrder = function(message) {
             }
           }
         }
-        console.log('[Delete lots]', company.symbol, company.oldExpiryPosition, company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
+        console.log('[Delete lots]', company.symbol, company.oldExpiryPosition, lLots, company.lLotsLength, sLots, company.sLotsLength);
       } else if (orderStatus !== 'Inactive') {
         var oldExpiryPosition = company.oldExpiryPosition;
         var exLot = null;
@@ -305,8 +307,8 @@ var handleOpenOrder = function(message) {
           var lmtPrice = action === BUY ? company.bid : company.ask;
           placeMyOrder(company, action, order.totalQuantity, (lmtPrice ? 'LMT' : 'MKT'), lmtPrice, true, false);
         } else if (action === BUY) {
-          if (!company.sLots[oId]) {
-            company.sLots[oId] = true;
+          if (!sLots[oId]) {
+            sLots[oId] = true;
             company.sLotsLength += 1;
             if (newExpiry !== expiry) {
               if (oldExpiryPosition > 0) {
@@ -322,8 +324,8 @@ var handleOpenOrder = function(message) {
             }
           }
         } else if (action === SELL) {
-          if (!company.lLots[oId]) {
-            company.lLots[oId] = true;
+          if (!lLots[oId]) {
+            lLots[oId] = true;
             company.lLotsLength += 1;
             if (newExpiry !== expiry) {
               if (oldExpiryPosition < 0) {
@@ -339,7 +341,7 @@ var handleOpenOrder = function(message) {
             }
           }
         }
-        console.log('[Append lots]', company.symbol, company.oldExpiryPosition, company.lLots, company.lLotsLength, company.sLots, company.sLotsLength);
+        console.log('[Append lots]', company.symbol, company.oldExpiryPosition, lLots, company.lLotsLength, sLots, company.sLotsLength);
       }
     }
   }
