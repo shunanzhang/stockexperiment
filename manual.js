@@ -30,7 +30,7 @@ var orderId = -1;
 // Singleton order object
 var newOrder = ibapi.order.createOrder();
 newOrder.auxPrice = 0.0;
-newOrder.hidden = true;
+newOrder.hidden = false;
 newOrder.tif = 'GTC';
 newOrder.outsideRth = true;
 newOrder.percentOffset = 0; // bug workaround
