@@ -238,46 +238,52 @@ var handleTickPrice = function(tickPrice) {
         var threshold = 1.15;
         var pad = round(price * 0.02);
         if (sLotsLength > 0) {
-          for (i = 0; i < lLotsLength; i++) {
+          for (i = lLotKeys.length; i--;) {
             oId = lLotKeys[i];
             order = lLots[oId];
-            lmtPrice = order.lmtPrice;
-            if (lmtPrice / price > threshold) { // lmtPrice is too far from last close
-              lLift += lmtPrice - price - pad;
-              company.orderId = oId;
-              placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price + pad, false, true); // modify order
-              order.lmtPrice = price + pad;
+            if (order) {
+              lmtPrice = order.lmtPrice;
+              if (lmtPrice / price > threshold) { // lmtPrice is too far from last close
+                lLift += lmtPrice - price - pad;
+                company.orderId = oId;
+                placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price + pad, false, true); // modify order
+                order.lmtPrice = price + pad;
+              }
             }
           }
         }
         if (lLotsLength > 0) {
           lLift = Math.ceil(lLift / sLotsLength * tickInverse) / tickInverse; // averaged lift amount
-          for (i = 0; i < sLotsLength; i++) {
+          for (i = sLotKeys.length; i--;) {
             oId = sLotKeys[i];
             order = sLots[oId];
-            lmtPrice = order.lmtPrice - lLift; // after lift of lLots
-            company.orderId = oId;
-            if (price / lmtPrice> threshold) { // lmtPrice is too far from last close
-              sLift += price - lmtPrice - pad;
-              placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price - pad, false, true); // modify order
-              order.lmtPrice = price - pad;
-            } else if (lmtPrice < 0.0) {
-              sLift += lLift;
-            } else if (lLift) {
-              placeMyOrder(company, order.action, order.totalQuantity, 'LMT', lmtPrice, false, true); // modify order
-              order.lmtPrice = lmtPrice;
+            if (order) {
+              lmtPrice = order.lmtPrice - lLift; // after lift of lLots
+              company.orderId = oId;
+              if (price / lmtPrice> threshold) { // lmtPrice is too far from last close
+                sLift += price - lmtPrice - pad;
+                placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price - pad, false, true); // modify order
+                order.lmtPrice = price - pad;
+              } else if (lmtPrice < 0.0) {
+                sLift += lLift;
+              } else if (lLift) {
+                placeMyOrder(company, order.action, order.totalQuantity, 'LMT', lmtPrice, false, true); // modify order
+                order.lmtPrice = lmtPrice;
+              }
             }
           }
         }
         if (sLift) {
           sLift = Math.ceil(sLift / lLotsLength * tickInverse) / tickInverse; // averaged lift amount
-          for (i = 0; i < lLotsLength; i++) {
+          for (i = lLotKeys.length; i--;) {
             oId = lLotKeys[i];
             order = lLots[oId];
-            lmtPrice = order.lmtPrice + sLift; // after lift of sLots
-            company.orderId = oId;
-            placeMyOrder(company, order.action, order.totalQuantity, 'LMT', lmtPrice, false, true); // modify order
-            order.lmtPrice = lmtPrice;
+            if (order) {
+              lmtPrice = order.lmtPrice + sLift; // after lift of sLots
+              company.orderId = oId;
+              placeMyOrder(company, order.action, order.totalQuantity, 'LMT', lmtPrice, false, true); // modify order
+              order.lmtPrice = lmtPrice;
+            }
           }
         }
         console.log('after baseup', company);

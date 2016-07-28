@@ -85,7 +85,7 @@ TradeController.prototype.tradeLogic = function(mid, high, low, open, forceHold,
     this.d = d;
     if (i > 9) {
       if (debug) {
-        console.log('k:', k, 'd:', d);
+        console.log('k:', k, 'd:', d, 'up:', sma.up, 'down:', sma.down);
       }
       if (this.above && d <= 80.0 && (noSma || sma.down)) {
         result = SELL;
