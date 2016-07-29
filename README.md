@@ -32,5 +32,3 @@ Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
   - Emulate TWS API interface
   - Bootstrapping
 - Build a portfolio and diversity
-- More accurate execution timing
-  - Use process.hrtime()
