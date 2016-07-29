@@ -41,7 +41,7 @@ var newOrder = ibapi.order.createOrder();
 newOrder.auxPrice = 0.0;
 newOrder.hidden = false;
 newOrder.tif = 'GTC';
-newOrder.outsideRth = true;
+newOrder.outsideRth = false; // true; // false for futures, true for stocks
 newOrder.percentOffset = 0; // bug workaround
 
 var getRealtimeBars = function(company) {
