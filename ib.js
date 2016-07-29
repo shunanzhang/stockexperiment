@@ -29,6 +29,7 @@ var createCompanies = function() {
 };
 
 var api = new ibapi.NodeIbapi();
+var apiClient = api.client;
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -67,7 +68,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
   newOrder.lmtPrice = lmtPrice;
-  api.placeOrder(oldId, company.contract, newOrder);
+  apiClient.placeOrder(oldId, company.contract, newOrder); // avoid rate limitter
   console.log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
 };
 
@@ -91,7 +92,7 @@ var handleValidOrderId = function(message) {
 var cancelPrevOrder = function(prevOrderId) {
   if (prevOrderId > 0) { // cannot cancel negative order id or zero
     console.log('canceling order: %d', prevOrderId);
-    setImmediate(api.cancelOrder.bind(api, prevOrderId));
+    apiClient.cancelOrder(prevOrderId); // avoid rate limitter
   }
 };
 
@@ -108,20 +109,6 @@ var handleServerError = function(message) {
   }
   console.log(Date(), '[ServerError]', message);
   if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
-    process.exit(1);
-  }
-};
-
-var handleClientError = function(message) {
-  console.log(Date(), '[ClientError]', message);
-  if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
-    process.exit(1);
-  }
-};
-
-var handleDisconnected = function(message) {
-  console.log(Date(), '[Disconnected]', message);
-  if (message.errorCode === 1101 || message.errorCode === 1102 || message.errorCode === 1300) {
     process.exit(1);
   }
 };
@@ -414,22 +401,39 @@ var handleOpenOrder = function(message) {
 
 // After that, you must register the event handler with a messageId
 // For list of valid messageIds, see messageIds.js file.
-api.handlers[messageIds.nextValidId] = handleValidOrderId;
-api.handlers[messageIds.error] = handleServerError;
-api.handlers[messageIds.clientError] = handleClientError;
-api.handlers[messageIds.disconnected] = handleDisconnected;
-api.handlers[messageIds.connectionClosed] = handleConnectionClosed;
-api.handlers[messageIds.realtimeBar] = handleRealTimeBar;
-api.handlers[messageIds.tickPrice] = handleTickPrice;
-api.handlers[messageIds.orderStatus] = handleOrderStatus;
-api.handlers[messageIds.openOrder] = handleOpenOrder;
+var handlers = api.handlers;
+handlers[messageIds.nextValidId] = handleValidOrderId;
+handlers[messageIds.error] = handleServerError;
+handlers[messageIds.connectionClosed] = handleConnectionClosed;
+handlers[messageIds.realtimeBar] = handleRealTimeBar;
+handlers[messageIds.tickPrice] = handleTickPrice;
+handlers[messageIds.orderStatus] = handleOrderStatus;
+handlers[messageIds.openOrder] = handleOpenOrder;
 
 // Connect to the TWS client or IB Gateway
 var connected = api.connect('127.0.0.1', 7496, 0);
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
-  api.beginProcessing();
+  if (!api.isProcessing) {
+    var processMessage = function() {
+      apiClient.checkMessages();
+      apiClient.processMsg();
+      var msg = apiClient.getInboundMsg();
+      var messageId = msg.messageId;
+      if (messageId) {
+        var handler = handlers[messageId];
+        if (handler) {
+          handler(msg);
+        }
+        setImmediate(processMessage); // faster but 100% cpu
+      } else {
+        setTimeout(processMessage, 0); // slower but less cpu intensive
+      }
+    };
+    setImmediate(processMessage);
+    api.isProcessing = true;
+  }
 } else {
   throw new Error('Failed connecting to localhost TWS/IB Gateway');
 }
