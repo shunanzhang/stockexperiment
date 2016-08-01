@@ -266,13 +266,13 @@ var handleTickPrice = function(tickPrice) {
       if (field === 1) { // bid price
         var bid = company.bid;
         company.bid = price;
-        if (company.lastOrderStatus === 'Submitted' && action === SELL && bid > price && bid) { // to aggresive mode
+        if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid) {
           placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
         }
       } else if (field === 2) { // ask price
         var ask = company.ask;
         company.ask = price;
-        if (company.lastOrderStatus === 'Submitted' && action === BUY && ask < price && ask) { // to aggresive mode
+        if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask) {
           placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
         }
       }

@@ -117,7 +117,7 @@ var handleTickPrice = function(tickPrice) {
         var lLots = company.lLots;
         var lLotKeys = Object.keys(lLots);
         for (i = lLotKeys.length; i--;) {
-          key = parseInt(lLotKeys[i]);
+          key = parseInt(lLotKeys[i], 10);
           if (key < ignoreOrderId) {
             continue;
           }
@@ -132,7 +132,7 @@ var handleTickPrice = function(tickPrice) {
         var sLots = company.sLots;
         var sLotKeys = Object.keys(sLots);
         for (i = sLotKeys.length; i--;) {
-          key = parseInt(sLotKeys[i]);
+          key = parseInt(sLotKeys[i], 10);
           if (key < ignoreOrderId) {
             continue;
           }
