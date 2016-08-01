@@ -148,7 +148,7 @@ var handleTickPrice = function(tickPrice) {
 };
 
 // for debugging
-var limit = 1;
+var limit = 2;
 var count = 0;
 
 var handleOpenOrder = function(message) {
@@ -189,7 +189,7 @@ var handleOpenOrder = function(message) {
       }
       console.log('[Append lots]', company.symbol, lLotsLength, sLotsLength);
     }
-    var maxLot = company.maxLot;
+    var maxLot = 1;//company.maxLot;
     var bid = company.bid;
     var ask = company.ask;
     var hardLMaxPrice = company.hardLMaxPrices[lLotsLength];
@@ -217,7 +217,7 @@ var kick = function(company) {
   var lLots = company.lLots;
   var lLotsLength = company.lLotsLength;
   var sLotsLength = company.sLotsLength;
-  var maxLot = company.maxLot;
+  var maxLot = 1;//company.maxLot;
   var bid = company.bid;
   var ask = company.ask;
   var hardLMaxPrice = company.hardLMaxPrices[lLotsLength];
