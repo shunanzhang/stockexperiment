@@ -25,7 +25,7 @@ var api = new ibapi.NodeIbapi();
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
 //  Make sure you keep track of this.
-var orderId = -1;
+var orderId = parseInt(process.argv[8], 10) || -1;
 
 // Singleton order object
 var newOrder = ibapi.order.createOrder();

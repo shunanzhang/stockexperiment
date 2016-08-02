@@ -148,7 +148,7 @@ var handleTickPrice = function(tickPrice) {
 };
 
 // for debugging
-var limit = 2;
+var limit = 5;
 var count = 0;
 
 var handleOpenOrder = function(message) {
@@ -158,7 +158,8 @@ var handleOpenOrder = function(message) {
     return;
   }
   var orderStatus = message.orderState.status;
-  var company = symbols[message.contract.symbol];
+  var symbol = message.contract.symbol;
+  var company = symbols[symbol];
   if (company) {
     var order = message.order;
     var action = order.action;
@@ -180,35 +181,18 @@ var handleOpenOrder = function(message) {
           lLotsLength -= 1;
         }
       }
-      console.log('[Delete lots]', company.symbol, lLotsLength, sLotsLength);
+      console.log('[Delete lots]', symbol, lLotsLength, sLotsLength);
     } else {
       if (action === SELL) {
         sLots[oId] = order;
       } else if (action === BUY) {
         lLots[oId] = order;
       }
-      console.log('[Append lots]', company.symbol, lLotsLength, sLotsLength);
-    }
-    var maxLot = 1;//company.maxLot;
-    var bid = company.bid;
-    var ask = company.ask;
-    var hardLMaxPrice = company.hardLMaxPrices[lLotsLength];
-    var hardSMinPrice = company.hardSMinPrices[sLotsLength];
-    if (bid > hardLMaxPrice || ask < hardSMinPrice || !hardLMaxPrice || !hardSMinPrice || !bid || !ask) {
-      console.log('[WARNING] order ignored since the bid and ask are', bid, ask, ', which is less/more than the threshold', hardLMaxPrice, hardSMinPrice);
-    } else if (lLotsLength < maxLot && sLotsLength < maxLot && count < limit) {
-      var onePosition = company.onePosition;
-      placeMyOrder(company, BUY, onePosition, 'LMT', bid, 0);
-      lLotsLength += 1;
-      lLots[company.orderId] = {action: BUY, totalQuantity: onePosition};
-      placeMyOrder(company, SELL, onePosition, 'LMT', ask, 0);
-      sLotsLength += 1;
-      sLots[company.orderId] = {action: SELL, totalQuantity: onePosition};
-      count += 1;
-      console.log('count', count);
+      console.log('[Append lots]', symbol, lLotsLength, sLotsLength);
     }
     company.lLotsLength = lLotsLength;
     company.sLotsLength = sLotsLength;
+    setTimeout(kick, 5, company);
   }
 };
 
