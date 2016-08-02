@@ -420,16 +420,20 @@ if (connected) {
     var processMessage = function() {
       apiClient.checkMessages();
       apiClient.processMsg();
-      var msg = apiClient.getInboundMsg();
-      var messageId = msg.messageId;
-      if (messageId) {
-        var handler = handlers[messageId];
-        if (handler) {
+      while (true) {
+        var msg = apiClient.getInboundMsg();
+        var messageId = msg.messageId;
+        if (messageId) {
+          var handler = handlers[messageId];
+          if (!handler) {
+            continue;
+          }
           handler(msg);
+          setImmediate(processMessage); // faster but 100% cpu
+        } else {
+          setTimeout(processMessage, 0); // slower but less cpu intensive
         }
-        setImmediate(processMessage); // faster but 100% cpu
-      } else {
-        setTimeout(processMessage, 0); // slower but less cpu intensive
+        break;
       }
     };
     setImmediate(processMessage);
