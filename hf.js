@@ -66,9 +66,6 @@ var handleValidOrderId = function(message) {
   for (var i = companies.length; i--;) {
     var company = companies[i];
     getMktData(company);
-    if (process.argv[2]) {
-      kick(company);
-    }
   }
 };
 
@@ -110,36 +107,53 @@ var handleTickPrice = function(tickPrice) {
     var key = -1;
     var order;
     var i = 0;
+    var bid = company.bid;
+    var ask = company.ask;
     if (field === 1 && canAutoExecute) { // bid price
-      var bid = company.bid;
       company.bid = price;
-      if (bid < price && bid) {
-        var lLots = company.lLots;
-        var lLotKeys = Object.keys(lLots);
-        for (i = lLotKeys.length; i--;) {
-          key = parseInt(lLotKeys[i], 10);
-          if (key < ignoreOrderId) {
-            continue;
-          }
-          order = lLots[key];
-          //placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price, key); // modify order
-        }
-      }
+      //if (bid < price && bid) {
+      //  var lLots = company.lLots;
+      //  var lLotKeys = Object.keys(lLots);
+      //  for (i = lLotKeys.length; i--;) {
+      //    key = parseInt(lLotKeys[i], 10);
+      //    if (key < ignoreOrderId) {
+      //      continue;
+      //    }
+      //    order = lLots[key];
+      //    placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price, key); // modify order
+      //  }
+      //}
+      company.oldExpiryPosition = 0;
     } else if (field === 2 && canAutoExecute) { // ask price
-      var ask = company.ask;
       company.ask = price;
-      if (ask > price && ask) {
-        var sLots = company.sLots;
-        var sLotKeys = Object.keys(sLots);
-        for (i = sLotKeys.length; i--;) {
-          key = parseInt(sLotKeys[i], 10);
-          if (key < ignoreOrderId) {
-            continue;
+      //if (ask > price && ask) {
+      //  var sLots = company.sLots;
+      //  var sLotKeys = Object.keys(sLots);
+      //  for (i = sLotKeys.length; i--;) {
+      //    key = parseInt(sLotKeys[i], 10);
+      //    if (key < ignoreOrderId) {
+      //      continue;
+      //    }
+      //    order = sLots[key];
+      //    placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price, key); // modify order
+      //  }
+      //}
+      company.oldExpiryPosition = 0;
+    } else if (field === 4) { // last price
+      var within = company.oldExpiryPosition; // TODO rename oldExpiryPosition to something more appropriate
+      if (bid <= price && price <= ask && (ask - bid) * company.oneTickInverse === 1.0) {
+        if (++within > 4) {
+          if (process.argv[2]) {
+            setImmediate(kick, company);
+          } else {
+            console.log('kick', Date.now());
           }
-          order = sLots[key];
-          //placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price, key); // modify order
+          within = 0;
         }
+      } else {
+        within = 0;
       }
+      company.oldExpiryPosition = within;
     } else if (field === 9) { // last day close
       company.setCaps(price);
       console.log('last day close', price, company);
@@ -148,7 +162,7 @@ var handleTickPrice = function(tickPrice) {
 };
 
 // for debugging
-var limit = 5;
+var limit = 10;
 var count = 0;
 
 var handleOpenOrder = function(message) {
@@ -192,7 +206,6 @@ var handleOpenOrder = function(message) {
     }
     company.lLotsLength = lLotsLength;
     company.sLotsLength = sLotsLength;
-    setTimeout(kick, 5, company);
   }
 };
 
