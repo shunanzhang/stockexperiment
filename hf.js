@@ -162,7 +162,7 @@ var handleTickPrice = function(tickPrice) {
 };
 
 // for debugging
-var limit = 10;
+var limit = 20;
 var count = 0;
 
 var handleOpenOrder = function(message) {
@@ -214,7 +214,7 @@ var kick = function(company) {
   var lLots = company.lLots;
   var lLotsLength = company.lLotsLength;
   var sLotsLength = company.sLotsLength;
-  var maxLot = 1;//company.maxLot;
+  var maxLot = company.maxLot;
   var bid = company.bid;
   var ask = company.ask;
   var hardLMaxPrice = company.hardLMaxPrices[lLotsLength];

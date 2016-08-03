@@ -2,6 +2,7 @@ workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
 10 6 * * 1-5 pkill node || true
 12 6 * * 1-5 pkill redis || true
 14 6 * * 1-5 cd ${workdir}; PATH=/usr/local/bin:$PATH /usr/local/bin/forever --minUptime 1000 --spinSleepTime 5000 ib.js 2>&1 | tee ${workdir}/ib.js.log
+30 6 * * 1-5 cd ${workdir}; PATH=/usr/local/bin:$PATH /usr/local/bin/node hf.js true 2>&1 | tee ${workdir}/hf.js.log
 12 14 * * 1-5 PATH=/usr/local/bin:$PATH /usr/local/bin/forever stopall
 14 14 * * 1-5 pkill node || true
 55 14 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
