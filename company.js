@@ -125,23 +125,27 @@ Company.prototype.setCaps = function(dailyClose) {
   var hardLMinPercents = HARD_L_MIN_PERCENTS[symbol] || [];
   var hardSMinPercents = HARD_S_MIN_PERCENTS[symbol] || [];
   var hardSMaxPercents = HARD_S_MAX_PERCENTS[symbol] || [];
+  var hardLMaxPrices = [];
+  var hardLMinPrices = [];
+  var hardSMinPrices = [];
+  var hardSMaxPrices = [];
   var i = 0;
   for (i = hardLMaxPercents.length; i--;) {
-    hardLMaxPercents[i] *= dailyClose;
+    hardLMaxPrices[i] = hardLMaxPercents[i] * dailyClose;
   }
   for (i = hardLMinPercents.length; i--;) {
-    hardLMinPercents[i] *= dailyClose;
+    hardLMinPrices[i] = hardLMinPercents[i] * dailyClose;
   }
   for (i = hardSMinPercents.length; i--;) {
-    hardSMinPercents[i] *= dailyClose;
+    hardSMinPrices[i] = hardSMinPercents[i] * dailyClose;
   }
   for (i = hardSMaxPercents.length; i--;) {
-    hardSMaxPercents[i] *= dailyClose;
+    hardSMaxPrices[i] = hardSMaxPercents[i] * dailyClose;
   }
-  this.hardLMaxPrices = hardLMaxPercents;
-  this.hardLMinPrices = hardLMinPercents;
-  this.hardSMinPrices = hardSMinPercents;
-  this.hardSMaxPrices = hardSMaxPercents;
+  this.hardLMaxPrices = hardLMaxPrices;
+  this.hardLMinPrices = hardLMinPrices;
+  this.hardSMinPrices = hardSMinPrices;
+  this.hardSMaxPrices = hardSMaxPrices;
 };
 
 Company.prototype.getExLot = function() {
