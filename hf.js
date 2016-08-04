@@ -92,11 +92,6 @@ var handleConnectionClosed = function(message) {
   process.exit(1);
 };
 
-// var date = moment.tz(TIMEZONE);
-// var minute = date.minutes();
-// var hour = date.hours();
-// var noPosition = (hour < 9) || (hour >= 15) || (minute < 21 && hour === 9) || (minute > 20 && hour === 14); // starts earlier than regular trading hours
-
 var handleTickPrice = function(tickPrice) {
   console.log('tickPrice:', JSON.stringify(tickPrice));
   var company = cancelIds[tickPrice.tickerId];
@@ -144,7 +139,7 @@ var handleTickPrice = function(tickPrice) {
       if (bid <= price && price <= ask && (ask - bid) * company.oneTickInverse === 1.0) {
         if (++within > 4) {
           if (process.argv[2]) {
-            setImmediate(kick, company);
+            kick(company);
           } else {
             console.log('kick', Date.now());
           }
@@ -162,8 +157,24 @@ var handleTickPrice = function(tickPrice) {
 };
 
 // for debugging
-var limit = 20;
+var limit = 100;
 var count = 0;
+var maxLot = 3;
+
+var maxLotControl = function() {
+  var date = moment.tz(TIMEZONE);
+  var minute = date.minutes();
+  var hour = date.hours();
+  if (hour < 10 || (hour === 10 && minute < 31)) {
+    maxLot = 3;
+  } else if (hour < 12 || hour > 14) {
+    maxLot = 2;
+  } else {
+    maxLot = 1;
+  }
+};
+maxLotControl();
+setInterval(maxLotControl, 60 * 1000);
 
 var handleOpenOrder = function(message) {
   console.log('OpenOrder:', JSON.stringify(message));
@@ -214,11 +225,10 @@ var kick = function(company) {
   var lLots = company.lLots;
   var lLotsLength = company.lLotsLength;
   var sLotsLength = company.sLotsLength;
-  var maxLot = company.maxLot;
   var bid = company.bid;
   var ask = company.ask;
-  var hardLMaxPrice = company.hardLMaxPrices[lLotsLength];
-  var hardSMinPrice = company.hardSMinPrices[sLotsLength];
+  var hardLMaxPrice = company.hardLMaxPrices[0];
+  var hardSMinPrice = company.hardSMinPrices[0];
   if (bid > hardLMaxPrice || ask < hardSMinPrice || !hardLMaxPrice || !hardSMinPrice || !bid || !ask) {
     setTimeout(kick, 1000, company);
   } else if (lLotsLength < maxLot && sLotsLength < maxLot && count < limit) {
