@@ -77,7 +77,7 @@ api.handlers[messageIds.nextValidId] = handleValidOrderId;
 api.handlers[messageIds.error] = handleServerError;
 
 // Connect to the TWS client or IB Gateway
-var connected = api.connect('127.0.0.1', 7496, 0);
+var connected = api.connect('127.0.0.1', 7496, 1);
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
