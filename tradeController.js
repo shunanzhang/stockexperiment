@@ -87,17 +87,19 @@ TradeController.prototype.tradeLogic = function(mid, high, low, open, forceHold,
       if (debug) {
         console.log('k:', k, 'd:', d, 'sma:', sma.ave, 'up:', sma.up, 'down:', sma.down);
       }
-      if (this.above && d <= 80.0 && (noSma || sma.down)) {
+      var d_le_80 = d <= 80.0;
+      var d_ge_20 = d >= 20.0;
+      if (this.above && d_le_80 && (noSma || sma.down)) {
         result = SELL;
-      } else if (this.below && d >= 20.0 && (noSma || sma.up)) {
+      } else if (this.below && d_ge_20 && (noSma || sma.up)) {
         result = BUY;
-      } else if (!this.below && d < 20.0) {
+      } else if (!this.below && !d_ge_20) {
         result = SELL;
       }
-      if (d < 20.0) {
+      if (!d_ge_20) {
         this.above = false;
         this.below = true;
-      } else if (d > 80.0) {
+      } else if (!d_le_80) {
         this.above = true;
         this.below = false;
       } else {
