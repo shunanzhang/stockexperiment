@@ -52,7 +52,9 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
 
 var handleValidOrderId = function(message) {
   var companies = createCompanies();
-  orderId = message.orderId;
+  if (!orderId || orderId < 0) {
+    orderId = message.orderId;
+  }
   console.log('next order Id is', orderId);
   for (var i = companies.length; i--;) {
     var company = companies[i];
@@ -77,7 +79,7 @@ api.handlers[messageIds.nextValidId] = handleValidOrderId;
 api.handlers[messageIds.error] = handleServerError;
 
 // Connect to the TWS client or IB Gateway
-var connected = api.connect('127.0.0.1', 7496, 1);
+var connected = api.connect('127.0.0.1', 7496, (process.argv[9] === undefined) ? 1 : parseInt(process.argv[9], 10));
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
