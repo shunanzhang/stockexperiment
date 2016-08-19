@@ -96,16 +96,8 @@ TradeController.prototype.tradeLogic = function(mid, high, low, open, forceHold,
       } else if (!this.below && !d_ge_20) {
         result = SELL;
       }
-      if (!d_ge_20) {
-        this.above = false;
-        this.below = true;
-      } else if (!d_le_80) {
-        this.above = true;
-        this.below = false;
-      } else {
-        this.above = false;
-        this.below = false;
-      }
+      this.above = !d_le_80;
+      this.below = !d_ge_20;
     }
   }
   return result;
