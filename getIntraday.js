@@ -10,11 +10,11 @@ var MIN_INT = require('./utils').MIN_INT;
 
 var INTERVAL = 60; // sec
 var PERIOD = 20; // days
+var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
-var MINUTES_DAY = TradeController.MINUTES_DAY;
 var OFFSET = TradeController.OFFSET;
 var OFFSET_POS = TradeController.OFFSET_POS;
 var OFFSET_NEG = TradeController.OFFSET_NEG;

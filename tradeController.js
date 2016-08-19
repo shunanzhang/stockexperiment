@@ -11,7 +11,6 @@ var BUY = 'BUY';
 var SELL = 'SELL';
 var HOLD = 'HOLD';
 
-var MINUTES_DAY = 390; // 390 minutes per day (9:30AM - 4:00PM ET)
 var OFFSET = 0.20 / 200;
 
 var TradeController = module.exports = function(columns) {
@@ -27,7 +26,6 @@ var TradeController = module.exports = function(columns) {
 TradeController.BUY = BUY;
 TradeController.SELL = SELL;
 TradeController.HOLD = HOLD;
-TradeController.MINUTES_DAY = MINUTES_DAY;
 TradeController.OFFSET = OFFSET;
 TradeController.OFFSET_POS = 1.0 + OFFSET;
 TradeController.OFFSET_NEG = 1.0 - OFFSET;
