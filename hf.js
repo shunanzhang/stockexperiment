@@ -137,7 +137,7 @@ var handleTickPrice = function(tickPrice) {
     } else if (field === 4) { // last price
       var within = company.oldExpiryPosition; // TODO rename oldExpiryPosition to something more appropriate
       if (bid <= price && price <= ask && (ask - bid) * company.oneTickInverse === 1.0) {
-        if (++within > 4) {
+        if (++within > 3) {
           if (process.argv[2]) {
             kick(company);
           } else {
@@ -159,7 +159,7 @@ var handleTickPrice = function(tickPrice) {
 // for debugging
 var limit = 100;
 var count = 0;
-var maxLot = 3;
+var maxLot = 2;
 
 var maxLotControl = function() {
   var date = moment.tz(TIMEZONE);
@@ -173,8 +173,8 @@ var maxLotControl = function() {
     maxLot = 1;
   }
 };
-maxLotControl();
-setInterval(maxLotControl, 60 * 1000);
+//maxLotControl();
+//setInterval(maxLotControl, 60 * 1000);
 
 var handleOpenOrder = function(message) {
   console.log('OpenOrder:', JSON.stringify(message));
