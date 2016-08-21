@@ -91,8 +91,8 @@ var handleValidOrderId = function(message) {
 
 var cancelPrevOrder = function(prevOrderId) {
   if (prevOrderId > 0) { // cannot cancel negative order id or zero
-    console.log('canceling order: %d', prevOrderId);
     apiClient.cancelOrder(prevOrderId); // avoid rate limitter
+    console.log('canceling order: %d', prevOrderId);
   }
 };
 
@@ -156,7 +156,6 @@ var handleRealTimeBar = function(realtimeBar) {
   var noSma = (hour < 11) || (hour === 11 && minute < 38);
   var action = tradeController.tradeLogic(mid, high, low, open, noPosition, noSma, true);
   company.resetLowHighCloseOpen();
-  console.log(realtimeBar, bid, ask, mid, Date());
   var lLotsLength = company.lLotsLength;
   var sLotsLength = company.sLotsLength;
   var lengthDiff = lLotsLength - sLotsLength;
@@ -166,10 +165,12 @@ var handleRealTimeBar = function(realtimeBar) {
   var hardSMinPrices = company.hardSMinPrices;
   var hardSMaxPrices = company.hardSMaxPrices;
   if (action === HOLD || (action === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= hardLMaxPrices.length)) || (action === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= hardSMinPrices.length))) {
+    console.log(realtimeBar, bid, ask, mid, Date());
     return;
   }
   var lmtPrice = action === BUY ? bid : ask;
   if (action === BUY ? (lmtPrice > hardLMaxPrices[lLotsLength] || lmtPrice < hardLMinPrices[lLotsLength]) : (lmtPrice < hardSMinPrices[sLotsLength] || lmtPrice > hardSMaxPrices[sLotsLength])) {
+    console.log(realtimeBar, bid, ask, mid, Date());
     console.log('[WARNING]', action, 'order ignored since the limit price is', lmtPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
   }
@@ -180,6 +181,7 @@ var handleRealTimeBar = function(realtimeBar) {
     company.contract.expiry = company.newExpiry;
   }
   placeMyOrder(company, action, company.onePosition, 'LMT', lmtPrice, true, false);
+  console.log(realtimeBar, bid, ask, mid, Date());
 };
 
 var handleTickPrice = function(tickPrice) {
@@ -281,7 +283,6 @@ var handleTickPrice = function(tickPrice) {
 };
 
 var handleOrderStatus = function(message) {
-  console.log('OrderStatus:', JSON.stringify(message));
   var oId = message.orderId;
   var orderStatus = message.status;
   var company = entryOrderIds[oId];
@@ -312,10 +313,10 @@ var handleOrderStatus = function(message) {
       placeMyOrder(company, action, message.filled, 'LMT', lmtPrice, false, false);
     }
   }
+  console.log('OrderStatus:', JSON.stringify(message));
 };
 
 var handleOpenOrder = function(message) {
-  console.log('OpenOrder:', JSON.stringify(message));
   var oId = message.orderId;
   var orderStatus = message.orderState.status;
   var company = entryOrderIds[oId];
@@ -398,6 +399,7 @@ var handleOpenOrder = function(message) {
       }
     }
   }
+  console.log('OpenOrder:', JSON.stringify(message));
 };
 
 // After that, you must register the event handler with a messageId
