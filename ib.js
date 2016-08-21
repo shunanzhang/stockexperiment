@@ -439,7 +439,7 @@ if (connected) {
         }
         handler(msg);
         setImmediate(processMessage); // faster but 100% cpu
-      } else if(msgCount++ === 6) {
+      } else if(msgCount++ === 200) {
         setTimeout(processMessage, 0); // slower but less cpu intensive
         msgCount = 0;
       } else {

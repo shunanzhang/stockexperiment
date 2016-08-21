@@ -71,8 +71,8 @@ var handleValidOrderId = function(message) {
 
 var cancelPrevOrder = function(prevOrderId) {
   if (prevOrderId > 0) { // cannot cancel negative order id or zero
-    console.log('canceling order: %d', prevOrderId);
     apiClient.cancelOrder(prevOrderId); // avoid rate limitter
+    console.log('canceling order: %d', prevOrderId);
   }
 };
 
@@ -93,7 +93,6 @@ var handleConnectionClosed = function(message) {
 };
 
 var handleTickPrice = function(tickPrice) {
-  console.log('tickPrice:', JSON.stringify(tickPrice));
   var company = cancelIds[tickPrice.tickerId];
   var field = tickPrice.field;
   var price = tickPrice.price;
@@ -154,6 +153,7 @@ var handleTickPrice = function(tickPrice) {
       console.log('last day close', price, company);
     }
   }
+  console.log('tickPrice:', JSON.stringify(tickPrice));
 };
 
 // for debugging
@@ -177,7 +177,6 @@ var maxLotControl = function() {
 //setInterval(maxLotControl, 60 * 1000);
 
 var handleOpenOrder = function(message) {
-  console.log('OpenOrder:', JSON.stringify(message));
   var oId = message.orderId;
   if (oId < ignoreOrderId) {
     return;
@@ -218,6 +217,7 @@ var handleOpenOrder = function(message) {
     company.lLotsLength = lLotsLength;
     company.sLotsLength = sLotsLength;
   }
+  console.log('OpenOrder:', JSON.stringify(message));
 };
 
 var kick = function(company) {
@@ -261,6 +261,7 @@ var connected = api.connect('127.0.0.1', 7496, 1);
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
   if (!api.isProcessing) {
+    var msgCount = 0;
     var processMessage = function() {
       apiClient.checkMessages();
       apiClient.processMsg();
@@ -280,8 +281,11 @@ if (connected) {
         }
         handler(msg);
         setImmediate(processMessage); // faster but 100% cpu
-      } else {
+      } else if(msgCount++ === 200) {
         setTimeout(processMessage, 0); // slower but less cpu intensive
+        msgCount = 0;
+      } else {
+        setImmediate(processMessage);
       }
     };
     setImmediate(processMessage);
