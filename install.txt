@@ -20,6 +20,7 @@ git clone https://github.com/kazuyukitanimura/stockexperiment.git
 cd stockexperiment
 npm install
 sudo npm install -g forever
+crontab crontab_ubuntu.txt
 
 # java8
 sudo apt-add-repository ppa:webupd8team/java
