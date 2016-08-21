@@ -9,3 +9,4 @@ workdir=/home/ubuntu/stockexperiment
 #30 9 * * 1-5 cd ${workdir}; node hf.js true 2>&1 | tee ${workdir}/hf.js.log
 12 17 * * 1-5 forever stopall
 14 17 * * 1-5 pkill node || true
+00 18 * * * if ! pgrep "Xtightvnc" > /dev/null; then vncserver; fi
