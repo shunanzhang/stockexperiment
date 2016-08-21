@@ -1,0 +1,32 @@
+# Ubuntu 14.04 setup
+# ssh -i keyfile -L 5901:localhost:5901 ipaddress
+
+sudo apt-get update
+sudo apt-get upgrade -y
+sudo apt-get install -y build-essential git htop tightvncserver xfce4 unzip
+
+# satart vnc and set up password
+vncserver
+
+# time zone
+sudo timedatectl set-timezone America/New_York
+
+# nodejs
+curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+#clone project
+git clone https://github.com/kazuyukitanimura/stockexperiment.git
+cd stockexperiment
+npm install
+sudo npm install -g forever
+
+# java8
+sudo apt-add-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install -y oracle-java8-installer
+
+# ib gateway
+wget https://download2.interactivebrokers.com/installers/ibgateway/stable-standalone/ibgateway-stable-standalone-linux-x64.sh
+chmod u+x ibgateway-stable-standalone-linux-x64.sh
+# vnc to the machine and double click the desktop icon. setup things
