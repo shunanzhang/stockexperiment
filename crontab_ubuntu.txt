@@ -1,0 +1,9 @@
+# disable sending emails
+MAILTO=""
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:$PATH
+workdir=/home/ubuntu/stockexperiment
+10 9 * * 1-5 pkill node || true
+14 9 * * 1-5 cd ${workdir}; forever --minUptime 1000 --spinSleepTime 5000 ib.js 2>&1 | tee ${workdir}/ib.js.log
+#30 9 * * 1-5 cd ${workdir}; node hf.js true 2>&1 | tee ${workdir}/hf.js.log
+12 17 * * 1-5 forever stopall
+14 17 * * 1-5 pkill node || true
