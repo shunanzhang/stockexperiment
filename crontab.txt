@@ -3,10 +3,10 @@ workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
 #12 6 * * 1-5 pkill redis || true
 #14 6 * * 1-5 cd ${workdir}; PATH=/usr/local/bin:$PATH /usr/local/bin/forever --minUptime 1000 --spinSleepTime 5000 ib.js 2>&1 | tee ${workdir}/ib.js.log
 #30 6 * * 1-5 cd ${workdir}; PATH=/usr/local/bin:$PATH /usr/local/bin/node hf.js true 2>&1 | tee ${workdir}/hf.js.log
-#12 14 * * 1-5 PATH=/usr/local/bin:$PATH /usr/local/bin/forever stopall
-14 14 * * 1-5 pkill node || true
-16 14 * * 1-5 pkill redis || true
-55 14 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
-02 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js SPY true 2>&1 | tee ${workdir}/spy.log
-04 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js IWM true 2>&1 | tee ${workdir}/iwm.log
-06 15 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js TLT true 2>&1 | tee ${workdir}/tlt.log
+#30 13 * * 1-5 PATH=/usr/local/bin:$PATH /usr/local/bin/forever stopall
+01 14 * * 1-5 pkill node || true
+02 14 * * 1-5 pkill redis || true
+03 14 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
+05 14 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js SPY true 2>&1 | tee ${workdir}/spy.log
+07 14 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js IWM true 2>&1 | tee ${workdir}/iwm.log
+09 14 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js TLT true 2>&1 | tee ${workdir}/tlt.log

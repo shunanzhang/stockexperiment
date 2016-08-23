@@ -261,7 +261,6 @@ var connected = api.connect('127.0.0.1', 7496, 1);
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
   if (!api.isProcessing) {
-    var msgCount = 0;
     var processMessage = function() {
       apiClient.checkMessages();
       apiClient.processMsg();
@@ -280,13 +279,9 @@ if (connected) {
           }
         }
         handler(msg);
-        setImmediate(processMessage); // faster but 100% cpu
-      } else if(msgCount++ === 200) {
-        setTimeout(processMessage, 0); // slower but less cpu intensive
-        msgCount = 0;
-      } else {
-        setImmediate(processMessage);
       }
+      setImmediate(processMessage); // faster but 100% cpu
+      //setTimeout(processMessage, 0); // slower but less cpu intensive
     };
     setImmediate(processMessage);
     api.isProcessing = true;
