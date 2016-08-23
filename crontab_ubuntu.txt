@@ -1,12 +1,12 @@
 # disable sending emails
 MAILTO=""
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:$PATH
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin:$PATH
 workdir=/home/ubuntu/stockexperiment
 10 9 * * 1-5 pkill node || true
 12 9 * * 1-5 sudo renice -n -6 -p $(ps --no-heading -Lo tid $(pidof java))
 14 9 * * 1-5 cd ${workdir}; forever --minUptime 1000 --spinSleepTime 5000 ib.js 2>&1 | tee ${workdir}/ib.js.log
 16 9 * * 1-5 sudo renice -n -6 -p $(ps --no-heading -Lo tid $(pidof nodejs))
 #30 9 * * 1-5 cd ${workdir}; node hf.js true 2>&1 | tee ${workdir}/hf.js.log
-30 16 * * 1-5 forever stopall
-40 16 * * 1-5 pkill node || true
+16 16 * * 1-5 forever stopall
+17 16 * * 1-5 pkill node || true
 00 18 * * * if ! pgrep "Xtightvnc" > /dev/null; then vncserver; fi
