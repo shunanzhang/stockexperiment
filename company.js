@@ -121,6 +121,7 @@ var Company = module.exports = function(symbol) {
   this.cancelId = ++cancelId;
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id
+  this.tickSecond = 0;
 };
 
 Company.prototype.setCaps = function(dailyClose) {

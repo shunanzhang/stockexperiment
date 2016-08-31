@@ -12,6 +12,7 @@ var Company = require('./company');
 var max = Math.max;
 var min = Math.min;
 var round = Math.round;
+var hrtime = process.hrtime;
 
 var cancelIds = {};
 var symbols = {};
@@ -265,17 +266,23 @@ var handleTickPrice = function(tickPrice) {
       console.log('after baseup', company);
     } else if (canAutoExecute) {
       var action = actions[company.orderId];
+      var prevTickSecond = company.tickSecond;
+      var tickSecond = 0;
       if (field === 1) { // bid price
         var bid = company.bid;
         company.bid = price;
-        if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid) {
+        tickSecond = hrtime()[0];
+        if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid && tickSecond > prevTickSecond) { // wait more than 1 sec
           placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
+          company.tickSecond = tickSecond;
         }
       } else if (field === 2) { // ask price
         var ask = company.ask;
         company.ask = price;
-        if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask) {
+        tickSecond = hrtime()[0];
+        if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask && tickSecond > prevTickSecond) { // wait more than 1 sec
           placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
+          company.tickSecond = tickSecond;
         }
       }
     }
