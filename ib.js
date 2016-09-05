@@ -136,7 +136,7 @@ var handleRealTimeBar = function(realtimeBar) {
       company.resetLowHigh();
     } else {
       company.open = open || realtimeBar.open;
-      if (second > 52 && company.lastOrderStatus !== 'Filled') {
+      if (second > 52 && company.lastOrderStatus !== 'Filled' && company.lastOrderStatus !== 'Cancelled') {
         cancelPrevOrder(company.orderId);
       }
     }
@@ -318,6 +318,8 @@ var handleOrderStatus = function(message) {
         company.contract.expiry = newExpiry;
       }
       placeMyOrder(company, action, message.filled, 'LMT', lmtPrice, false, false);
+    } else if (orderStatus === 'Cancelled') {
+      entryOrderIds[oId] = null;
     }
   }
   console.log('OrderStatus:', JSON.stringify(message));
