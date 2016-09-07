@@ -176,12 +176,14 @@ var handleRealTimeBar = function(realtimeBar) {
     return;
   }
   var oldExpiryPosition = company.oldExpiryPosition;
+  var orderType = 'LMT';
   if (action === BUY ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
     company.contract.expiry = company.oldExpiry;
+    orderType = 'MKT';
   } else {
     company.contract.expiry = company.newExpiry;
   }
-  placeMyOrder(company, action, company.onePosition, 'LMT', lmtPrice, true, false);
+  placeMyOrder(company, action, company.onePosition, orderType, lmtPrice, true, false);
   console.log(realtimeBar, bid, ask, mid, Date());
 };
 
@@ -367,8 +369,7 @@ var handleOpenOrder = function(message) {
         if (oldExpiry === newExpiry && newExpiry !== expiry) { // right before expiry, aggresively roll
           modifyExpiry(company, oId, order);
           company.contract.expiry = expiry;
-          var lmtPrice = action === BUY ? company.bid : company.ask;
-          placeMyOrder(company, action, order.totalQuantity, (lmtPrice ? 'LMT' : 'MKT'), lmtPrice, true, false);
+          placeMyOrder(company, action, order.totalQuantity, 'MKT', 0.0, true, false);
         } else if (action === BUY) {
           if (!sLots[oId]) {
             sLots[oId] = order;
