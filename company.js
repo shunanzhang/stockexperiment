@@ -153,7 +153,7 @@ Company.prototype.setCaps = function(dailyClose) {
   this.hardSMaxPrices = hardSMaxPrices;
 };
 
-Company.prototype.getExLot = function() {
+Company.prototype.popExLot = function() {
   var oldExpiryPosition = this.oldExpiryPosition;
   if (oldExpiryPosition === 0) {
     return undefined;
@@ -162,6 +162,8 @@ Company.prototype.getExLot = function() {
   for (var oId in exLots) {
     var order = exLots[oId];
     if (order) {
+      delete exLots[oId];
+      this.oldExpiryPosition += (oldExpiryPosition > 0) ? -1 : 1;
       return {oId: parseInt(oId, 10), order: order};
     }
   }
@@ -187,11 +189,9 @@ if (!module.parent) {
   company.sExLots[3] = '3';
   company.oldExpiryPosition -= 1;
   console.log(company);
-  console.log(company.getExLot());
-  company.lExLots[1] = null;
-  company.oldExpiryPosition -= 1;
-  console.log(company.getExLot());
+  console.log(company.popExLot());
+  console.log(company.popExLot());
   company.lExLots[4] = '4';
   company.oldExpiryPosition += 1;
-  console.log(company.getExLot());
+  console.log(company.popExLot());
 }

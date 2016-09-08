@@ -308,7 +308,7 @@ var handleOrderStatus = function(message) {
       var oldExpiry = company.oldExpiry;
       var newExpiry = company.newExpiry;
       if (oldExpiry !== newExpiry) {
-        var exLot = company.getExLot();
+        var exLot = company.popExLot();
         if (exLot) {
           modifyExpiry(company, exLot.oId, exLot.order);
         }
@@ -342,7 +342,7 @@ var handleOpenOrder = function(message) {
       var expiry = contract.expiry.substring(0, newExpiry.length);
       var sLots = company.sLots;
       var lLots = company.lLots;
-      if (orderStatus === 'Filled' || orderStatus === 'Cancelled') {
+      if (orderStatus === 'Filled' || orderStatus === 'Cancelled') { // in reality, Cancelled is never called
         if (action === BUY) {
           if (sLots[oId]) {
             sLots[oId] = null;
@@ -376,7 +376,7 @@ var handleOpenOrder = function(message) {
             company.sLotsLength += 1;
             if (newExpiry !== expiry) {
               if (oldExpiryPosition > 0) {
-                exLot = company.getExLot();
+                exLot = company.popExLot();
                 if (exLot) {
                   modifyExpiry(company, exLot.oId, exLot.order);
                   modifyExpiry(company, oId, order);
@@ -393,7 +393,7 @@ var handleOpenOrder = function(message) {
             company.lLotsLength += 1;
             if (newExpiry !== expiry) {
               if (oldExpiryPosition < 0) {
-                exLot = company.getExLot();
+                exLot = company.popExLot();
                 if (exLot) {
                   modifyExpiry(company, exLot.oId, exLot.order);
                   modifyExpiry(company, oId, order);
