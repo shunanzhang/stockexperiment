@@ -43,7 +43,7 @@ var HARD_L_MIN_PERCENTS = {
 var HARD_S_MIN_PERCENTS = {
   SPY: [0.961, 0.971, 0.981],
   //ES: [0.961, 0.981, 1.006]
-  ES: [0.971, 1.006]
+  ES: [0.971, 1.002]
 };
 
 var HARD_S_MAX_PERCENTS = {
