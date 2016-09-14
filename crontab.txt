@@ -8,5 +8,4 @@ workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
 02 14 * * 1-5 pkill redis || true
 03 14 * * 1-5 cd ${workdir}; /usr/local/bin/redis-server 2>&1 | tee ${workdir}/redis.log
 05 14 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js SPY true 2>&1 | tee ${workdir}/spy.log
-07 14 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js IWM true 2>&1 | tee ${workdir}/iwm.log
 09 14 * * 1-5 cd ${workdir}; /usr/local/bin/node getIntraday.js TLT true 2>&1 | tee ${workdir}/tlt.log
