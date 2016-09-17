@@ -1,6 +1,6 @@
-var moment = require('moment-timezone');
-var GoogleCSVReader = require('./googleCSVReader');
-var TIMEZONE = GoogleCSVReader.TIMEZONE;
+var moment = require('./momenttz');
+var momenttz = moment.tz;
+var TIMEZONE = moment.TIMEZONE;
 var Company = require('./company');
 
 var ibapi = require('ibapi');
@@ -12,7 +12,7 @@ var orderId = -1;
 var company = new Company('ES');
 var contract = company.contract;
 
-var baseTime = moment.tz('2016-06-01T16:00:00', TIMEZONE);
+var baseTime = momenttz('2016-06-01T16:00:00', TIMEZONE);
 var duration = 10;
 var endDateTime = baseTime.clone().add(duration + ((duration / 5) | 0) * 2, 'day').format('YYYYMMDD HH:mm:ss') + ' EST';
 

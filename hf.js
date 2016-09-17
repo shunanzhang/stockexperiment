@@ -1,7 +1,8 @@
-var moment = require('moment-timezone');
+var moment = require('./momenttz');
+var momenttz = moment.tz;
+var TIMEZONE = moment.TIMEZONE;
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var TIMEZONE = require('./googleCSVReader').TIMEZONE;
 var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
@@ -162,7 +163,7 @@ var count = 0;
 var maxLot = 2;
 
 var maxLotControl = function() {
-  var date = moment.tz(TIMEZONE);
+  var date = momenttz(TIMEZONE);
   var minute = date.minutes();
   var hour = date.hours();
   if (hour < 10 || (hour === 10 && minute < 31)) {

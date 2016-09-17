@@ -1,7 +1,8 @@
-var moment = require('moment-timezone');
+var moment = require('./momenttz');
+var momenttz = moment.tz;
+var TIMEZONE = moment.TIMEZONE;
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var TIMEZONE = require('./googleCSVReader').TIMEZONE;
 var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
@@ -125,7 +126,7 @@ var handleRealTimeBar = function(realtimeBar) {
     console.log('[WARNING] Unknown realtimeBar', realtimeBar);
     return;
   }
-  var date = moment.tz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
+  var date = momenttz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
   var low = company.low = min(realtimeBar.low, company.low);
   var high = company.high = max(realtimeBar.high, company.high);
   var close = company.close;

@@ -1,4 +1,6 @@
-var moment = require('moment-timezone');
+var moment = require('./momenttz');
+var momenttz = moment.tz;
+var TIMEZONE = moment.TIMEZONE;
 var toCent = require('./utils').toCent;
 var redis;
 
@@ -9,7 +11,6 @@ var LOW_COLUMN = 'LOW';
 var OPEN_COLUMN = 'OPEN';
 var VOLUME_COLUMN = 'VOLUME';
 var COLUMNS = [DATE_COLUMN, CLOSE_COLUMN, HIGH_COLUMN, LOW_COLUMN, OPEN_COLUMN, VOLUME_COLUMN];
-var TIMEZONE = 'America/New_York';
 
 var initRedis = function() {
   if (!redis) {
@@ -38,7 +39,6 @@ GoogleCSVReader.HIGH_COLUMN = HIGH_COLUMN;
 GoogleCSVReader.LOW_COLUMN = LOW_COLUMN;
 GoogleCSVReader.OPEN_COLUMN = OPEN_COLUMN;
 GoogleCSVReader.VOLUME_COLUMN = VOLUME_COLUMN;
-GoogleCSVReader.TIMEZONE = TIMEZONE;
 
 GoogleCSVReader.prototype.parseLine = function(line) {
   if (!line) {
@@ -99,7 +99,7 @@ GoogleCSVReader.prototype.load = function(callback) {
     var date;
     var day = 0;
     for (var l = lines.length; i < l; i++) {
-      date = moment.tz(parseInt(lines[i][columnIndex], 10) * 1000, TIMEZONE);
+      date = momenttz(parseInt(lines[i][columnIndex], 10) * 1000, TIMEZONE);
       if (date.hours() === 9 && date.minutes() === 31) {
         day = date.date();
         break;
@@ -109,8 +109,8 @@ GoogleCSVReader.prototype.load = function(callback) {
     var baseTime = 0;
     for (i = 0; i < lines.length; i++) {
       var currTime = parseInt(lines[i][columnIndex], 10);
-      date = moment.tz(currTime * 1000, TIMEZONE);
-      if (date.date() !== day && moment.tz(baseTime * 1000, TIMEZONE).hours() !== 16) {
+      date = momenttz(currTime * 1000, TIMEZONE);
+      if (date.date() !== day && momenttz(baseTime * 1000, TIMEZONE).hours() !== 16) {
         // do nothing
       } else if (date.hours() === 9 && date.minutes() === 31) {
         baseTime = currTime;

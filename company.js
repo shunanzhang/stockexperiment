@@ -1,6 +1,7 @@
-var moment = require('moment-timezone');
+var moment = require('./momenttz');
+var momenttz = moment.tz;
+var TIMEZONE = moment.TIMEZONE;
 var createContract = require('ibapi').contract.createContract;
-var TIMEZONE = require('./googleCSVReader').TIMEZONE;
 var TradeController = require('./tradeController');
 var MAX_VALUE = Number.MAX_VALUE;
 var MIN_VALUE = Number.MIN_VALUE;
@@ -92,7 +93,7 @@ var Company = module.exports = function(symbol) {
   contract.currency = 'USD';
   var expir = EXPIRIES[symbol];
   if (expir) {
-    var date = moment.tz(TIMEZONE);
+    var date = momenttz(TIMEZONE);
     var rollWeek = ((date.date() - (date.day() + 3) % 7 + 1) / 7) | 0; // === 1 between Thursday 2nd week of month and Wednewsay 3rd week of month
     var diff = expir - (date.month() + 1) % expir;
     if (diff === expir && rollWeek < 2) {

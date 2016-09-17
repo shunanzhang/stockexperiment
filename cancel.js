@@ -1,7 +1,5 @@
-var moment = require('moment-timezone');
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var TIMEZONE = require('./googleCSVReader').TIMEZONE;
 var TradeController = require('./tradeController');
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
