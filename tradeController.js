@@ -1,8 +1,3 @@
-var GoogleCSVReader = require('./googleCSVReader');
-var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
-var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
-var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
-var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
 var Sma = require('./sma');
 var max = Math.max;
 var min = Math.min;
@@ -13,14 +8,10 @@ var HOLD = 'HOLD';
 
 var OFFSET = 0.20 / 200;
 
-var TradeController = module.exports = function(columns) {
+var TradeController = module.exports = function() {
   if (! (this instanceof TradeController)) { // enforcing new
-    return new TradeController(columns);
+    return new TradeController();
   }
-  this.closeColumnIndex = columns[CLOSE_COLUMN];
-  this.highColumnIndex = columns[HIGH_COLUMN];
-  this.lowColumnIndex = columns[LOW_COLUMN];
-  this.openColumnIndex = columns[OPEN_COLUMN];
   this.reset();
 };
 TradeController.BUY = BUY;
@@ -41,11 +32,7 @@ TradeController.prototype.reset = function() {
   this.sma = new Sma(30);
 };
 
-TradeController.prototype.trade = function(datum, forceHold) {
-  var close = datum[this.closeColumnIndex];
-  var high = datum[this.highColumnIndex];
-  var low = datum[this.lowColumnIndex];
-  var open = datum[this.openColumnIndex];
+TradeController.prototype.trade = function(close, high, low, open, forceHold) {
   return this.tradeLogic(close, high, low, open, forceHold, this.i < 127, false);
 };
 

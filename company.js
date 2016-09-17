@@ -1,7 +1,6 @@
 var moment = require('moment-timezone');
 var createContract = require('ibapi').contract.createContract;
-var GoogleCSVReader = require('./googleCSVReader');
-var TIMEZONE = GoogleCSVReader.TIMEZONE;
+var TIMEZONE = require('./googleCSVReader').TIMEZONE;
 var TradeController = require('./tradeController');
 var MAX_VALUE = Number.MAX_VALUE;
 var MIN_VALUE = Number.MIN_VALUE;
@@ -74,8 +73,7 @@ var Company = module.exports = function(symbol) {
   this.hardLMinPrices = [];
   this.hardSMinPrices = [];
   this.hardSMaxPrices = [];
-  var googleCSVReader = new GoogleCSVReader(symbol);
-  this.tradeController = new TradeController(googleCSVReader.columns);
+  this.tradeController = new TradeController();
   this.low = MAX_VALUE;
   this.high = MIN_VALUE;
   this.close = 0.0;

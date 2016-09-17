@@ -84,19 +84,6 @@ GoogleCSVReader.prototype.parseLine = function(line) {
   }
 };
 
-GoogleCSVReader.prototype.getColumnData = function(column) {
-  var result = [];
-  var columnIndex = this.columns[column];
-
-  if (columnIndex) {
-    var data = this.data;
-    for (var i = data.length; i--;) {
-      result[i] = data[i][columnIndex];
-    }
-  }
-  return result;
-};
-
 GoogleCSVReader.prototype.save = function() {
   initRedis().saveIntraday(this.tickerId, this.columns[DATE_COLUMN], this.data);
 };

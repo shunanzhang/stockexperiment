@@ -5,6 +5,8 @@ var GoogleCSVReader = require('./googleCSVReader');
 var CLOSE_COLUMN = GoogleCSVReader.CLOSE_COLUMN;
 var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
 var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
+var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
+var DATE_COLUMN = GoogleCSVReader.DATE_COLUMN;
 var TradeController = require('./tradeController');
 var MIN_INT = require('./utils').MIN_INT;
 
@@ -31,10 +33,13 @@ var url = ['http://www.google.com/finance/getprices?i=', INTERVAL, '&p=', PERIOD
 var backtest = function() {
   var data = googleCSVReader.data;
   var dataLen = data.length;
-  var closes = googleCSVReader.getColumnData(CLOSE_COLUMN);
-  var highs = googleCSVReader.getColumnData(HIGH_COLUMN);
-  var lows = googleCSVReader.getColumnData(LOW_COLUMN);
-  var tradeController = new TradeController(googleCSVReader.columns);
+  var tradeController = new TradeController();
+  var columns = googleCSVReader.columns;
+  var closeColumnIndex = columns[CLOSE_COLUMN];
+  var highColumnIndex = columns[HIGH_COLUMN];
+  var lowColumnIndex = columns[LOW_COLUMN];
+  var openColumnIndex = columns[OPEN_COLUMN];
+  var dateColumnIndex = columns[DATE_COLUMN];
 
   var gain = 0;
   var gains = [];
@@ -45,12 +50,13 @@ var backtest = function() {
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
-    var newClose = closes[i];
-    var newHigh = highs[i];
-    var newLow = lows[i];
+    var newClose = datum[closeColumnIndex];
+    var newHigh = datum[highColumnIndex];
+    var newLow = datum[lowColumnIndex];
+    var newOpen = datum[openColumnIndex];
     var noPosition = (i_MINUTES_DAY >= MINUTES_DAY - 99);
     var displayTime = new Date(0, 0, 0, 9, 30 + i % MINUTES_DAY, 0, 0).toLocaleTimeString();
-    var result = tradeController.trade(datum, noPosition);
+    var result = tradeController.trade(newClose, newHigh, newLow, newOpen, noPosition);
     var j = 0;
     var target = 0;
     var diff = 0;
@@ -130,7 +136,7 @@ var backtest = function() {
       console.log(' ', 'sold', displayTime, newClose);
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
-      console.log(new Date((datum[0] + 60 * 60 * 3) * 1000).toLocaleDateString(), lTargets, sTargets);
+      console.log(new Date((datum[dateColumnIndex] + 60 * 60 * 3) * 1000).toLocaleDateString(), lTargets, sTargets);
       console.log('=====');
       //console.log(gain);
     }
@@ -160,11 +166,11 @@ var backtest = function() {
   console.log('size:', dataLen);
   console.log(tickerId);
   console.log('elapsed:', dataLen / MINUTES_DAY | 0, 'days', dataLen % MINUTES_DAY, 'minutes');
-  console.log('gain:', gain, 'per day =', 100.0 * gain / closes[0] / dataLen * MINUTES_DAY, '%');
+  console.log('gain:', gain, 'per day =', 100.0 * gain / data[0][closeColumnIndex] / dataLen * MINUTES_DAY, '%');
   console.log('pGain/(pGain+nGain):', pGain / (pGain + nGain), 'kelly criterion:', pGain / (pGain + nGain) - nGain / (pGain + nGain) / ((pg / pGain) / (ng / nGain)));
   console.log('sigma:', Math.sqrt(variance), 'ave gain:', aveGain, 'ratio:', aveGain/Math.sqrt(variance), '# trades: ', gains.length);
   console.log('max draw down: ', maxDd);
-  console.log('buy and hold:', closes[dataLen - 1] - closes[0], 'profit factor:', pg / ng, 'payoff ratio: ', (pg / pGain) / (ng / nGain));
+  console.log('buy and hold:', data[dataLen - 1][closeColumnIndex] - data[0][closeColumnIndex], 'profit factor:', pg / ng, 'payoff ratio: ', (pg / pGain) / (ng / nGain));
   console.log('pGain*ave/sigma/days:', pGain * aveGain / Math.sqrt(variance) / (dataLen / MINUTES_DAY));
 
   googleCSVReader.shutdown();
