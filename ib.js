@@ -32,6 +32,11 @@ var createCompanies = function() {
 
 var api = new ibapi.NodeIbapi();
 var apiClient = api.client;
+var placeOrder = apiClient.placeOrder;
+var checkMessages = apiClient.checkMessages;
+var processMsg = apiClient.processMsg;
+var getInboundMsg = apiClient.getInboundMsg;
+var log = console.log;
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -70,8 +75,8 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
   newOrder.lmtPrice = lmtPrice;
-  apiClient.placeOrder(oldId, company.contract, newOrder); // avoid rate limitter
-  console.log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
+  placeOrder(oldId, company.contract, newOrder); // avoid rate limitter
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
 };
 
 // Here we specify the event handlers.
@@ -81,7 +86,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
 var handleValidOrderId = function(message) {
   var companies = createCompanies();
   orderId = message.orderId;
-  console.log('next order Id is', orderId);
+  log('next order Id is', orderId);
   api.reqAllOpenOrders();
   api.reqAutoOpenOrders(true);
   for (var i = companies.length; i--;) {
@@ -94,7 +99,7 @@ var handleValidOrderId = function(message) {
 var cancelPrevOrder = function(prevOrderId) {
   if (prevOrderId > 0) { // cannot cancel negative order id or zero
     apiClient.cancelOrder(prevOrderId); // avoid rate limitter
-    console.log('canceling order: %d', prevOrderId);
+    log('canceling order:', prevOrderId);
   }
 };
 
@@ -109,21 +114,21 @@ var handleServerError = function(message) {
   if (errorCode === 2109) { // ignore
     return;
   }
-  console.log(Date(), '[ServerError]', message);
+  log(Date(), '[ServerError]', message);
   if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
     process.exit(1);
   }
 };
 
 var handleConnectionClosed = function(message) {
-  console.log(Date(), '[ConnectionClosed]', message);
+  log(Date(), '[ConnectionClosed]', message);
   process.exit(1);
 };
 
 var handleRealTimeBar = function(realtimeBar) {
   var company = cancelIds[realtimeBar.reqId];
   if (!company) {
-    console.log('[WARNING] Unknown realtimeBar', realtimeBar);
+    log('[WARNING] Unknown realtimeBar', realtimeBar);
     return;
   }
   var date = momenttz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
@@ -143,10 +148,6 @@ var handleRealTimeBar = function(realtimeBar) {
     }
     return; // skip if it is not the end of minutes
   }
-  realtimeBar.low = low;
-  realtimeBar.high = high;
-  realtimeBar.close = close;
-  realtimeBar.open = open;
   var bid = company.bid;
   var ask = company.ask;
   var mid = (bid + ask) / 2.0;
@@ -167,13 +168,13 @@ var handleRealTimeBar = function(realtimeBar) {
   var hardSMinPrices = company.hardSMinPrices;
   var hardSMaxPrices = company.hardSMaxPrices;
   if (action === HOLD || (action === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= hardLMaxPrices.length)) || (action === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= hardSMinPrices.length))) {
-    console.log(realtimeBar, bid, ask, mid, Date());
+    log(low, high, close, open, bid, ask, mid, Date());
     return;
   }
   var lmtPrice = action === BUY ? bid : ask;
   if (action === BUY ? (lmtPrice > hardLMaxPrices[lLotsLength] || lmtPrice < hardLMinPrices[lLotsLength]) : (lmtPrice < hardSMinPrices[sLotsLength] || lmtPrice > hardSMaxPrices[sLotsLength])) {
-    console.log(realtimeBar, bid, ask, mid, Date());
-    console.log('[WARNING]', action, 'order ignored since the limit price is', lmtPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
+    log(low, high, close, open, bid, ask, mid, Date());
+    log('[WARNING]', action, 'order ignored since the limit price is', lmtPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
   }
   var oldExpiryPosition = company.oldExpiryPosition;
@@ -185,7 +186,7 @@ var handleRealTimeBar = function(realtimeBar) {
     company.contract.expiry = company.newExpiry;
   }
   placeMyOrder(company, action, company.onePosition, orderType, lmtPrice, true, false);
-  console.log(realtimeBar, bid, ask, mid, Date());
+  log(low, high, close, open, bid, ask, mid, Date());
 };
 
 var handleTickPrice = function(tickPrice) {
@@ -201,7 +202,7 @@ var handleTickPrice = function(tickPrice) {
       company.open = company.open || price;
     } else if (field === 9) { // last day close
       company.setCaps(price);
-      console.log('last day close', price);
+      log('last day close', price);
       var tickInverse = company.oneTickInverse;
       var lLots = company.lLots;
       var sLots = company.sLots;
@@ -266,7 +267,7 @@ var handleTickPrice = function(tickPrice) {
           }
         }
       }
-      console.log('after baseup', company);
+      log('after baseup', company);
     } else if (canAutoExecute) {
       var action = actions[company.orderId];
       var prevTickSecond = company.tickSecond;
@@ -325,7 +326,7 @@ var handleOrderStatus = function(message) {
       entryOrderIds[oId] = null;
     }
   }
-  console.log('OrderStatus:', JSON.stringify(message));
+  log('OrderStatus:', JSON.stringify(message));
 };
 
 var handleOpenOrder = function(message) {
@@ -334,7 +335,8 @@ var handleOpenOrder = function(message) {
   var company = entryOrderIds[oId];
   if (company === undefined) { // if exiting the position
     var contract = message.contract;
-    company = symbols[contract.symbol];
+    var symbol = contract.symbol;
+    company = symbols[symbol];
     if (company) {
       var order = message.order;
       var action = order.action;
@@ -363,7 +365,7 @@ var handleOpenOrder = function(message) {
             }
           }
         }
-        console.log('[Delete lots]', company.symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
+        log('[Delete lots]', symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
       } else if (orderStatus !== 'Inactive') {
         var oldExpiryPosition = company.oldExpiryPosition;
         var exLot = null;
@@ -406,11 +408,11 @@ var handleOpenOrder = function(message) {
             }
           }
         }
-        console.log('[Append lots]', company.symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
+        log('[Append lots]', symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
       }
     }
   }
-  console.log('OpenOrder:', JSON.stringify(message));
+  log('OpenOrder:', JSON.stringify(message));
 };
 
 // After that, you must register the event handler with a messageId
@@ -431,14 +433,14 @@ var connected = api.connect('127.0.0.1', 7496, 0);
 if (connected) {
   if (!api.isProcessing) {
     var processMessage = function() {
-      apiClient.checkMessages();
-      apiClient.processMsg();
-      var msg = apiClient.getInboundMsg();
+      checkMessages();
+      processMsg();
+      var msg = getInboundMsg();
       var messageId = msg.messageId;
       if (messageId) {
         var handler = handlers[messageId];
         while (!handler) {
-          msg = apiClient.getInboundMsg();
+          msg = getInboundMsg();
           messageId = msg.messageId;
           if (messageId) {
             handler = handlers[messageId];
