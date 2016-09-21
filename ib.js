@@ -32,10 +32,6 @@ var createCompanies = function() {
 
 var api = new ibapi.NodeIbapi();
 var apiClient = api.client;
-var placeOrder = apiClient.placeOrder;
-var checkMessages = apiClient.checkMessages;
-var processMsg = apiClient.processMsg;
-var getInboundMsg = apiClient.getInboundMsg;
 var log = console.log;
 
 // Interactive Broker requires that you use orderId for every new order
@@ -75,7 +71,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
   newOrder.totalQuantity = quantity;
   newOrder.orderType = orderType;
   newOrder.lmtPrice = lmtPrice;
-  placeOrder(oldId, company.contract, newOrder); // avoid rate limitter
+  apiClient.placeOrder(oldId, company.contract, newOrder); // avoid rate limitter
   log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
 };
 
@@ -433,14 +429,14 @@ var connected = api.connect('127.0.0.1', 7496, 0);
 if (connected) {
   if (!api.isProcessing) {
     var processMessage = function() {
-      checkMessages();
-      processMsg();
-      var msg = getInboundMsg();
+      apiClient.checkMessages();
+      apiClient.processMsg();
+      var msg = apiClient.getInboundMsg();
       var messageId = msg.messageId;
       if (messageId) {
         var handler = handlers[messageId];
         while (!handler) {
-          msg = getInboundMsg();
+          msg = apiClient.getInboundMsg();
           messageId = msg.messageId;
           if (messageId) {
             handler = handlers[messageId];
