@@ -182,6 +182,7 @@ var handleRealTimeBar = function(realtimeBar) {
     company.contract.expiry = company.newExpiry;
   }
   placeMyOrder(company, action, company.onePosition, orderType, lmtPrice, true, false);
+  company.tickSecond = hrtime()[0];
   log(low, high, close, open, bid, ask, mid, Date());
 };
 
@@ -369,6 +370,7 @@ var handleOpenOrder = function(message) {
           modifyExpiry(company, oId, order);
           company.contract.expiry = expiry;
           placeMyOrder(company, action, order.totalQuantity, 'MKT', 0.0, true, false);
+          company.tickSecond = hrtime()[0];
         } else if (action === BUY) {
           if (!sLots[oId]) {
             sLots[oId] = order;
