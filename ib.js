@@ -72,7 +72,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
   newOrder.orderType = orderType;
   newOrder.lmtPrice = lmtPrice;
   apiClient.placeOrder(oldId, company.contract, newOrder); // avoid rate limitter
-  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask, company.tickSecond);
 };
 
 // Here we specify the event handlers.
