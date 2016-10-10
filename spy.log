@@ -2316,12 +2316,14 @@ bought 10:10:00 AM 21945
 =====
 10/7/2016 [ 23898, 23500, 21964, 21967, 21967 ] [ 19470, 19470, 21063 ]
 =====
-size: 77220
+10/10/2016 [ 23898, 23500, 21964, 21967, 21967 ] [ 19470, 19470, 21063 ]
+=====
+size: 77610
 SPY
-elapsed: 198 days 0 minutes
-gain: 17160 per day = 0.42315642139869475 %
+elapsed: 199 days 0 minutes
+gain: 17160 per day = 0.42103000722081185 %
 pGain/(pGain+nGain): 1 kelly criterion: NaN
 sigma: 1.0698920715604778 ave gain: 17.93103448275862 ratio: 16.759666661147914 # trades:  957
 max draw down:  0
-buy and hold: 1023 profit factor: Infinity payoff ratio:  NaN
-pGain*ave/sigma/days: 81.0050555288816
+buy and hold: 1135 profit factor: Infinity payoff ratio:  NaN
+pGain*ave/sigma/days: 80.59799494833445
