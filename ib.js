@@ -21,7 +21,8 @@ var entryOrderIds = {};
 var actions = {};
 
 var createCompanies = function() {
-  var companies = [new Company('ES'), new Company('ZN')];
+  //var companies = [new Company('ES'), new Company('ZN')];
+  var companies = [new Company('ES')];
   for (var i = companies.length; i--;) {
     var company = companies[i];
     cancelIds[company.cancelId] = company;
