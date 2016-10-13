@@ -8,56 +8,71 @@ var MIN_VALUE = Number.MIN_VALUE;
 
 var EXCHANGES = {
   SPY: 'ARCA',
-  ES: 'GLOBEX'
+  ES: 'GLOBEX',
+  ZN: 'GLOBEX'
 };
 
 var DESTINATIONS = {
   SPY: 'SMART',
-  ES: 'GLOBEX'
+  ES: 'GLOBEX',
+  ZN: 'GLOBEX'
 };
 
 var SEC_TYPES = {
   SPY: 'STK',
-  ES: 'FUT'
+  ES: 'FUT',
+  ZN: 'FUT'
 };
 
 var EXPIRIES = {
-  ES: 3
+  ES: 3,
+  ZN: 3
 };
 
 var MAX_LOTS = {
   SPY: 2,
-  ES: 2
+  ES: 2,
+  ZN: 2
 };
 
 var HARD_L_MAX_PERCENTS = {
   SPY: [1.019, 1.014, 1.009, 1.004, 0.999],
-  ES: [1.019, 1.014, 1.009, 1.004, 0.999]
+  ES: [1.019, 1.014, 1.009, 1.004, 0.999],
+  ZN: [0.999]
 };
 
 var HARD_L_MIN_PERCENTS = {
   SPY: [0.9, 0.9, 0.9, 0.9, 0.9],
-  ES: [0.9, 0.9, 0.9, 0.9, 0.9]
+  ES: [0.9, 0.9, 0.9, 0.9, 0.9],
+  ZN: [0.9]
 };
 
 var HARD_S_MIN_PERCENTS = {
   SPY: [0.961, 0.971, 0.981],
-  ES: [0.976, 0.986, 0.996]
+  ES: [0.976, 0.986, 0.996],
+  ZN: [0.996]
 };
 
 var HARD_S_MAX_PERCENTS = {
   SPY: [1.1, 1.1, 1.1],
-  ES: [1.1, 1.1, 1.1]
+  ES: [1.1, 1.1, 1.1],
+  ZN: [1.1]
 };
 
 var ONE_POSITIONS = {
   SPY: 184,
-  ES: 1
+  ES: 1,
+  ZN: 1
 };
 
 var ONE_TICKS = {
   SPY: 0.01,
-  ES: 0.25
+  ES: 0.25,
+  ZN: 1.0 / 64.0
+};
+
+var ROLLDAY_OFFSET = {
+  ZN: {days: 14}
 };
 
 var cancelId = 0;
@@ -94,6 +109,7 @@ var Company = module.exports = function(symbol) {
   var expir = EXPIRIES[symbol];
   if (expir) {
     var date = momenttz(TIMEZONE);
+    date.add(ROLLDAY_OFFSET[symbol]); // if there is no offset, add ROLLDAY_OFFSET[symbol] === undefined
     var rollWeek = ((date.date() - (date.day() + 3) % 7 + 1) / 7) | 0; // === 1 between Thursday 2nd week of month and Wednewsay 3rd week of month
     var diff = expir - (date.month() + 1) % expir;
     if (diff === expir && rollWeek < 2) {
