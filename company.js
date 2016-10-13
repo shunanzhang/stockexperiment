@@ -9,13 +9,13 @@ var MIN_VALUE = Number.MIN_VALUE;
 var EXCHANGES = {
   SPY: 'ARCA',
   ES: 'GLOBEX',
-  ZN: 'GLOBEX'
+  ZN: 'ECBOT'
 };
 
 var DESTINATIONS = {
   SPY: 'SMART',
   ES: 'GLOBEX',
-  ZN: 'GLOBEX'
+  ZN: 'ECBOT'
 };
 
 var SEC_TYPES = {
