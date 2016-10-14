@@ -274,18 +274,22 @@ var handleTickPrice = function(tickPrice) {
       if (field === 1) { // bid price
         var bid = company.bid;
         company.bid = price;
-        tickSecond = hrtime()[0];
-        if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid && tickSecond > prevTickSecond) { // wait more than 1 sec
-          placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
-          company.tickSecond = tickSecond;
+        if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid) {
+          tickSecond = hrtime()[0];
+          if (tickSecond > prevTickSecond) { // wait more than 1 sec
+            placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
+            company.tickSecond = tickSecond;
+          }
         }
       } else if (field === 2) { // ask price
         var ask = company.ask;
         company.ask = price;
-        tickSecond = hrtime()[0];
-        if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask && tickSecond > prevTickSecond) { // wait more than 1 sec
-          placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
-          company.tickSecond = tickSecond;
+        if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask) {
+          tickSecond = hrtime()[0];
+          if (tickSecond > prevTickSecond) { // wait more than 1 sec
+            placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
+            company.tickSecond = tickSecond;
+          }
         }
       }
     }
