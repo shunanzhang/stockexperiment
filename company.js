@@ -181,13 +181,9 @@ Company.prototype.popExLot = function() {
   return undefined;
 };
 
-Company.prototype.resetLowHigh = function() {
+Company.prototype.resetLowHighOpen = function() {
   this.low = MAX_VALUE;
   this.high = MIN_VALUE;
-};
-
-Company.prototype.resetLowHighCloseOpen = function() {
-  this.resetLowHigh();
   this.open = 0.0;
 };
 

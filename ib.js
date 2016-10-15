@@ -127,20 +127,16 @@ var handleRealTimeBar = function(realtimeBar) {
     log('[WARNING] Unknown realtimeBar', realtimeBar);
     return;
   }
-  var date = momenttz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time has 5 sec delay, fastforward 5 sec
+  var date = momenttz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time is the start of the bar (5 sec ago), fastforward 5 sec
   var low = company.low = min(realtimeBar.low, company.low);
   var high = company.high = max(realtimeBar.high, company.high);
   var close = company.close;
   var open = company.open;
   var second = date.seconds();
   if (second <= 57 && second > 3) {
-    if (second <= 7) {
-      company.resetLowHigh();
-    } else {
-      company.open = open || realtimeBar.open;
-      if (second > 52 && company.lastOrderStatus !== 'Filled' && company.lastOrderStatus !== 'Cancelled') {
-        cancelPrevOrder(company.orderId);
-      }
+    company.open = open || realtimeBar.open;
+    if (second > 52 && company.lastOrderStatus !== 'Filled' && company.lastOrderStatus !== 'Cancelled') {
+      cancelPrevOrder(company.orderId);
     }
     return; // skip if it is not the end of minutes
   }
@@ -154,7 +150,7 @@ var handleRealTimeBar = function(realtimeBar) {
   //var noPosition = (hour < 9) || (hour >= 12) || (hour === 9 && minute < 21) || (hour === 11 && minute > 20); // for thanksgiving and christmas
   var noSma = (hour < 11) || (hour === 11 && minute < 38);
   var action = tradeController.tradeLogic(mid, high, low, open, noPosition, noSma, true);
-  company.resetLowHighCloseOpen();
+  company.resetLowHighOpen();
   var lLotsLength = company.lLotsLength;
   var sLotsLength = company.sLotsLength;
   var lengthDiff = lLotsLength - sLotsLength;
