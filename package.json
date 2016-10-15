@@ -9,5 +9,5 @@
     , "request": ">= 2.75.0"
     , "redis": ">= 2.6.2"
   }
-  , "engine": "node >= 6.8.0"
+  , "engine": "node >= 6.8.1"
 }
