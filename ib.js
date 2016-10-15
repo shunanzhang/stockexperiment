@@ -220,7 +220,7 @@ var handleTickPrice = function(tickPrice) {
             lmtPrice = order.lmtPrice;
             if (lmtPrice / price > threshold) { // lmtPrice is too far from last close
               lLift += lmtPrice - price - pad;
-              company.orderId = oId;
+              company.orderId = parseInt(oId, 10);
               placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price + pad, false, true); // modify order
               order.lmtPrice = price + pad;
             }
@@ -234,7 +234,7 @@ var handleTickPrice = function(tickPrice) {
           order = sLots[oId];
           if (order) {
             lmtPrice = order.lmtPrice - lLift; // after lift of lLots
-            company.orderId = oId;
+            company.orderId = parseInt(oId, 10);
             if (price / lmtPrice> threshold) { // lmtPrice is too far from last close
               sLift += price - lmtPrice - pad;
               placeMyOrder(company, order.action, order.totalQuantity, 'LMT', price - pad, false, true); // modify order
@@ -255,7 +255,7 @@ var handleTickPrice = function(tickPrice) {
           order = lLots[oId];
           if (order) {
             lmtPrice = order.lmtPrice + sLift; // after lift of sLots
-            company.orderId = oId;
+            company.orderId = parseInt(oId, 10);
             placeMyOrder(company, order.action, order.totalQuantity, 'LMT', lmtPrice, false, true); // modify order
             order.lmtPrice = lmtPrice;
           }
