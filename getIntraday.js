@@ -7,7 +7,7 @@ var HIGH_COLUMN = GoogleCSVReader.HIGH_COLUMN;
 var LOW_COLUMN = GoogleCSVReader.LOW_COLUMN;
 var OPEN_COLUMN = GoogleCSVReader.OPEN_COLUMN;
 var DATE_COLUMN = GoogleCSVReader.DATE_COLUMN;
-var TradeController = require('./tradeController');
+var TradeController = require('./build/Release/addon').TradeController;
 var MIN_INT = require('./utils').MIN_INT;
 
 var INTERVAL = 60; // sec

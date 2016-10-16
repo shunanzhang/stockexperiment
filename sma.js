@@ -67,4 +67,15 @@ if (!module.parent) {
   sma.push(3);
   sma.push(4);
   console.log(2.5, sma.ave, sma.up, sma.down);
+
+  sma = new Sma(30);
+  var rand = Math.random;
+  console.time('sma');
+  for (var i = 1000000; i--;) {
+    sma.push(rand());
+    //sma.ave;
+    //sma.up;
+    //sma.down;
+  }
+  console.timeEnd('sma');
 }
