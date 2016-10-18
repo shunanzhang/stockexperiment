@@ -1,8 +1,5 @@
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var TradeController = require('./tradeController');
-var BUY = TradeController.BUY;
-var SELL = TradeController.SELL;
 var Company = require('./company');
 
 var api = new ibapi.NodeIbapi();

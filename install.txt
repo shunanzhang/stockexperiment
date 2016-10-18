@@ -19,7 +19,7 @@ sudo apt-get install -y nodejs
 git clone https://github.com/kazuyukitanimura/stockexperiment.git
 cd stockexperiment
 npm install
-sudo npm install -g forever
+sudo npm install -g forever node-gyp
 crontab crontab_ubuntu.txt
 
 # java8

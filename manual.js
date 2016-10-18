@@ -1,6 +1,5 @@
 var ibapi = require('ibapi');
 var messageIds = ibapi.messageIds;
-var TradeController = require('./tradeController');
 var Company = require('./company');
 
 /**

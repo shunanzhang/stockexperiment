@@ -2,7 +2,7 @@ var moment = require('./momenttz');
 var momenttz = moment.tz;
 var TIMEZONE = moment.TIMEZONE;
 var createContract = require('ibapi').contract.createContract;
-var TradeController = require('./tradeController');
+var TradeController = require('./build/Release/addon').TradeController;
 var MAX_VALUE = Number.MAX_VALUE;
 var MIN_VALUE = Number.MIN_VALUE;
 
