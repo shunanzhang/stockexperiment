@@ -33,3 +33,4 @@ wget https://download2.interactivebrokers.com/installers/ibgateway/stable-standa
 chmod u+x ibgateway-stable-standalone-linux-x64.sh
 ./ibgateway-stable-standalone-linux-x64.sh
 # vnc to the machine and double click the desktop icon. setup things
+vi ~/Jts/jts.ini # change gdc1.ibllc.com to cdc1.ibllc.com
