@@ -1,9 +1,10 @@
-# Ubuntu 14.04 setup
+# Ubuntu 16.04 server setup
+# chmod 600 keyfile
 # ssh -i keyfile -L 5901:localhost:5901 ipaddress
 
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install -y build-essential git htop tightvncserver xfce4 unzip ntp
+sudo apt-get install -y build-essential git htop tightvncserver xfce4 unzip ntp python
 
 # satart vnc and set up password
 vncserver
@@ -30,4 +31,5 @@ sudo apt-get install -y oracle-java8-installer
 # ib gateway
 wget https://download2.interactivebrokers.com/installers/ibgateway/stable-standalone/ibgateway-stable-standalone-linux-x64.sh
 chmod u+x ibgateway-stable-standalone-linux-x64.sh
+./ibgateway-stable-standalone-linux-x64.sh
 # vnc to the machine and double click the desktop icon. setup things
