@@ -1,9 +1,9 @@
 var moment = require('./momenttz');
 var momenttz = moment.tz;
 var TIMEZONE = moment.TIMEZONE;
-var ibapi = require('ibapi');
-var messageIds = ibapi.messageIds;
-var TradeController = require('./build/Release/addon').TradeController;
+var Addon = require('./build/Release/addon');
+var TradeController = Addon.TradeController;
+var IbClient = Addon.IbClient;
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
@@ -14,47 +14,30 @@ var max = Math.max;
 var min = Math.min;
 var round = Math.round;
 var hrtime = process.hrtime;
+var log = console.log;
 
 var cancelIds = {};
 var symbols = {};
 var entryOrderIds = {};
 var actions = {};
 
-var createCompanies = function() {
-  var companies = [new Company('ES'), new Company('ZN')];
+var companies = [new Company('ES'), new Company('ZN')];
+var listContracts = function() {
+  var contracts = new Array(companies.length);
   for (var i = companies.length; i--;) {
     var company = companies[i];
     cancelIds[company.cancelId] = company;
     symbols[company.symbol] = company;
+    contracts[i] = company.contract;
   }
-  return companies;
+  return contracts;
 };
-
-var api = new ibapi.NodeIbapi();
-var apiClient = api.client;
-var log = console.log;
+var ibClient = new IbClient(listContracts(), handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
 //  Make sure you keep track of this.
 var orderId = -1;
-
-// Singleton order object
-var newOrder = ibapi.order.createOrder();
-newOrder.auxPrice = 0.0;
-newOrder.hidden = false;
-newOrder.tif = 'GTC';
-newOrder.outsideRth = false; // true; // false for futures, true for stocks
-newOrder.percentOffset = 0; // bug workaround
-
-var getRealtimeBars = function(company) {
-  // only 5 sec is supported, only regular trading ours == false
-  api.reqRealtimeBars(company.cancelId, company.contract, 5, 'TRADES', false);
-};
-
-var getMktData = function(company) {
-  api.reqMktData(company.cancelId, company.contract, '', false);
-};
 
 var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entry, modify) {
   var oldId = -1;
@@ -67,34 +50,24 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
       actions[oldId] = action;
     }
   }
-  newOrder.action = action;
-  newOrder.totalQuantity = quantity;
-  newOrder.orderType = orderType;
-  newOrder.lmtPrice = lmtPrice;
-  apiClient.placeOrder(oldId, company.contract, newOrder); // avoid rate limitter
+  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
   log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask, company.tickSecond);
 };
 
-// Here we specify the event handlers.
-//  Please follow this guideline for event handlers:
-//  1. Add handlers to listen to messages
-//  2. Each handler must have be a function (message) signature
-var handleValidOrderId = function(message) {
-  var companies = createCompanies();
-  orderId = message.orderId;
+var handleValidOrderId = function(orderId) {
   log('next order Id is', orderId);
-  api.reqAllOpenOrders();
-  api.reqAutoOpenOrders(true);
+  ibClient.reqAllOpenOrders();
+  ibClient.reqAutoOpenOrders(true);
   for (var i = companies.length; i--;) {
     var company = companies[i];
-    getRealtimeBars(company);
-    getMktData(company);
+    ibClient.reqRealTimeBars(company.cancelId, 'TRADES', false); // only regular trading ours == false
+    ibClient.reqMktData(company.cancelId, '', false);
   }
 };
 
 var cancelPrevOrder = function(prevOrderId) {
   if (prevOrderId > 0) { // cannot cancel negative order id or zero
-    apiClient.cancelOrder(prevOrderId); // avoid rate limitter
+    ibClient.cancelOrder(prevOrderId); // avoid rate limitter
     log('canceling order:', prevOrderId);
   }
 };
@@ -105,36 +78,35 @@ var modifyExpiry = function(company, oId, order) {
   placeMyOrder(company, order.action, order.totalQuantity, 'LMT', order.lmtPrice, false, false);
 };
 
-var handleServerError = function(message) {
-  var errorCode = message.errorCode;
+var handleServerError = function(id, errorCode, errorString) {
   if (errorCode === 2109) { // ignore
     return;
   }
-  log(Date(), '[ServerError]', message);
+  log(Date(), '[ServerError]', id, errorCode, errorString);
   if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
     process.exit(1);
   }
 };
 
-var handleConnectionClosed = function(message) {
-  log(Date(), '[ConnectionClosed]', message);
+var handleConnectionClosed = function() {
+  log(Date(), '[ConnectionClosed]');
   process.exit(1);
 };
 
-var handleRealTimeBar = function(realtimeBar) {
-  var company = cancelIds[realtimeBar.reqId];
+var handleRealTimeBar = function(reqId, timeLong, barOpen, barHigh, barLow, barClose, volume, wap, count) {
+  var company = cancelIds[reqId];
   if (!company) {
-    log('[WARNING] Unknown realtimeBar', realtimeBar);
+    log('[WARNING] Unknown realtimeBar', reqId, timeLong, barOpen, barHigh, barLow, barClose, volume, wap, count);
     return;
   }
-  var date = momenttz((realtimeBar.timeLong + 5) * 1000, TIMEZONE); // realtimeBar time is the start of the bar (5 sec ago), fastforward 5 sec
-  var low = company.low = min(realtimeBar.low, company.low);
-  var high = company.high = max(realtimeBar.high, company.high);
+  var date = momenttz((timeLong + 5) * 1000, TIMEZONE); // realtimeBar time is the start of the bar (5 sec ago), fastforward 5 sec
+  var low = company.low = min(barLow, company.low);
+  var high = company.high = max(barHigh, company.high);
   var close = company.close;
   var open = company.open;
   var second = date.seconds();
   if (second <= 57 && second > 3) {
-    company.open = open || realtimeBar.open;
+    company.open = open || barOpen;
     if (second > 52 && company.lastOrderStatus !== 'Filled' && company.lastOrderStatus !== 'Cancelled') {
       cancelPrevOrder(company.orderId);
     }
@@ -183,11 +155,8 @@ var handleRealTimeBar = function(realtimeBar) {
   log(symbol, low, high, close, open, bid, ask, mid, Date());
 };
 
-var handleTickPrice = function(tickPrice) {
-  var company = cancelIds[tickPrice.tickerId];
-  var field = tickPrice.field;
-  var price = tickPrice.price;
-  var canAutoExecute = tickPrice.canAutoExecute;
+var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
+  var company = cancelIds[tickerId];
   if (company && price) {
     if (field === 4) { // last price
       company.low = min(price, company.low);
@@ -291,9 +260,7 @@ var handleTickPrice = function(tickPrice) {
   }
 };
 
-var handleOrderStatus = function(message) {
-  var oId = message.orderId;
-  var orderStatus = message.status;
+var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld) {
   var company = entryOrderIds[oId];
   if (company) {
     company.lastOrderStatus = orderStatus;
@@ -302,7 +269,7 @@ var handleOrderStatus = function(message) {
     } else if (orderStatus === 'Filled') {
       entryOrderIds[oId] = null;
       var action = actions[oId] === BUY ? SELL : BUY;
-      var lmtPrice = message.avgFillPrice * (action === SELL ? OFFSET_POS : OFFSET_NEG);
+      var lmtPrice = avgFillPrice * (action === SELL ? OFFSET_POS : OFFSET_NEG);
       var tickInverse = company.oneTickInverse;
       lmtPrice = round(lmtPrice * tickInverse) / tickInverse; // required to place a correct order
       var oldExpiry = company.oldExpiry;
@@ -319,28 +286,28 @@ var handleOrderStatus = function(message) {
       } else {
         company.contract.expiry = newExpiry;
       }
-      placeMyOrder(company, action, message.filled, 'LMT', lmtPrice, false, false);
+      placeMyOrder(company, action, filled, 'LMT', lmtPrice, false, false);
     } else if (orderStatus === 'Cancelled') {
       entryOrderIds[oId] = null;
     }
   }
-  log('OrderStatus:', JSON.stringify(message));
+  log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
 };
 
-var handleOpenOrder = function(message) {
-  var oId = message.orderId;
-  var orderStatus = message.orderState.status;
+var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {
   var company = entryOrderIds[oId];
   if (company === undefined) { // if exiting the position
-    var contract = message.contract;
-    var symbol = contract.symbol;
     company = symbols[symbol];
     if (company) {
-      var order = message.order;
-      var action = order.action;
+      var order = {
+        action: action,
+        totalQuantity: totalQuantity,
+        orderType: orderType,
+        lmtPrice: lmtPrice
+      };
       var oldExpiry = company.oldExpiry;
       var newExpiry = company.newExpiry;
-      var expiry = contract.expiry.substring(0, newExpiry.length);
+      expiry = expiry.substring(0, newExpiry.length);
       var sLots = company.sLots;
       var lLots = company.lLots;
       if (orderStatus === 'Filled' || orderStatus === 'Cancelled') { // in reality, Cancelled is never called
@@ -370,7 +337,7 @@ var handleOpenOrder = function(message) {
         if (oldExpiry === newExpiry && newExpiry !== expiry) { // right before expiry, aggresively roll
           modifyExpiry(company, oId, order);
           company.contract.expiry = expiry;
-          placeMyOrder(company, action, order.totalQuantity, 'MKT', 0.0, true, false);
+          placeMyOrder(company, action, totalQuantity, 'MKT', 0.0, true, false);
           company.tickSecond = hrtime()[0];
         } else if (action === BUY) {
           if (!sLots[oId]) {
@@ -411,51 +378,20 @@ var handleOpenOrder = function(message) {
       }
     }
   }
-  log('OpenOrder:', JSON.stringify(message));
+  log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-// After that, you must register the event handler with a messageId
-// For list of valid messageIds, see messageIds.js file.
-var handlers = api.handlers;
-handlers[messageIds.nextValidId] = handleValidOrderId;
-handlers[messageIds.error] = handleServerError;
-handlers[messageIds.connectionClosed] = handleConnectionClosed;
-handlers[messageIds.realtimeBar] = handleRealTimeBar;
-handlers[messageIds.tickPrice] = handleTickPrice;
-handlers[messageIds.orderStatus] = handleOrderStatus;
-handlers[messageIds.openOrder] = handleOpenOrder;
-
 // Connect to the TWS client or IB Gateway
-var connected = api.connect('127.0.0.1', 7496, 0);
+var connected = ibClient.connect('127.0.0.1', 7496, 0);
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
-  if (!api.isProcessing) {
-    var processMessage = function() {
-      apiClient.checkMessages();
-      apiClient.processMsg();
-      var msg = apiClient.getInboundMsg();
-      var messageId = msg.messageId;
-      if (messageId) {
-        var handler = handlers[messageId];
-        while (!handler) {
-          msg = apiClient.getInboundMsg();
-          messageId = msg.messageId;
-          if (messageId) {
-            handler = handlers[messageId];
-          } else {
-            setImmediate(processMessage);
-            return;
-          }
-        }
-        handler(msg);
-      }
-      setImmediate(processMessage); // faster but 100% cpu
-      //setTimeout(processMessage, 0); // slower but less cpu intensive
-    };
-    setImmediate(processMessage);
-    api.isProcessing = true;
-  }
+  var processMessage = function() {
+    ibClient.processMessages();
+    setImmediate(processMessage); // faster but 100% cpu
+    //setTimeout(processMessage, 0); // slower but less cpu intensive
+  };
+  setImmediate(processMessage);
 } else {
   throw new Error('Failed connecting to localhost TWS/IB Gateway');
 }

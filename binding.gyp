@@ -6,6 +6,7 @@
         "src/addon.cc",
         "src/sma.cc",
         "src/tradeController.cc",
+        "src/IbClient.cc",
         "IBJts/source/PosixClient/src/EPosixClientSocket.cpp",
         "IBJts/source/PosixClient/src/EClientSocketBase.cpp",
       ],
