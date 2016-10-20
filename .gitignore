@@ -6,3 +6,5 @@ appendonly.aof
 IBController.ini
 *.pem
 build
+IBJts
+*.jar
