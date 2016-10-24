@@ -359,3 +359,11 @@ void IbClient::ReqAllOpenOrders(const v8::FunctionCallbackInfo<v8::Value>& args)
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
   obj->reqAllOpenOrders();
 }
+
+void IbClient::ReqRealTimeBars(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  TickerId tickerId = args[0]->IntegerValue();
+  v8::String::Utf8Value whatToShow(args[1]);
+  bool useRTH = args[2]->BooleanValue();
+  IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
+  obj->reqRealTimeBars(tickerId, IBString(*whatToShow), useRTH);
+}
