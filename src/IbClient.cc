@@ -124,7 +124,7 @@ void IbClient::orderStatus(OrderId orderId, const IBString &status, int filled, 
   v8::Local<v8::Value> arg8 = v8::Int32::New(isolate, clientId);
   v8::Local<v8::Value> arg9 = v8::String::NewFromUtf8(isolate, whyHeld.c_str());
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9};
-  orderStatus_->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate, orderStatus_)->Call(v8::Null(isolate), argc, argv);
 }
 
 void IbClient::nextValidId(OrderId orderId) {
@@ -132,7 +132,7 @@ void IbClient::nextValidId(OrderId orderId) {
   const unsigned argc = 1;
   v8::Local<v8::Value> arg0 = v8::Integer::New(isolate, orderId);
   v8::Local<v8::Value> argv[argc] = {arg0};
-  nextValidId_->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate, nextValidId_)->Call(v8::Null(isolate), argc, argv);
 }
 
 void IbClient::error(const int id, const int errorCode, const IBString errorString) {
@@ -142,7 +142,7 @@ void IbClient::error(const int id, const int errorCode, const IBString errorStri
   v8::Local<v8::Value> arg1 = v8::Int32::New(isolate, errorCode);
   v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate, errorString.c_str());
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2};
-  error_->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate, error_)->Call(v8::Null(isolate), argc, argv);
 }
 
 void IbClient::tickPrice(TickerId tickerId, TickType field, double price, int canAutoExecute) {
@@ -153,7 +153,7 @@ void IbClient::tickPrice(TickerId tickerId, TickType field, double price, int ca
   v8::Local<v8::Value> arg2 = v8::Number::New(isolate, price);
   v8::Local<v8::Value> arg3 = v8::Int32::New(isolate, canAutoExecute);
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3};
-  tickPrice_->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate, tickPrice_)->Call(v8::Null(isolate), argc, argv);
 }
 
 void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order& order, const OrderState& ostate) {
@@ -168,7 +168,7 @@ void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order&
   v8::Local<v8::Value> arg6 = v8::Number::New(isolate, order.lmtPrice);
   v8::Local<v8::Value> arg7 = v8::String::NewFromUtf8(isolate, ostate.status.c_str());
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7};
-  openOrder_->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate, openOrder_)->Call(v8::Null(isolate), argc, argv);
 }
 
 void IbClient::realtimeBar(TickerId reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
@@ -184,12 +184,12 @@ void IbClient::realtimeBar(TickerId reqId, long time, double open, double high, 
   v8::Local<v8::Value> arg7 = v8::Number::New(isolate, wap);
   v8::Local<v8::Value> arg8 = v8::Int32::New(isolate, count);
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8};
-  realtimeBar_->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate, realtimeBar_)->Call(v8::Null(isolate), argc, argv);
 }
 
 void IbClient::connectionClosed() {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  connectionClosed_->Call(v8::Null(isolate), 0, NULL);
+  v8::Local<v8::Function>::New(isolate, connectionClosed_)->Call(v8::Null(isolate), 0, NULL);
 }
 
 /**
@@ -269,13 +269,13 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Local<v8::Array> contractArray = v8::Local<v8::Array>::Cast(args[0]);
     uint32_t contractLength = contractArray->Length();
     IbClient* obj = new IbClient(contractLength);
-    obj->orderStatus_ = v8::Local<v8::Function>::Cast(args[1]);
-    obj->nextValidId_ = v8::Local<v8::Function>::Cast(args[2]);
-    obj->error_ = v8::Local<v8::Function>::Cast(args[3]);
-    obj->tickPrice_ = v8::Local<v8::Function>::Cast(args[4]);
-    obj->openOrder_ = v8::Local<v8::Function>::Cast(args[5]);
-    obj->realtimeBar_ = v8::Local<v8::Function>::Cast(args[6]);
-    obj->connectionClosed_ = v8::Local<v8::Function>::Cast(args[7]);
+    obj->orderStatus_.Reset(isolate, v8::Local<v8::Function>::Cast(args[1]));
+    obj->nextValidId_.Reset(isolate, v8::Local<v8::Function>::Cast(args[2]));
+    obj->error_.Reset(isolate, v8::Local<v8::Function>::Cast(args[3]));
+    obj->tickPrice_.Reset(isolate, v8::Local<v8::Function>::Cast(args[4]));
+    obj->openOrder_.Reset(isolate, v8::Local<v8::Function>::Cast(args[5]));
+    obj->realtimeBar_.Reset(isolate, v8::Local<v8::Function>::Cast(args[6]));
+    obj->connectionClosed_.Reset(isolate, v8::Local<v8::Function>::Cast(args[7]));
     for (uint32_t i = 0; i < contractLength; i++) {
       Contract contract = obj->contracts[i];
       v8::Local<v8::Object> contractObject = contractArray->Get(i)->ToObject(isolate);

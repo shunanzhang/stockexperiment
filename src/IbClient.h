@@ -87,13 +87,13 @@ private:
   Contract* contracts; // array
 
   // v8
-  v8::Local<v8::Function> orderStatus_;
-  v8::Local<v8::Function> nextValidId_;
-  v8::Local<v8::Function> error_;
-  v8::Local<v8::Function> tickPrice_;
-  v8::Local<v8::Function> openOrder_;
-  v8::Local<v8::Function> realtimeBar_;
-  v8::Local<v8::Function> connectionClosed_;
+  v8::Persistent<v8::Function> orderStatus_;
+  v8::Persistent<v8::Function> nextValidId_;
+  v8::Persistent<v8::Function> error_;
+  v8::Persistent<v8::Function> tickPrice_;
+  v8::Persistent<v8::Function> openOrder_;
+  v8::Persistent<v8::Function> realtimeBar_;
+  v8::Persistent<v8::Function> connectionClosed_;
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void ProcessMessages(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void Connect(const v8::FunctionCallbackInfo<v8::Value>& args);
