@@ -111,85 +111,78 @@ void IbClient::reqRealTimeBars(TickerId tickerId, const IBString &whatToShow, bo
  * events
  */
 void IbClient::orderStatus(OrderId orderId, const IBString &status, int filled, int remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, const IBString& whyHeld) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   const unsigned argc = 10;
-  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate, orderId);
-  v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate, status.c_str());
-  v8::Local<v8::Value> arg2 = v8::Int32::New(isolate, filled);
-  v8::Local<v8::Value> arg3 = v8::Int32::New(isolate, remaining);
-  v8::Local<v8::Value> arg4 = v8::Number::New(isolate, avgFillPrice);
-  v8::Local<v8::Value> arg5 = v8::Int32::New(isolate, permId);
-  v8::Local<v8::Value> arg6 = v8::Int32::New(isolate, parentId);
-  v8::Local<v8::Value> arg7 = v8::Number::New(isolate, lastFillPrice);
-  v8::Local<v8::Value> arg8 = v8::Int32::New(isolate, clientId);
-  v8::Local<v8::Value> arg9 = v8::String::NewFromUtf8(isolate, whyHeld.c_str());
+  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, orderId);
+  v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate_, status.c_str());
+  v8::Local<v8::Value> arg2 = v8::Int32::New(isolate_, filled);
+  v8::Local<v8::Value> arg3 = v8::Int32::New(isolate_, remaining);
+  v8::Local<v8::Value> arg4 = v8::Number::New(isolate_, avgFillPrice);
+  v8::Local<v8::Value> arg5 = v8::Int32::New(isolate_, permId);
+  v8::Local<v8::Value> arg6 = v8::Int32::New(isolate_, parentId);
+  v8::Local<v8::Value> arg7 = v8::Number::New(isolate_, lastFillPrice);
+  v8::Local<v8::Value> arg8 = v8::Int32::New(isolate_, clientId);
+  v8::Local<v8::Value> arg9 = v8::String::NewFromUtf8(isolate_, whyHeld.c_str());
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9};
-  v8::Local<v8::Function>::New(isolate, orderStatus_)->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate_, orderStatus_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
 void IbClient::nextValidId(OrderId orderId) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   const unsigned argc = 1;
-  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate, orderId);
+  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, orderId);
   v8::Local<v8::Value> argv[argc] = {arg0};
-  v8::Local<v8::Function>::New(isolate, nextValidId_)->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate_, nextValidId_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
 void IbClient::error(const int id, const int errorCode, const IBString errorString) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   const unsigned argc = 3;
-  v8::Local<v8::Value> arg0 = v8::Int32::New(isolate, id);
-  v8::Local<v8::Value> arg1 = v8::Int32::New(isolate, errorCode);
-  v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate, errorString.c_str());
+  v8::Local<v8::Value> arg0 = v8::Int32::New(isolate_, id);
+  v8::Local<v8::Value> arg1 = v8::Int32::New(isolate_, errorCode);
+  v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate_, errorString.c_str());
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2};
-  v8::Local<v8::Function>::New(isolate, error_)->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate_, error_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
 void IbClient::tickPrice(TickerId tickerId, TickType field, double price, int canAutoExecute) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   const unsigned argc = 4;
-  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate, tickerId);
-  v8::Local<v8::Value> arg1 = v8::Uint32::New(isolate, field);
-  v8::Local<v8::Value> arg2 = v8::Number::New(isolate, price);
-  v8::Local<v8::Value> arg3 = v8::Int32::New(isolate, canAutoExecute);
+  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, tickerId);
+  v8::Local<v8::Value> arg1 = v8::Uint32::New(isolate_, field);
+  v8::Local<v8::Value> arg2 = v8::Number::New(isolate_, price);
+  v8::Local<v8::Value> arg3 = v8::Int32::New(isolate_, canAutoExecute);
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3};
-  v8::Local<v8::Function>::New(isolate, tickPrice_)->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate_, tickPrice_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
 void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order& order, const OrderState& ostate) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   const unsigned argc = 8;
-  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate, orderId);
-  v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate, contract.symbol.c_str());
-  v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate, contract.expiry.c_str());
-  v8::Local<v8::Value> arg3 = v8::String::NewFromUtf8(isolate, order.action.c_str());
-  v8::Local<v8::Value> arg4 = v8::Integer::New(isolate, order.totalQuantity);
-  v8::Local<v8::Value> arg5 = v8::String::NewFromUtf8(isolate, order.orderType.c_str());
-  v8::Local<v8::Value> arg6 = v8::Number::New(isolate, order.lmtPrice);
-  v8::Local<v8::Value> arg7 = v8::String::NewFromUtf8(isolate, ostate.status.c_str());
+  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, orderId);
+  v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate_, contract.symbol.c_str());
+  v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate_, contract.expiry.c_str());
+  v8::Local<v8::Value> arg3 = v8::String::NewFromUtf8(isolate_, order.action.c_str());
+  v8::Local<v8::Value> arg4 = v8::Integer::New(isolate_, order.totalQuantity);
+  v8::Local<v8::Value> arg5 = v8::String::NewFromUtf8(isolate_, order.orderType.c_str());
+  v8::Local<v8::Value> arg6 = v8::Number::New(isolate_, order.lmtPrice);
+  v8::Local<v8::Value> arg7 = v8::String::NewFromUtf8(isolate_, ostate.status.c_str());
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7};
-  v8::Local<v8::Function>::New(isolate, openOrder_)->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate_, openOrder_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
 void IbClient::realtimeBar(TickerId reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   const unsigned argc = 9;
-  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate, reqId);
-  v8::Local<v8::Value> arg1 = v8::Integer::New(isolate, time);
-  v8::Local<v8::Value> arg2 = v8::Number::New(isolate, open);
-  v8::Local<v8::Value> arg3 = v8::Number::New(isolate, high);
-  v8::Local<v8::Value> arg4 = v8::Number::New(isolate, low);
-  v8::Local<v8::Value> arg5 = v8::Number::New(isolate, close);
-  v8::Local<v8::Value> arg6 = v8::Integer::New(isolate, volume);
-  v8::Local<v8::Value> arg7 = v8::Number::New(isolate, wap);
-  v8::Local<v8::Value> arg8 = v8::Int32::New(isolate, count);
+  v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, reqId);
+  v8::Local<v8::Value> arg1 = v8::Integer::New(isolate_, time);
+  v8::Local<v8::Value> arg2 = v8::Number::New(isolate_, open);
+  v8::Local<v8::Value> arg3 = v8::Number::New(isolate_, high);
+  v8::Local<v8::Value> arg4 = v8::Number::New(isolate_, low);
+  v8::Local<v8::Value> arg5 = v8::Number::New(isolate_, close);
+  v8::Local<v8::Value> arg6 = v8::Integer::New(isolate_, volume);
+  v8::Local<v8::Value> arg7 = v8::Number::New(isolate_, wap);
+  v8::Local<v8::Value> arg8 = v8::Int32::New(isolate_, count);
   v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8};
-  v8::Local<v8::Function>::New(isolate, realtimeBar_)->Call(v8::Null(isolate), argc, argv);
+  v8::Local<v8::Function>::New(isolate_, realtimeBar_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
 void IbClient::connectionClosed() {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  v8::Local<v8::Function>::New(isolate, connectionClosed_)->Call(v8::Null(isolate), 0, NULL);
+  v8::Local<v8::Function>::New(isolate_, connectionClosed_)->Call(isolate_->GetCurrentContext()->Global(), 0, NULL);
 }
 
 /**
@@ -269,6 +262,7 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Local<v8::Array> contractArray = v8::Local<v8::Array>::Cast(args[0]);
     uint32_t contractLength = contractArray->Length();
     IbClient* obj = new IbClient(contractLength);
+    obj->isolate_ = isolate;
     obj->orderStatus_.Reset(isolate, v8::Local<v8::Function>::Cast(args[1]));
     obj->nextValidId_.Reset(isolate, v8::Local<v8::Function>::Cast(args[2]));
     obj->error_.Reset(isolate, v8::Local<v8::Function>::Cast(args[3]));

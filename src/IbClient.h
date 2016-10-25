@@ -94,6 +94,7 @@ private:
   v8::Persistent<v8::Function> openOrder_;
   v8::Persistent<v8::Function> realtimeBar_;
   v8::Persistent<v8::Function> connectionClosed_;
+  v8::Isolate* isolate_;
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void ProcessMessages(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void Connect(const v8::FunctionCallbackInfo<v8::Value>& args);
