@@ -6,7 +6,6 @@
 #include "Order.h"
 #include "OrderState.h"
 
-#include <memory>
 #include <node.h>
 #include <node_object_wrap.h>
 
@@ -82,7 +81,7 @@ public:
   static void Init(v8::Local<v8::Object> exports);
 
 private:
-  std::auto_ptr<EPosixClientSocket> m_pClient;
+  EPosixClientSocket* m_pClient;
   Order order_; // Singleton order object
   Contract* contracts; // array
 

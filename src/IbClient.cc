@@ -16,6 +16,14 @@ IbClient::IbClient(long contractLength) : m_pClient(new EPosixClientSocket(this)
 }
 
 IbClient::~IbClient() {
+  orderStatus_.Reset();
+  nextValidId_.Reset();
+  error_.Reset();
+  tickPrice_.Reset();
+  openOrder_.Reset();
+  realtimeBar_.Reset();
+  connectionClosed_.Reset();
+  delete m_pClient;
   delete[] contracts;
 }
 
