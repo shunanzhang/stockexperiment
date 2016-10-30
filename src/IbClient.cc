@@ -83,13 +83,13 @@ void IbClient::processMessages() {
 }
 
 void IbClient::placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, const IBString &expiry) {
-  Contract contract = contracts[tickerId - 1]; // tickerId is 1 base
-  contract.expiry = expiry;
+  Contract* contract = &(contracts[tickerId - 1]); // tickerId is 1 base
+  contract->expiry = expiry;
   order_.action = action;
   order_.totalQuantity = quantity;
   order_.orderType = orderType;
   order_.lmtPrice = lmtPrice;
-  m_pClient->placeOrder(orderId, contract, order_);
+  m_pClient->placeOrder(orderId, *contract, order_);
 }
 
 void IbClient::cancelOrder(OrderId orderId) {
@@ -279,18 +279,20 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     obj->realtimeBar_.Reset(isolate, v8::Local<v8::Function>::Cast(args[6]));
     obj->connectionClosed_.Reset(isolate, v8::Local<v8::Function>::Cast(args[7]));
     for (uint32_t i = 0; i < contractLength; i++) {
-      Contract contract = obj->contracts[i];
+      Contract* contract = &(obj->contracts[i]);
       v8::Local<v8::Object> contractObject = contractArray->Get(i)->ToObject(isolate);
       v8::String::Utf8Value symbol(contractObject->Get(v8::String::NewFromUtf8(isolate, "symbol")));
       v8::String::Utf8Value secType(contractObject->Get(v8::String::NewFromUtf8(isolate, "secType")));
       v8::String::Utf8Value exchange(contractObject->Get(v8::String::NewFromUtf8(isolate, "exchange")));
       v8::String::Utf8Value primaryExchange(contractObject->Get(v8::String::NewFromUtf8(isolate, "primaryExchange")));
       v8::String::Utf8Value currency(contractObject->Get(v8::String::NewFromUtf8(isolate, "currency")));
-      contract.symbol = IBString(*symbol);
-      contract.secType = IBString(*secType);
-      contract.exchange = IBString(*exchange);
-      contract.primaryExchange = IBString(*primaryExchange);
-      contract.currency = IBString(*currency);
+      v8::String::Utf8Value expiry(contractObject->Get(v8::String::NewFromUtf8(isolate, "expiry")));
+      contract->symbol = IBString(*symbol);
+      contract->secType = IBString(*secType);
+      contract->exchange = IBString(*exchange);
+      contract->primaryExchange = IBString(*primaryExchange);
+      contract->currency = IBString(*currency);
+      contract->expiry = IBString(*expiry);
     }
     obj->Wrap(args.This());
     args.GetReturnValue().Set(args.This());
