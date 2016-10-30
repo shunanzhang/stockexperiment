@@ -1,3 +1,5 @@
+var Addon = require('./build/Release/addon');
+var IbClient = Addon.IbClient;
 var Company = require('./company');
 var log = console.log;
 
