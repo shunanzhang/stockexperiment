@@ -32,7 +32,6 @@ var listContracts = function() {
   }
   return contracts;
 };
-var ibClient = new IbClient(listContracts(), handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -380,6 +379,8 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
   }
   log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
+
+var ibClient = new IbClient(listContracts(), handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
 var connected = ibClient.connect('127.0.0.1', 7496, 0);
