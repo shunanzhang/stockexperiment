@@ -22,16 +22,6 @@ var entryOrderIds = {};
 var actions = {};
 
 var companies = [new Company('ES'), new Company('ZN')];
-var listContracts = function() {
-  var contracts = new Array(companies.length);
-  for (var i = companies.length; i--;) {
-    var company = companies[i];
-    cancelIds[company.cancelId] = company;
-    symbols[company.symbol] = company;
-    contracts[i] = company.contract;
-  }
-  return contracts;
-};
 
 // Interactive Broker requires that you use orderId for every new order
 //  inputted. The orderId is incremented everytime you submit an order.
@@ -54,11 +44,17 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
 };
 
 var handleValidOrderId = function(orderId) {
+  var company;
+  for (var i = companies.length; i--;) {
+    company = companies[i];
+    cancelIds[company.cancelId] = company;
+    symbols[company.symbol] = company;
+  }
   log('next order Id is', orderId);
   ibClient.reqAllOpenOrders();
   ibClient.reqAutoOpenOrders(true);
-  for (var i = companies.length; i--;) {
-    var company = companies[i];
+  for (i = companies.length; i--;) {
+    company = companies[i];
     ibClient.reqRealTimeBars(company.cancelId, 'TRADES', false); // only regular trading ours == false
     ibClient.reqMktData(company.cancelId, '', false);
   }
@@ -73,7 +69,7 @@ var cancelPrevOrder = function(prevOrderId) {
 
 var modifyExpiry = function(company, oId, order) {
   cancelPrevOrder(oId);
-  company.contract.expiry = company.newExpiry;
+  company.expiry = company.newExpiry;
   placeMyOrder(company, order.action, order.totalQuantity, 'LMT', order.lmtPrice, false, false);
 };
 
@@ -144,10 +140,10 @@ var handleRealTimeBar = function(reqId, timeLong, barOpen, barHigh, barLow, barC
   var oldExpiryPosition = company.oldExpiryPosition;
   var orderType = 'LMT';
   if (action === BUY ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
-    company.contract.expiry = company.oldExpiry;
+    company.expiry = company.oldExpiry;
     orderType = 'MKT';
   } else {
-    company.contract.expiry = company.newExpiry;
+    company.expiry = company.newExpiry;
   }
   placeMyOrder(company, action, company.onePosition, orderType, lmtPrice, true, false);
   company.tickSecond = hrtime()[0];
@@ -281,9 +277,9 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       }
       var oldExpiryPosition = company.oldExpiryPosition;
       if (action === BUY ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
-        company.contract.expiry = oldExpiry;
+        company.expiry = oldExpiry;
       } else {
-        company.contract.expiry = newExpiry;
+        company.expiry = newExpiry;
       }
       placeMyOrder(company, action, filled, 'LMT', lmtPrice, false, false);
     } else if (orderStatus === 'Cancelled') {
@@ -335,7 +331,7 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
         var exLot = null;
         if (oldExpiry === newExpiry && newExpiry !== expiry) { // right before expiry, aggresively roll
           modifyExpiry(company, oId, order);
-          company.contract.expiry = expiry;
+          company.expiry = expiry;
           placeMyOrder(company, action, totalQuantity, 'MKT', 0.0, true, false);
           company.tickSecond = hrtime()[0];
         } else if (action === BUY) {
@@ -380,7 +376,7 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
   log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-var ibClient = new IbClient(listContracts(), handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
+var ibClient = new IbClient(companies, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
 var connected = ibClient.connect('127.0.0.1', 7496, 0);

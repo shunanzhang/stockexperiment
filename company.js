@@ -1,7 +1,6 @@
 var moment = require('./momenttz');
 var momenttz = moment.tz;
 var TIMEZONE = moment.TIMEZONE;
-var createContract = require('ibapi').contract.createContract;
 var TradeController = require('./build/Release/addon').TradeController;
 var MAX_VALUE = Number.MAX_VALUE;
 var MIN_VALUE = Number.MIN_VALUE;
@@ -100,31 +99,29 @@ var Company = module.exports = function(symbol) {
   this.sLots = {};
   this.lLotsLength = 0;
   this.sLotsLength = 0;
-  var contract = this.contract = createContract();
-  contract.symbol = symbol;
-  contract.secType = SEC_TYPES[symbol] || 'STK';
-  contract.exchange = DESTINATIONS[symbol] || 'SMART';
-  contract.primaryExchange = EXCHANGES[symbol];
-  contract.currency = 'USD';
-  var expir = EXPIRIES[symbol];
-  if (expir) {
+  this.secType = SEC_TYPES[symbol] || 'STK';
+  this.exchange = DESTINATIONS[symbol] || 'SMART';
+  this.primaryExchange = EXCHANGES[symbol];
+  this.currency = 'USD';
+  var expiry = EXPIRIES[symbol];
+  if (expiry) {
     var date = momenttz(TIMEZONE);
     date.add(ROLLDAY_OFFSET[symbol]); // if there is no offset, add ROLLDAY_OFFSET[symbol] === undefined
     var rollWeek = ((date.date() - (date.day() + 3) % 7 + 1) / 7) | 0; // === 1 between Thursday 2nd week of month and Wednewsay 3rd week of month
-    var diff = expir - (date.month() + 1) % expir;
-    if (diff === expir && rollWeek < 2) {
+    var diff = expiry - (date.month() + 1) % expiry;
+    if (diff === expiry && rollWeek < 2) {
       if (rollWeek < 1) {
-        this.oldExpiry = this.newExpiry = contract.expiry = date.format('YYYYMM');
+        this.oldExpiry = this.newExpiry = this.expiry = date.format('YYYYMM');
       } else {
         // The roll date is the second Thursday http://www.cmegroup.com/trading/equity-index/rolldates.html
         this.oldExpiry = date.format('YYYYMM');
-        this.newExpiry = contract.expiry = date.add(diff, 'month').format('YYYYMM');
+        this.newExpiry = this.expiry = date.add(diff, 'month').format('YYYYMM');
       }
     } else {
-      this.oldExpiry = this.newExpiry = contract.expiry = date.add(diff, 'month').format('YYYYMM');
+      this.oldExpiry = this.newExpiry = this.expiry = date.add(diff, 'month').format('YYYYMM');
     }
   } else {
-    this.oldExpiry = this.newExpiry = contract.expiry;
+    this.oldExpiry = this.newExpiry = this.expiry;
   }
   this.oldExpiryPosition = 0;
   this.lExLots = {};
