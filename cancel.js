@@ -50,6 +50,7 @@ if (connected) {
     setImmediate(processMessage); // faster but 100% cpu
     //setTimeout(processMessage, 0); // slower but less cpu intensive
   };
+  setImmediate(processMessage);
 } else {
   throw new Error('Failed connecting to localhost TWS/IB Gateway');
 }
