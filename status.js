@@ -1,62 +1,50 @@
-var ibapi = require('ibapi');
-var messageIds = ibapi.messageIds;
 var Company = require('./company');
+var log = console.log;
 
-var createCompanies = function() {
-  var companies = [new Company('ES')];
-  return companies;
-};
+var companies = [new Company('ES')];
 
-var api = new ibapi.NodeIbapi();
-
-// Interactive Broker requires that you use orderId for every new order
-//  inputted. The orderId is incremented everytime you submit an order.
-//  Make sure you keep track of this.
 var orderId = -1;
 
-// Here we specify the event handlers.
-//  Please follow this guideline for event handlers:
-//  1. Add handlers to listen to messages
-//  2. Each handler must have be a function (message) signature
-var handleValidOrderId = function(message) {
-  var companies = createCompanies();
-  orderId = message.orderId;
-  console.log('next order Id is', orderId);
-  api.reqAllOpenOrders();
+var handleValidOrderId = function(orderId) {
+  log('next order Id is', orderId);
+  ibClient.reqAllOpenOrders();
 };
 
-var handleServerError = function(message) {
-  var errorCode = message.errorCode;
+var handleServerError = function(id, errorCode, errorString) {
   if (errorCode === 2109) { // ignore
     return;
   }
-  console.log(Date(), '[ServerError]', message);
+  log(Date(), '[ServerError]', id, errorCode, errorString);
   if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
     process.exit(1);
   }
 };
 
-var handleOrderStatus = function(message) {
-  console.log('OrderStatus:', JSON.stringify(message));
+var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld) {
+  log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
 };
 
-var handleOpenOrder = function(message) {
-  console.log('OpenOrder:', JSON.stringify(message));
+var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {
+  log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-// After that, you must register the event handler with a messageId
-// For list of valid messageIds, see messageIds.js file.
-api.handlers[messageIds.nextValidId] = handleValidOrderId;
-api.handlers[messageIds.error] = handleServerError;
-api.handlers[messageIds.orderStatus] = handleOrderStatus;
-api.handlers[messageIds.openOrder] = handleOpenOrder;
+var handleTickPrice = function() {};
+var handleRealTimeBar = function() {};
+var handleConnectionClosed = function() {};
+
+var ibClient = new IbClient(companies, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
-var connected = api.connect('127.0.0.1', 7496, 1);
+var connected = ibClient.connect('127.0.0.1', 7496, 1);
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
-  api.beginProcessing();
+  var processMessage = function() {
+    ibClient.processMessages();
+    setImmediate(processMessage); // faster but 100% cpu
+    //setTimeout(processMessage, 0); // slower but less cpu intensive
+  };
+  setImmediate(processMessage);
 } else {
   throw new Error('Failed connecting to localhost TWS/IB Gateway');
 }

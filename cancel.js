@@ -1,15 +1,6 @@
-var ibapi = require('ibapi');
-var messageIds = ibapi.messageIds;
-var Company = require('./company');
+var log = console.log;
 
-var api = new ibapi.NodeIbapi();
-var apiClient = api.client;
-
-// Here we specify the event handlers.
-//  Please follow this guideline for event handlers:
-//  1. Add handlers to listen to messages
-//  2. Each handler must have be a function (message) signature
-var handleValidOrderId = function(message) {
+var handleValidOrderId = function(orderId) {
   if (process.argv[4]) {
     cancelPrevOrder(parseInt(process.argv[3], 10));
   }
@@ -17,71 +8,46 @@ var handleValidOrderId = function(message) {
 
 var cancelPrevOrder = function(prevOrderId) {
   if (prevOrderId > 0) { // cannot cancel negative order id or zero
-    console.log('canceling order: %d', prevOrderId);
-    apiClient.cancelOrder(prevOrderId); // avoid rate limitter
+    log('canceling order: %d', prevOrderId);
+    ibClient.cancelOrder(prevOrderId); // avoid rate limitter
   }
 };
 
-var handleServerError = function(message) {
-  var errorCode = message.errorCode;
+var handleServerError = function(id, errorCode, errorString) {
   if (errorCode === 2109) { // ignore
     return;
   }
-  console.log(Date(), '[ServerError]', message);
+  log(Date(), '[ServerError]', id, errorCode, errorString);
   if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
     process.exit(1);
   }
 };
 
-var handleConnectionClosed = function(message) {
-  console.log(Date(), '[ConnectionClosed]', message);
+var handleConnectionClosed = function() {
+  log(Date(), '[ConnectionClosed]');
   process.exit(1);
 };
 
-var handleOpenOrder = function(message) {
-  console.log('OpenOrder:', JSON.stringify(message));
+var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {
+  log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-// After that, you must register the event handler with a messageId
-// For list of valid messageIds, see messageIds.js file.
-var handlers = api.handlers;
-handlers[messageIds.nextValidId] = handleValidOrderId;
-handlers[messageIds.error] = handleServerError;
-handlers[messageIds.connectionClosed] = handleConnectionClosed;
-handlers[messageIds.openOrder] = handleOpenOrder;
+var handleOrderStatus = function() {};
+var handleTickPrice = function() {};
+var handleRealTimeBar = function() {};
+
+var ibClient = new IbClient([], handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
-var connected = api.connect('127.0.0.1', 7496, parseInt(process.argv[2], 10));
+var connected = ibClient.connect('127.0.0.1', 7496, parseInt(process.argv[2], 10));
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
-  if (!api.isProcessing) {
-    var processMessage = function() {
-      apiClient.checkMessages();
-      apiClient.processMsg();
-      var msg = apiClient.getInboundMsg();
-      var messageId = msg.messageId;
-      if (messageId) {
-        var handler = handlers[messageId];
-        while (!handler) {
-          msg = apiClient.getInboundMsg();
-          messageId = msg.messageId;
-          if (messageId) {
-            handler = handlers[messageId];
-          } else {
-            setImmediate(processMessage);
-            return;
-          }
-        }
-        handler(msg);
-        setImmediate(processMessage); // faster but 100% cpu
-      } else {
-        setTimeout(processMessage, 0); // slower but less cpu intensive
-      }
-    };
-    setImmediate(processMessage);
-    api.isProcessing = true;
-  }
+  var processMessage = function() {
+    ibClient.processMessages();
+    setImmediate(processMessage); // faster but 100% cpu
+    //setTimeout(processMessage, 0); // slower but less cpu intensive
+  };
 } else {
   throw new Error('Failed connecting to localhost TWS/IB Gateway');
 }

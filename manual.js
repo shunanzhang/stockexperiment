@@ -1,6 +1,5 @@
-var ibapi = require('ibapi');
-var messageIds = ibapi.messageIds;
 var Company = require('./company');
+var log = console.log;
 
 /**
  * argument parsing
@@ -12,25 +11,9 @@ var orderType = process.argv[5];
 var lmtPrice = parseFloat(process.argv[6]);
 var auxPrice = parseFloat(process.argv[7]);
 
-var createCompanies = function() {
-  var companies = [new Company(tickerId)];
-  return companies;
-};
+var companies = [new Company(tickerId)];
 
-var api = new ibapi.NodeIbapi();
-
-// Interactive Broker requires that you use orderId for every new order
-//  inputted. The orderId is incremented everytime you submit an order.
-//  Make sure you keep track of this.
 var orderId = parseInt(process.argv[8], 10) || -1;
-
-// Singleton order object
-var newOrder = ibapi.order.createOrder();
-newOrder.auxPrice = 0.0;
-newOrder.hidden = false;
-newOrder.tif = 'GTC';
-newOrder.outsideRth = true;
-newOrder.percentOffset = 0; // bug workaround
 
 var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entry, modify) {
   var oldId = -1;
@@ -39,48 +22,50 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
   } else {
     oldId = company.orderId = orderId++;
   }
-  newOrder.action = action;
-  newOrder.totalQuantity = quantity;
-  newOrder.orderType = orderType;
-  newOrder.lmtPrice = lmtPrice;
-  api.placeOrder(oldId, company.contract, newOrder);
-  console.log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask);
+  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, newOrder, company.bid, company.ask, company.tickSecond);
 };
 
-var handleValidOrderId = function(message) {
-  var companies = createCompanies();
+var handleValidOrderId = function(messageOrderId) {
   if (!orderId || orderId < 0) {
-    orderId = message.orderId;
+    orderId = messageOrderId;
   }
-  console.log('next order Id is', orderId);
+  log('next order Id is', orderId);
   for (var i = companies.length; i--;) {
     var company = companies[i];
     placeMyOrder(company, action, quantity, orderType, lmtPrice, true, false);
   }
 };
 
-var handleServerError = function(message) {
-  var errorCode = message.errorCode;
+var handleServerError = function(id, errorCode, errorString) {
   if (errorCode === 2109) { // ignore
     return;
   }
-  console.log(Date(), '[ServerError]', message);
+  log(Date(), '[ServerError]', id, errorCode, errorString);
   if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
     process.exit(1);
   }
 };
 
-// After that, you must register the event handler with a messageId
-// For list of valid messageIds, see messageIds.js file.
-api.handlers[messageIds.nextValidId] = handleValidOrderId;
-api.handlers[messageIds.error] = handleServerError;
+var handleOrderStatus = function() {};
+var handleTickPrice = function() {};
+var handleOpenOrder = function() {};
+var handleRealTimeBar = function() {};
+var handleConnectionClosed = function() {};
+
+var ibClient = new IbClient(companies, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
-var connected = api.connect('127.0.0.1', 7496, (process.argv[9] === undefined) ? 1 : parseInt(process.argv[9], 10));
+var connected = ibClient.connect('127.0.0.1', 7496, (process.argv[9] === undefined) ? 1 : parseInt(process.argv[9], 10));
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {
-  api.beginProcessing();
+  var processMessage = function() {
+    ibClient.processMessages();
+    setImmediate(processMessage); // faster but 100% cpu
+    //setTimeout(processMessage, 0); // slower but less cpu intensive
+  };
+  setImmediate(processMessage);
 } else {
   throw new Error('Failed connecting to localhost TWS/IB Gateway');
 }
