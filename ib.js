@@ -43,14 +43,15 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
   log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, company.bid, company.ask, company.tickSecond);
 };
 
-var handleValidOrderId = function(orderId) {
+var handleValidOrderId = function(oId) {
   var company;
   for (var i = companies.length; i--;) {
     company = companies[i];
     cancelIds[company.cancelId] = company;
     symbols[company.symbol] = company;
   }
-  log('next order Id is', orderId);
+  orderId = oId;
+  log('next order Id is', oId);
   ibClient.reqAllOpenOrders();
   ibClient.reqAutoOpenOrders(true);
   for (i = companies.length; i--;) {
