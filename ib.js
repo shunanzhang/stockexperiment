@@ -40,7 +40,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
     }
   }
   ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
-  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, company.bid, company.ask, company.tickSecond);
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, company.expiry, company.bid, company.ask, company.tickSecond);
 };
 
 var handleValidOrderId = function(oId) {
