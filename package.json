@@ -4,9 +4,9 @@
   , "private": true
   , "dependencies": {
       "hiredis": ">= 0.5.0"
-    , "moment-timezone": ">=0.5.6"
-    , "request": ">= 2.75.0"
-    , "redis": ">= 2.6.2"
+    , "moment-timezone": ">=0.5.7"
+    , "request": ">= 2.76.0"
+    , "redis": ">= 2.6.3"
   }
   , "engine": "node >= 6.9.1"
   , "scripts": {
