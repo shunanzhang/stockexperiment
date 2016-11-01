@@ -78,7 +78,7 @@ var handleServerError = function(id, errorCode, errorString) {
     return;
   }
   log(Date(), '[ServerError]', id, errorCode, errorString);
-  if (errorCode === 1101 || errorCode === 1102 || errorCode === 1300) {
+  if (errorCode === 1101 || errorCode === 1300) {
     process.exit(1);
   }
 };
