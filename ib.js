@@ -129,12 +129,12 @@ var handleRealTimeBar = function(reqId, timeLong, barOpen, barHigh, barLow, barC
   var hardSMaxPrices = company.hardSMaxPrices;
   var symbol = company.symbol;
   if (action === HOLD || (action === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= hardLMaxPrices.length)) || (action === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= hardSMinPrices.length))) {
-    log(symbol, low, high, close, open, bid, ask, mid, Date());
+    log(Date(), symbol, low, high, close, open, bid, ask, mid);
     return;
   }
   var lmtPrice = action === BUY ? bid : ask;
   if (action === BUY ? (lmtPrice > hardLMaxPrices[lLotsLength] || lmtPrice < hardLMinPrices[lLotsLength]) : (lmtPrice < hardSMinPrices[sLotsLength] || lmtPrice > hardSMaxPrices[sLotsLength])) {
-    log(symbol, low, high, close, open, bid, ask, mid, Date());
+    log(Date(), symbol, low, high, close, open, bid, ask, mid);
     log('[WARNING]', action, 'order ignored since the limit price is', lmtPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
   }
@@ -148,7 +148,7 @@ var handleRealTimeBar = function(reqId, timeLong, barOpen, barHigh, barLow, barC
   }
   placeMyOrder(company, action, company.onePosition, orderType, lmtPrice, true, false);
   company.tickSecond = hrtime()[0];
-  log(symbol, low, high, close, open, bid, ask, mid, Date());
+  log(Date(), symbol, low, high, close, open, bid, ask, mid);
 };
 
 var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
