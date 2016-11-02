@@ -304,7 +304,14 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
 void IbClient::ProcessMessages(const v8::FunctionCallbackInfo<v8::Value>& args) {
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
-  obj->processMessages();
+  obj->processMessages(); // 1
+  obj->processMessages(); // 2
+  obj->processMessages(); // 3
+  obj->processMessages(); // 4
+  obj->processMessages(); // 5
+  obj->processMessages(); // 6
+  obj->processMessages(); // 7
+  obj->processMessages(); // 8
 }
 
 void IbClient::Connect(const v8::FunctionCallbackInfo<v8::Value>& args) {
