@@ -70,14 +70,14 @@ void IbClient::processMessages() {
     if (m_pClient->fd() < 0) {
       return;
     }
-    if (FD_ISSET(m_pClient->fd(), &writeSet)) { // socket is ready for writing
-      m_pClient->onSend();
+    if (FD_ISSET(m_pClient->fd(), &readSet)) { // socket is ready for reading
+      m_pClient->onReceive();
     }
     if (m_pClient->fd() < 0) {
       return;
     }
-    if (FD_ISSET(m_pClient->fd(), &readSet)) { // socket is ready for reading
-      m_pClient->onReceive();
+    if (FD_ISSET(m_pClient->fd(), &writeSet)) { // socket is ready for writing
+      m_pClient->onSend();
     }
   }
 }
