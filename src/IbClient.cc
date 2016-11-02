@@ -46,14 +46,9 @@ void IbClient::processMessages() {
     FD_ZERO(&readSet);
     errorSet = writeSet = readSet;
     FD_SET(m_pClient->fd(), &readSet);
-
-    if (!m_pClient->isOutBufferEmpty()) {
-      FD_SET(m_pClient->fd(), &writeSet);
-    }
-
+    FD_SET(m_pClient->fd(), &writeSet);
     FD_SET(m_pClient->fd(), &errorSet);
     int ret = select(m_pClient->fd() + 1, &readSet, &writeSet, &errorSet, &tval);
-
     if (ret == 0) { // timeout
       return;
     }
