@@ -46,10 +46,10 @@ void TradeController::reset() {
 }
 
 const char* TradeController::trade(double close, double high, double low, double open, bool forceHold) {
-  return tradeLogic(close, high, low, open, forceHold, i_ < 127);
+  return tradeLogic(close, high, low, forceHold, i_ < 127);
 }
 
-const char* TradeController::tradeLogic(double mid, double high, double low, double open, bool forceHold, bool noSma) {
+const char* TradeController::tradeLogic(double mid, double high, double low, bool forceHold, bool noSma) {
   const char* result = HOLD;
   if (forceHold) {
     reset();
@@ -166,12 +166,11 @@ void TradeController::TradeLogic(const FunctionCallbackInfo<Value>& args) {
   double close = args[0]->NumberValue();
   double high = args[1]->NumberValue();
   double low = args[2]->NumberValue();
-  double open = args[3]->NumberValue();
-  bool forceHold = args[4]->BooleanValue();
-  bool noSma = args[5]->BooleanValue();
+  bool forceHold = args[3]->BooleanValue();
+  bool noSma = args[4]->BooleanValue();
 
   TradeController* obj = ObjectWrap::Unwrap<TradeController>(args.Holder());
-  const char* result = obj->tradeLogic(close, high, low, open, forceHold, noSma);
+  const char* result = obj->tradeLogic(close, high, low, forceHold, noSma);
   args.GetReturnValue().Set(String::NewFromUtf8(isolate, result));
 }
 

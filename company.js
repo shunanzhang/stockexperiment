@@ -92,7 +92,6 @@ var Company = module.exports = function(symbol) {
   this.low = MAX_VALUE;
   this.high = MIN_VALUE;
   this.close = 0.0;
-  this.open = 0.0;
   this.bid = 0.0;
   this.ask = 0.0;
   this.lLots = {};
@@ -178,10 +177,9 @@ Company.prototype.popExLot = function() {
   return undefined;
 };
 
-Company.prototype.resetLowHighOpen = function() {
+Company.prototype.resetLowHigh = function() {
   this.low = MAX_VALUE;
   this.high = MIN_VALUE;
-  this.open = 0.0;
 };
 
 if (!module.parent) {

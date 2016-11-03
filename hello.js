@@ -45,7 +45,7 @@ for (i = 1000000; i--;) {
   var close = rand();
   var high = rand();
   var low = rand();
-  var a = tradeController.tradeLogic(close, high, low, 0.0, false, true);
+  var a = tradeController.tradeLogic(close, high, low, false, true);
   //var b = tradeController2.tradeLogic(close, high, low, 0.0, false, true);
   //assert.deepEqual(a, b);
 }

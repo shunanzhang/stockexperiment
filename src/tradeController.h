@@ -15,7 +15,7 @@ class TradeController: public node::ObjectWrap {
   ~TradeController();
   void reset();
   const char* trade(double close, double high, double low, double open, bool forceHold);
-  const char* tradeLogic(double mid, double high, double low, double open, bool forceHold, bool noSma);
+  const char* tradeLogic(double mid, double high, double low, bool forceHold, bool noSma);
   const static char BUY[];
   const static char SELL[];
   const static char HOLD[];
