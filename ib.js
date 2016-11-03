@@ -95,7 +95,7 @@ var handleRealTimeBar = function(reqId, timeLong, barOpen, barHigh, barLow, barC
     log('[WARNING] Unknown realtimeBar', reqId, timeLong, barOpen, barHigh, barLow, barClose, volume, wap, count);
     return;
   }
-  var date = momenttz((timeLong + 5) * 1000, TIMEZONE); // realtimeBar time is the start of the bar (5 sec ago), fastforward 5 sec
+  var date = momenttz(timeLong, TIMEZONE);
   var low = company.low = min(barLow, company.low);
   var high = company.high = max(barHigh, company.high);
   var close = company.close;

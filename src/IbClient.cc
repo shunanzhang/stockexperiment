@@ -172,7 +172,7 @@ void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order&
 void IbClient::realtimeBar(TickerId reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
   const unsigned argc = 9;
   v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, reqId);
-  v8::Local<v8::Value> arg1 = v8::Integer::New(isolate_, time);
+  v8::Local<v8::Value> arg1 = v8::Integer::New(isolate_, (time + 5) * 1000); // realtimeBar time is the start of the bar (5 sec ago), fastforward 5 sec and return in msec
   v8::Local<v8::Value> arg2 = v8::Number::New(isolate_, open);
   v8::Local<v8::Value> arg3 = v8::Number::New(isolate_, high);
   v8::Local<v8::Value> arg4 = v8::Number::New(isolate_, low);
