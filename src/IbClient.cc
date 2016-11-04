@@ -5,7 +5,7 @@
 
 v8::Persistent<v8::Function> IbClient::constructor;
 
-IbClient::IbClient(long contractLength) : m_pClient(new EPosixClientSocket(this)) {
+IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new EPosixClientSocket(this)) {
 // Singleton order object
  order_.auxPrice = 0.0;
  order_.hidden = false; // false for futures, true for stocks
@@ -13,6 +13,7 @@ IbClient::IbClient(long contractLength) : m_pClient(new EPosixClientSocket(this)
  order_.outsideRth = false;
  order_.percentOffset = 0; // bug workaround
  contracts = new Contract[contractLength];
+ hourOffset_ = hourOffset;
 }
 
 IbClient::~IbClient() {
@@ -170,17 +171,23 @@ void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order&
 }
 
 void IbClient::realtimeBar(TickerId reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
-  const unsigned argc = 9;
+  const unsigned argc = 11;
+  long timeSec = time + 5; // realtimeBar time is the start of the bar (5 sec ago), fastforward 5 sec
+  uint32_t second = timeSec % 60;
+  uint32_t minute = (timeSec / 60) % 60;
+  uint32_t hour = (timeSec / 3600 + hourOffset_) % 24;
   v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, reqId);
-  v8::Local<v8::Value> arg1 = v8::Integer::New(isolate_, time);
-  v8::Local<v8::Value> arg2 = v8::Number::New(isolate_, open);
-  v8::Local<v8::Value> arg3 = v8::Number::New(isolate_, high);
-  v8::Local<v8::Value> arg4 = v8::Number::New(isolate_, low);
-  v8::Local<v8::Value> arg5 = v8::Number::New(isolate_, close);
-  v8::Local<v8::Value> arg6 = v8::Integer::New(isolate_, volume);
-  v8::Local<v8::Value> arg7 = v8::Number::New(isolate_, wap);
-  v8::Local<v8::Value> arg8 = v8::Int32::New(isolate_, count);
-  v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8};
+  v8::Local<v8::Value> arg1 = v8::Number::New(isolate_, open);
+  v8::Local<v8::Value> arg2 = v8::Number::New(isolate_, high);
+  v8::Local<v8::Value> arg3 = v8::Number::New(isolate_, low);
+  v8::Local<v8::Value> arg4 = v8::Number::New(isolate_, close);
+  v8::Local<v8::Value> arg5 = v8::Integer::New(isolate_, volume);
+  v8::Local<v8::Value> arg6 = v8::Number::New(isolate_, wap);
+  v8::Local<v8::Value> arg7 = v8::Int32::New(isolate_, count);
+  v8::Local<v8::Value> arg8 = v8::Uint32::New(isolate_, second);
+  v8::Local<v8::Value> arg9 = v8::Uint32::New(isolate_, minute);
+  v8::Local<v8::Value> arg10 = v8::Uint32::New(isolate_, hour);
+  v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10};
   v8::Local<v8::Function>::New(isolate_, realtimeBar_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
@@ -264,15 +271,16 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     // Invoked as constructor: `new MyObject(...)`
     v8::Local<v8::Array> contractArray = v8::Local<v8::Array>::Cast(args[0]);
     uint32_t contractLength = contractArray->Length();
-    IbClient* obj = new IbClient(contractLength);
+    int32_t hourOffset = args[1]->Int32Value();
+    IbClient* obj = new IbClient(contractLength, hourOffset);
     obj->isolate_ = isolate;
-    obj->orderStatus_.Reset(isolate, v8::Local<v8::Function>::Cast(args[1]));
-    obj->nextValidId_.Reset(isolate, v8::Local<v8::Function>::Cast(args[2]));
-    obj->error_.Reset(isolate, v8::Local<v8::Function>::Cast(args[3]));
-    obj->tickPrice_.Reset(isolate, v8::Local<v8::Function>::Cast(args[4]));
-    obj->openOrder_.Reset(isolate, v8::Local<v8::Function>::Cast(args[5]));
-    obj->realtimeBar_.Reset(isolate, v8::Local<v8::Function>::Cast(args[6]));
-    obj->connectionClosed_.Reset(isolate, v8::Local<v8::Function>::Cast(args[7]));
+    obj->orderStatus_.Reset(isolate, v8::Local<v8::Function>::Cast(args[2]));
+    obj->nextValidId_.Reset(isolate, v8::Local<v8::Function>::Cast(args[3]));
+    obj->error_.Reset(isolate, v8::Local<v8::Function>::Cast(args[4]));
+    obj->tickPrice_.Reset(isolate, v8::Local<v8::Function>::Cast(args[5]));
+    obj->openOrder_.Reset(isolate, v8::Local<v8::Function>::Cast(args[6]));
+    obj->realtimeBar_.Reset(isolate, v8::Local<v8::Function>::Cast(args[7]));
+    obj->connectionClosed_.Reset(isolate, v8::Local<v8::Function>::Cast(args[8]));
     for (uint32_t i = 0; i < contractLength; i++) {
       Contract* contract = &(obj->contracts[i]);
       v8::Local<v8::Object> contractObject = contractArray->Get(i)->ToObject(isolate);

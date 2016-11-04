@@ -1,6 +1,4 @@
 var moment = require('./momenttz');
-var momenttz = moment.tz;
-var TIMEZONE = moment.TIMEZONE;
 var Addon = require('./build/Release/addon');
 var TradeController = Addon.TradeController;
 var IbClient = Addon.IbClient;
@@ -20,6 +18,8 @@ var cancelIds = {};
 var symbols = {};
 var entryOrderIds = {};
 var actions = {};
+
+var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
 var companies = [new Company('ES'), new Company('ZN')];
 
@@ -89,17 +89,15 @@ var handleConnectionClosed = function() {
   process.exit(1);
 };
 
-var handleRealTimeBar = function(reqId, timeLong, barOpen, barHigh, barLow, barClose, volume, wap, count) {
+var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volume, wap, count, second, minute, hour) {
   var company = cancelIds[reqId];
   if (!company) {
-    log('[WARNING] Unknown realtimeBar', reqId, timeLong, barOpen, barHigh, barLow, barClose, volume, wap, count);
+    log('[WARNING] Unknown realtimeBar', reqId, barOpen, barHigh, barLow, barClose, volume, wap, count, second, minute, hour);
     return;
   }
-  var date = momenttz((timeLong + 5) * 1000, TIMEZONE); // realtimeBar time is the start of the bar (5 sec ago), fastforward 5 sec
   var low = company.low = min(barLow, company.low);
   var high = company.high = max(barHigh, company.high);
   var close = company.close;
-  var second = date.seconds();
   if (second <= 57 && second > 3) {
     if (second > 52 && company.lastOrderStatus !== 'Filled' && company.lastOrderStatus !== 'Cancelled') {
       cancelPrevOrder(company.orderId);
@@ -110,8 +108,6 @@ var handleRealTimeBar = function(reqId, timeLong, barOpen, barHigh, barLow, barC
   var ask = company.ask;
   var mid = (bid + ask) / 2.0;
   var tradeController = company.tradeController;
-  var minute = date.minutes();
-  var hour = date.hours();
   var noPosition = (hour < 9) || (hour >= 15) || (hour === 9 && minute < 21) || (hour === 14 && minute > 20); // starts earlier than regular trading hours
   //var noPosition = (hour < 9) || (hour >= 12) || (hour === 9 && minute < 21) || (hour === 11 && minute > 20); // for thanksgiving and christmas
   var noSma = (hour < 11) || (hour === 11 && minute < 38);
@@ -374,7 +370,7 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
   log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-var ibClient = new IbClient(companies, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
+var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
 var connected = ibClient.connect('127.0.0.1', 7496, 0);
