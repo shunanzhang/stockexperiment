@@ -222,7 +222,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
       log('after baseup', company);
     } else if (canAutoExecute) {
       var action = actions[company.orderId];
-      var prevTickSecond = company.tickSecond;
+      var prevTickSecond = company.tickSecond + 1;
       var tickSecond = 0;
       if (field === 1) { // bid price
         var bid = company.bid;
