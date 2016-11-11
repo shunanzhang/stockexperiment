@@ -11,7 +11,7 @@ var Company = require('./company');
 var max = Math.max;
 var min = Math.min;
 var round = Math.round;
-var hrtime = process.hrtime;
+var now = Date.now;
 var log = console.log;
 
 var cancelIds = {};
@@ -40,7 +40,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
     }
   }
   ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
-  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, company.expiry, company.bid, company.ask, company.tickSecond);
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, company.expiry, company.bid, company.ask, company.tickTime);
 };
 
 var handleValidOrderId = function(oId) {
@@ -141,7 +141,7 @@ var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volu
     company.expiry = company.newExpiry;
   }
   placeMyOrder(company, action, company.onePosition, orderType, lmtPrice, true, false);
-  company.tickSecond = hrtime()[0];
+  company.tickTime = now();
   log(Date(), symbol, low, high, close, bid, ask, mid);
 };
 
@@ -222,26 +222,26 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
       log('after baseup', company);
     } else if (canAutoExecute) {
       var action = actions[company.orderId];
-      var prevTickSecond = company.tickSecond + 1;
-      var tickSecond = 0;
+      var prevTickTime = company.tickTime + 1999;
+      var tickTime = 0;
       if (field === 1) { // bid price
         var bid = company.bid;
         company.bid = price;
         if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid) {
-          tickSecond = hrtime()[0];
-          if (tickSecond > prevTickSecond) { // wait more than 1 sec
+          tickTime = now();
+          if (tickTime > prevTickTime) { // wait more than 2 sec
             placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
-            company.tickSecond = tickSecond;
+            company.tickTime = tickTime;
           }
         }
       } else if (field === 2) { // ask price
         var ask = company.ask;
         company.ask = price;
         if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask) {
-          tickSecond = hrtime()[0];
-          if (tickSecond > prevTickSecond) { // wait more than 1 sec
+          tickTime = now();
+          if (tickTime > prevTickTime) { // wait more than 2 sec
             placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
-            company.tickSecond = tickSecond;
+            company.tickTime = tickTime;
           }
         }
       }
@@ -327,7 +327,7 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
           modifyExpiry(company, oId, order);
           company.expiry = expiry;
           placeMyOrder(company, action, totalQuantity, 'MKT', 0.0, true, false);
-          company.tickSecond = hrtime()[0];
+          company.tickTime = now();
         } else if (action === BUY) {
           if (!sLots[oId]) {
             sLots[oId] = order;
