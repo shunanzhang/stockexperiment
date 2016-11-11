@@ -223,7 +223,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
     } else if (canAutoExecute) {
       var action = actions[company.orderId];
       var prevTickTime = company.tickTime + 1999;
-      var tickTime = 0;
+      var tickTime = 1478840331260; // some init time in msec
       if (field === 1) { // bid price
         var bid = company.bid;
         company.bid = price;
