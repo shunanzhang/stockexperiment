@@ -91,7 +91,6 @@ var Company = module.exports = function(symbol) {
   this.tradeController = new TradeController();
   this.low = MAX_VALUE;
   this.high = MIN_VALUE;
-  this.close = 0.0;
   this.bid = 0.0;
   this.ask = 0.0;
   this.lLots = {};

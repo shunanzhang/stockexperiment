@@ -40,7 +40,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
     }
   }
   ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
-  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, company.expiry, company.bid, company.ask, company.tickTime);
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, company.expiry, company.tickTime);
 };
 
 var handleValidOrderId = function(oId) {
@@ -97,7 +97,6 @@ var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volu
   }
   var low = company.low = min(barLow, company.low);
   var high = company.high = max(barHigh, company.high);
-  var close = company.close;
   if (second <= 57 && second > 3) {
     if (second > 52 && company.lastOrderStatus !== 'Filled' && company.lastOrderStatus !== 'Cancelled') {
       cancelPrevOrder(company.orderId);
@@ -123,12 +122,12 @@ var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volu
   var hardSMaxPrices = company.hardSMaxPrices;
   var symbol = company.symbol;
   if (action === HOLD || (action === BUY && ((lLotsLength >= maxLot && lengthDiff > 1) || lLotsLength >= hardLMaxPrices.length)) || (action === SELL && ((sLotsLength >= maxLot && lengthDiff < 0) || sLotsLength >= hardSMinPrices.length))) {
-    log(Date(), symbol, low, high, close, bid, ask, mid);
+    log(Date(), symbol, low, high, bid, ask, mid);
     return;
   }
   var lmtPrice = action === BUY ? bid : ask;
   if (action === BUY ? (lmtPrice > hardLMaxPrices[lLotsLength] || lmtPrice < hardLMinPrices[lLotsLength]) : (lmtPrice < hardSMinPrices[sLotsLength] || lmtPrice > hardSMaxPrices[sLotsLength])) {
-    log(Date(), symbol, low, high, close, bid, ask, mid);
+    log(Date(), symbol, low, high, bid, ask, mid);
     log('[WARNING]', action, 'order ignored since the limit price is', lmtPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
   }
@@ -142,7 +141,7 @@ var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volu
   }
   placeMyOrder(company, action, company.onePosition, orderType, lmtPrice, true, false);
   company.tickTime = now();
-  log(Date(), symbol, low, high, close, bid, ask, mid);
+  log(Date(), symbol, low, high, bid, ask, mid);
 };
 
 var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
@@ -151,7 +150,6 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
     if (field === 4) { // last price
       company.low = min(price, company.low);
       company.high = max(price, company.high);
-      company.close = price;
     } else if (field === 9) { // last day close
       company.setCaps(price);
       log(company.symbol, 'last day close', price);
@@ -280,7 +278,7 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       entryOrderIds[oId] = null;
     }
   }
-  log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
+  log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
 };
 
 var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {
