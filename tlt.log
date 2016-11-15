@@ -1437,12 +1437,29 @@ bought 11:32:00 AM 13987
    BUY 3:46:00 PM 12114 12 5368 1
 11/14/2016 [ 14824, 14824, 14824, 14824, 14824 ] [ 11888, 11888 ]
 =====
-size: 86580
+  sold 10:24:00 AM 12259
+   BUY 10:28:00 AM 12250 12 5378 1
+  sold 10:30:00 AM 12244
+   BUY 10:35:00 AM 12235 12 5388 1
+  sold 10:50:00 AM 12245
+   BUY 10:55:00 AM 12233 12 5398 1
+  sold 10:56:00 AM 12230
+   BUY 11:03:00 AM 12218 12 5408 1
+  sold 11:06:00 AM 12215
+   BUY 1:53:00 PM 12205 12 5418 1
+  sold 2:03:00 PM 12206
+   BUY 2:05:00 PM 12194 12 5428 1
+  sold 2:06:00 PM 12192
+   BUY 2:16:00 PM 12181 12 5438 1
+  sold 2:19:00 PM 12182
+11/15/2016 [ 14835, 14835, 14835, 14835, 14835 ] [ 11947, 11947, 11947 ]
+=====
+size: 86970
 TLT
-elapsed: 222 days 0 minutes
-gain: 5368 per day = 0.1986867722282677 %
+elapsed: 223 days 0 minutes
+gain: 5438 per day = 0.20037510455394617 %
 pGain/(pGain+nGain): 1 kelly criterion: NaN
-sigma: 0.6022598908974782 ave gain: 10.866396761133604 ratio: 18.04270369879799 # trades:  494
+sigma: 0.6066222595443076 ave gain: 10.854291417165669 ratio: 17.892998890807885 # trades:  501
 max draw down:  0
-buy and hold: -39 profit factor: Infinity payoff ratio:  NaN
-pGain*ave/sigma/days: 40.14907940182976
+buy and hold: 21 profit factor: Infinity payoff ratio:  NaN
+pGain*ave/sigma/days: 40.19906925692713
