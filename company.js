@@ -37,7 +37,7 @@ var MAX_LOTS = {
 var HARD_L_MAX_PERCENTS = {
   SPY: [1.019, 1.014, 1.009, 1.004, 0.999],
   ES: [1.019, 1.014, 1.009, 1.004, 0.999],
-  ZN: [0.999]
+  ZN: [1.0000]
 };
 
 var HARD_L_MIN_PERCENTS = {
@@ -49,7 +49,7 @@ var HARD_L_MIN_PERCENTS = {
 var HARD_S_MIN_PERCENTS = {
   SPY: [0.961, 0.971, 0.981],
   ES: [0.976, 0.986, 0.996],
-  ZN: [0.996]
+  ZN: [0.997]
 };
 
 var HARD_S_MAX_PERCENTS = {
