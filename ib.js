@@ -125,15 +125,16 @@ var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volu
     log(Date(), symbol, low, high, bid, ask, mid);
     return;
   }
-  var lmtPrice = action === BUY ? bid : ask;
-  if (action === BUY ? (lmtPrice > hardLMaxPrices[lLotsLength] || lmtPrice < hardLMinPrices[lLotsLength]) : (lmtPrice < hardSMinPrices[sLotsLength] || lmtPrice > hardSMaxPrices[sLotsLength])) {
+  var isBuy = action === BUY;
+  var lmtPrice = isBuy ? bid : ask;
+  if (isBuy ? (lmtPrice > hardLMaxPrices[lLotsLength] || lmtPrice < hardLMinPrices[lLotsLength]) : (lmtPrice < hardSMinPrices[sLotsLength] || lmtPrice > hardSMaxPrices[sLotsLength])) {
     log(Date(), symbol, low, high, bid, ask, mid);
     log('[WARNING]', action, 'order ignored since the limit price is', lmtPrice, ', which is less/more than the threshold', hardLMaxPrices[lLotsLength], hardLMinPrices[lLotsLength], hardSMinPrices[sLotsLength], hardSMaxPrices[sLotsLength]);
     return;
   }
   var oldExpiryPosition = company.oldExpiryPosition;
   var orderType = 'LMT';
-  if (action === BUY ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
+  if (isBuy ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
     company.expiry = company.oldExpiry;
     orderType = 'MKT';
   } else {
@@ -255,8 +256,9 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       cancelPrevOrder(oId);
     } else if (orderStatus === 'Filled') {
       entryOrderIds[oId] = null;
-      var action = actions[oId] === BUY ? SELL : BUY;
-      var lmtPrice = avgFillPrice * (action === SELL ? OFFSET_POS : OFFSET_NEG);
+      var isSell = actions[oId] === BUY;
+      var action = isSell ? SELL : BUY;
+      var lmtPrice = avgFillPrice * (isSell ? OFFSET_POS : OFFSET_NEG);
       var tickInverse = company.oneTickInverse;
       lmtPrice = round(lmtPrice * tickInverse) / tickInverse; // required to place a correct order
       var oldExpiry = company.oldExpiry;
@@ -268,10 +270,19 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
         }
       }
       var oldExpiryPosition = company.oldExpiryPosition;
-      if (action === BUY ? (oldExpiryPosition < 0) : (oldExpiryPosition > 0)) {
+      if (isSell ? (oldExpiryPosition > 0) : (oldExpiryPosition < 0)) {
         company.expiry = oldExpiry;
       } else {
         company.expiry = newExpiry;
+      }
+      if (isSell) {
+        if (company.ask > lmtPrice) { // this condition becomes true usually for rolling
+          lmtPrice = company.ask; // cannot sell at too low lmtPrice, the order gets rejected otherwise
+        }
+      } else {
+        if (company.bid < lmtPrice) { // this condition becomes true usually for rolling
+          lmtPrice = company.bid; // cannot buy at too high lmtPrice, the order gets rejected otherwise
+        }
       }
       placeMyOrder(company, action, filled, 'LMT', lmtPrice, false, false);
     } else if (orderStatus === 'Cancelled') {
