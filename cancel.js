@@ -1,6 +1,9 @@
+var moment = require('./momenttz');
 var Addon = require('./build/Release/addon');
 var IbClient = Addon.IbClient;
 var log = console.log;
+
+var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
 var handleValidOrderId = function(orderId) {
   if (process.argv[4]) {
@@ -38,7 +41,7 @@ var handleOrderStatus = function() {};
 var handleTickPrice = function() {};
 var handleRealTimeBar = function() {};
 
-var ibClient = new IbClient([], handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
+var ibClient = new IbClient([], hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
 var connected = ibClient.connect('127.0.0.1', 7496, parseInt(process.argv[2], 10));
