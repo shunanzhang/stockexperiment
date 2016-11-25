@@ -24,8 +24,8 @@ var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 var companies = [new Company('ES'), new Company('ZN')];
 
 // Interactive Broker requires that you use orderId for every new order
-//  inputted. The orderId is incremented everytime you submit an order.
-//  Make sure you keep track of this.
+// inputted. The orderId is incremented everytime you submit an order.
+// Make sure you keep track of this.
 var orderId = -1;
 
 var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entry, modify) {
@@ -108,7 +108,6 @@ var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volu
   var mid = (bid + ask) / 2.0;
   var tradeController = company.tradeController;
   var noPosition = (hour < 9) || (hour >= 15) || (hour === 9 && minute < 21) || (hour === 14 && minute > 20); // starts earlier than regular trading hours
-  //var noPosition = (hour < 9) || (hour >= 12) || (hour === 9 && minute < 21) || (hour === 11 && minute > 20); // for thanksgiving and christmas
   var noSma = (hour < 11) || (hour === 11 && minute < 38);
   var action = tradeController.tradeLogic(mid, high, low, noPosition, noSma);
   company.resetLowHigh();
