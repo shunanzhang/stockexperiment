@@ -220,7 +220,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
       log('after baseup', company);
     } else if (canAutoExecute) {
       var action = actions[company.orderId];
-      var prevTickTime = company.tickTime + 1999;
+      var prevTickTime = company.tickTime + 1699;
       var tickTime = 1478840331260; // some init time in msec
       if (field === 1) { // bid price
         var bid = company.bid;
