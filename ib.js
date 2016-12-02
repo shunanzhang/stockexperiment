@@ -21,7 +21,7 @@ var actions = {};
 
 var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
-var companies = [new Company('ES'), new Company('ZN')];
+var companies = [new Company('ES')];
 
 // Interactive Broker requires that you use orderId for every new order
 // inputted. The orderId is incremented everytime you submit an order.
