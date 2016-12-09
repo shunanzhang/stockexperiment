@@ -286,6 +286,22 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       placeMyOrder(company, action, filled, 'LMT', lmtPrice, false, false);
     } else if (orderStatus === 'Cancelled') {
       entryOrderIds[oId] = null;
+      // since handleOpenOrder is not called for canceling, cleanup is needed here
+      if (company.sLots[oId]) {
+        company.sLots[oId] = null;
+        company.sLotsLength -= 1;
+      } else if (company.lLots[oId]) {
+        company.lLots[oId] = null;
+        company.lLotsLength -= 1;
+      }
+      if (company.sExLots[oId]) {
+        company.oldExpiryPosition += 1;
+        company.sExLots[oId] = null;
+      } else if (company.lExLots[oId]) {
+        company.oldExpiryPosition -= 1;
+        company.lExLots[oId] = null;
+      }
+      log('[Cancel lots]', company.symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
     }
   }
   log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
