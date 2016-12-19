@@ -1522,12 +1522,14 @@ bought 11:32:00 AM 13987
 =====
 12/16/2016 [ 15023, 15023, 15023, 15023, 15023 ] [ 11480, 11480, 11480 ]
 =====
-size: 95550
+12/19/2016 [ 15126, 15126, 15126, 15126, 15126 ] [ 11602, 11602, 11602 ]
+=====
+size: 95940
 TLT
-elapsed: 245 days 0 minutes
-gain: 5558 per day = 0.18640685526470244 %
+elapsed: 246 days 0 minutes
+gain: 5558 per day = 0.18564910382053698 %
 pGain/(pGain+nGain): 1 kelly criterion: NaN
 sigma: 0.6132331779037514 ave gain: 10.83430799220273 ratio: 17.66751764677547 # trades:  513
 max draw down:  0
-buy and hold: -456 profit factor: Infinity payoff ratio:  NaN
-pGain*ave/sigma/days: 36.993618582840064
+buy and hold: -331 profit factor: Infinity payoff ratio:  NaN
+pGain*ave/sigma/days: 36.84323801949519
