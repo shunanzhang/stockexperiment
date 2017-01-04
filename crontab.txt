@@ -1,13 +1,7 @@
 workdir=/Users/kazuyukitanimura/Documents/git/stockexperiment
-#10 6 * * 1-5 pkill node || true
-#12 6 * * 1-5 pkill redis || true
-#14 6 * * 1-5 cd ${workdir}; PATH=/usr/local/bin:$PATH /usr/local/bin/forever --minUptime 1000 --spinSleepTime 5000 ib.js 2>&1 | tee ${workdir}/ib.js.log
-#30 6 * * 1-5 cd ${workdir}; PATH=/usr/local/bin:$PATH /usr/local/bin/node hf.js true 2>&1 | tee ${workdir}/hf.js.log
-#30 13 * * 1-5 PATH=/usr/local/bin:$PATH /usr/local/bin/forever stopall
 PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH
 01 14 * * 1-5 pkill node || true
 02 14 * * 1-5 pkill redis || true
 03 14 * * 1-5 cd ${workdir}; redis-server 2>&1 | tee ${workdir}/redis.log
 05 14 * * 1-5 cd ${workdir}; node getIntraday.js SPY true 2>&1 | tee ${workdir}/spy.log
-07 14 * * 1-5 cd ${workdir}; node getIntraday.js TLT true 2>&1 | tee ${workdir}/tlt.log
 10 15 * * 1-5 cd ${workdir}; git commit -a -m "dump" && git pull --ff-only --rebase && git push && npm install
