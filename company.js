@@ -128,6 +128,7 @@ var Company = module.exports = function(symbol) {
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id
   this.tickTime = 1478840331260; // some init time in msec
+  this.lastDayLock = false;
 };
 
 Company.prototype.setCaps = function(dailyClose) {

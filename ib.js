@@ -151,6 +151,11 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
       company.low = min(price, company.low);
       company.high = max(price, company.high);
     } else if (field === 9) { // last day close
+      if (company.lastDayLock) {
+        // last day close might happen multiple times in a day in case of connection errors
+        return;
+      }
+      company.lastDayLock = true;
       company.setCaps(price);
       log(company.symbol, 'last day close', price);
       var tickInverse = company.oneTickInverse;
