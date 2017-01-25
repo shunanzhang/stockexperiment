@@ -47,6 +47,10 @@ var backtest = function() {
   var nGain = 0;
   var lTargets = [];
   var sTargets = [];
+  var hardLMinPrices = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+  var hardLMaxPrices = [999999.9, 999999.9, 999999.9, 999999.9, 999999.9];
+  var hardSMinPrices = [0.0, 0.0, 0.0];
+  var hardSMaxPrices = [999999.9, 999999.9, 999999.9];
   for (var i = 0; i < dataLen; i++) {
     var datum = data[i];
     var i_MINUTES_DAY = i % MINUTES_DAY;
@@ -128,7 +132,9 @@ var backtest = function() {
         }
       }
     }
-    if (result === BUY && (lTargets.length < 2 || (lTargets.length - sTargets.length < 2 && lTargets.length < 5))) {
+    if ((result === BUY && (newClose * OFFSET_POS > hardLMaxPrices[lTargets.length] || newClose * OFFSET_POS < hardLMinPrices[lTargets.length])) || (result === SELL && (newClose * OFFSET_NEG < hardSMinPrices[sTargets.length] || newClose * OFFSET_NEG > hardSMaxPrices[sTargets.length]))) {
+      // pass
+    } else if (result === BUY && (lTargets.length < 2 || (lTargets.length - sTargets.length < 2 && lTargets.length < 5))) {
       lTargets.push(Math.round(newClose * OFFSET_POS));
       console.log('bought', displayTime, newClose);
     } else if (result === SELL && (sTargets.length < 2 || (sTargets.length - lTargets.length < 1 && sTargets.length < 3))) {
@@ -136,6 +142,10 @@ var backtest = function() {
       console.log(' ', 'sold', displayTime, newClose);
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
+      hardLMinPrices = [0.9 * newClose, 0.9 * newClose, 0.9 * newClose, 0.9 * newClose, 0.9 * newClose];
+      hardLMaxPrices = [1.019 * newClose, 1.014 * newClose, 1.009 * newClose, 1.004 * newClose, 0.999  * newClose];
+      hardSMinPrices = [0.961 * newClose, 0.971 * newClose, 0.981 * newClose];
+      hardSMaxPrices = [1.1 * newClose, 1.1 * newClose, 1.1 * newClose];
       console.log(new Date((datum[dateColumnIndex] + 60 * 60 * 3) * 1000).toLocaleDateString(), lTargets, sTargets);
       console.log('=====');
       //console.log(gain);
