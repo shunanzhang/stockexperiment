@@ -143,7 +143,7 @@ var backtest = function() {
     }
     if (i_MINUTES_DAY === MINUTES_DAY - 1) {
       hardLMinPrices = [0.9 * newClose, 0.9 * newClose, 0.9 * newClose, 0.9 * newClose, 0.9 * newClose];
-      hardLMaxPrices = [1.019 * newClose, 1.014 * newClose, 1.009 * newClose, 1.004 * newClose, 0.999  * newClose];
+      hardLMaxPrices = [1.019 * newClose, 1.015 * newClose, 1.011 * newClose, 1.007 * newClose, 1.003  * newClose];
       hardSMinPrices = [0.961 * newClose, 0.971 * newClose, 0.981 * newClose];
       hardSMaxPrices = [1.1 * newClose, 1.1 * newClose, 1.1 * newClose];
       console.log(new Date((datum[dateColumnIndex] + 60 * 60 * 3) * 1000).toLocaleDateString(), lTargets, sTargets);
