@@ -19,6 +19,8 @@ var symbols = {};
 var entryOrderIds = {};
 var actions = {};
 
+var CLIENT_ID = 0;
+
 var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
 var companies = [new Company('ES')];
@@ -39,7 +41,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
       actions[oldId] = action;
     }
   }
-  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
+  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, 0.0, company.expiry);
   log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, company.expiry, company.tickTime);
 };
 
@@ -312,11 +314,11 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
   log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
 };
 
-var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {
+var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus, clientId) {
   var company = entryOrderIds[oId];
   if (company === undefined) { // if exiting the position
     company = symbols[symbol];
-    if (company) {
+    if (company && clientId === CLIENT_ID) {
       var order = {
         action: action,
         totalQuantity: totalQuantity,
@@ -402,7 +404,7 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
 var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 
 // Connect to the TWS client or IB Gateway
-var connected = ibClient.connect('127.0.0.1', 7496, 0);
+var connected = ibClient.connect('127.0.0.1', 7496, CLIENT_ID);
 
 // Once connected, start processing incoming and outgoing messages
 if (connected) {

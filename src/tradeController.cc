@@ -21,6 +21,8 @@ const char TradeController::HOLD[] = "HOLD";
 const double TradeController::OFFSET = 0.001;
 const double TradeController::OFFSET_POS = 1.001; // 1.0 + OFFSET
 const double TradeController::OFFSET_NEG = 0.999; // 1.0 - OFFSET
+const char TradeController::CALL[] = "CALL";
+const char TradeController::PUT[] = "PUT";
 
 Persistent<Function> TradeController::constructor;
 
@@ -123,6 +125,8 @@ void TradeController::Init(Local<Object> exports) {
   tpl->GetFunction()->Set(String::NewFromUtf8(isolate, "OFFSET"), Number::New(isolate, OFFSET));
   tpl->GetFunction()->Set(String::NewFromUtf8(isolate, "OFFSET_POS"), Number::New(isolate, OFFSET_POS));
   tpl->GetFunction()->Set(String::NewFromUtf8(isolate, "OFFSET_NEG"), Number::New(isolate, OFFSET_NEG));
+  tpl->GetFunction()->Set(String::NewFromUtf8(isolate, "CALL"), String::NewFromUtf8(isolate, CALL));
+  tpl->GetFunction()->Set(String::NewFromUtf8(isolate, "PUT"), String::NewFromUtf8(isolate, PUT));
 
   constructor.Reset(isolate, tpl->GetFunction());
   exports->Set(String::NewFromUtf8(isolate, "TradeController"), tpl->GetFunction());

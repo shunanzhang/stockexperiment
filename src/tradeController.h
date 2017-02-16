@@ -22,6 +22,8 @@ class TradeController: public node::ObjectWrap {
   const static double OFFSET;
   const static double OFFSET_POS;
   const static double OFFSET_NEG;
+  const static char CALL[];
+  const static char PUT[];
 
  private:
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);

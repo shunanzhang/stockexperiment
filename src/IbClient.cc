@@ -7,7 +7,6 @@ v8::Persistent<v8::Function> IbClient::constructor;
 
 IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new EPosixClientSocket(this)) {
 // Singleton order object
- order_.auxPrice = 0.0;
  order_.hidden = false; // false for futures, true for stocks
  order_.tif = "GTC";
  order_.outsideRth = false;
@@ -78,13 +77,14 @@ void IbClient::processMessages() {
   }
 }
 
-void IbClient::placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, const IBString &expiry) {
+void IbClient::placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, double auxPrice, const IBString &expiry) {
   Contract* contract = &(contracts[tickerId - 1]); // tickerId is 1 base
   contract->expiry = expiry;
   order_.action = action;
   order_.totalQuantity = quantity;
   order_.orderType = orderType;
   order_.lmtPrice = lmtPrice;
+  order_.auxPrice = auxPrice;
   m_pClient->placeOrder(orderId, *contract, order_);
 }
 
@@ -157,7 +157,7 @@ void IbClient::tickPrice(TickerId tickerId, TickType field, double price, int ca
 }
 
 void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order& order, const OrderState& ostate) {
-  const unsigned argc = 8;
+  const unsigned argc = 9;
   v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, orderId);
   v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate_, contract.symbol.c_str());
   v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate_, contract.expiry.c_str());
@@ -166,7 +166,8 @@ void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order&
   v8::Local<v8::Value> arg5 = v8::String::NewFromUtf8(isolate_, order.orderType.c_str());
   v8::Local<v8::Value> arg6 = v8::Number::New(isolate_, order.lmtPrice);
   v8::Local<v8::Value> arg7 = v8::String::NewFromUtf8(isolate_, ostate.status.c_str());
-  v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7};
+  v8::Local<v8::Value> arg8 = v8::Integer::New(isolate_, order.clientId);
+  v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8};
   v8::Local<v8::Function>::New(isolate_, openOrder_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
@@ -296,6 +297,14 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
       contract->primaryExchange = IBString(*primaryExchange);
       contract->currency = IBString(*currency);
       contract->expiry = IBString(*expiry);
+      if (contractObject->Has(v8::String::NewFromUtf8(isolate, "right"))) {
+        v8::String::Utf8Value right(contractObject->Get(v8::String::NewFromUtf8(isolate, "right")));
+        contract->right = IBString(*right);
+      }
+      if (contractObject->Has(v8::String::NewFromUtf8(isolate, "strike"))) {
+        double strike = contractObject->Get(v8::String::NewFromUtf8(isolate, "strike"))->NumberValue();
+        contract->strike = strike;
+      }
     }
     obj->Wrap(args.This());
     args.GetReturnValue().Set(args.This());
@@ -344,9 +353,10 @@ void IbClient::PlaceOrder(const v8::FunctionCallbackInfo<v8::Value>& args) {
   long quantity = args[3]->IntegerValue();
   v8::String::Utf8Value orderType(args[4]);
   double lmtPrice = args[5]->NumberValue();
-  v8::String::Utf8Value expiry(args[6]);
+  double auxPrice = args[6]->NumberValue();
+  v8::String::Utf8Value expiry(args[7]);
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
-  obj->placeOrder(orderId, tickerId, IBString(*action), quantity, IBString(*orderType), lmtPrice, IBString(*expiry));
+  obj->placeOrder(orderId, tickerId, IBString(*action), quantity, IBString(*orderType), lmtPrice, auxPrice, IBString(*expiry));
 }
 
 void IbClient::CancelOrder(const v8::FunctionCallbackInfo<v8::Value>& args) {
