@@ -31,6 +31,14 @@ var MIN_PRICES = {
   ES: 0.05
 };
 
+var STRIKE_INTERVALS = {
+  ES: 5
+};
+
+var ROLL_DAY_OF_WEEKS = {
+  ES: 4 // Thursday
+};
+
 var cancelId = 0;
 
 var Option = module.exports = function(symbol, right, strike) {
@@ -42,6 +50,7 @@ var Option = module.exports = function(symbol, right, strike) {
   this.oneTickInverse = (1.0 / (ONE_TICKS[symbol] || 0.01));
   this.reducedTickInverse = (1.0 / (REDUCED_TICKS[symbol] || 0.01));
   this.minPrice = MIN_PRICES[symbol] || 0.0;
+  this.strikeInterval = STRIKE_INTERVALS[symbol] || 5;
   this.tradeController = new TradeController();
   this.bid = 0.0;
   this.ask = 0.0;
@@ -54,9 +63,9 @@ var Option = module.exports = function(symbol, right, strike) {
   this.primaryExchange = EXCHANGES[symbol];
   this.currency = 'USD';
   var date = momenttz(TIMEZONE);
-  var dayOfWeekToRoll = 5;
+  var dayOfWeekToRoll = ROLL_DAY_OF_WEEKS[symbol] || 4; // default Thursday
   var diff = (dayOfWeekToRoll - date.day() + 7) % 7;
-  if (diff === 0) { // if Friday
+  if (diff === 0) {
     this.expiry = date.format('YYYYMMDD');
     this.newExpiry = date.add(7, 'day').format('YYYYMMDD');
   } else {

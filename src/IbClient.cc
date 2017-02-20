@@ -240,6 +240,34 @@ void IbClient::displayGroupUpdated(int reqId, const IBString& contractInfo) {}
 void IbClient::winError(const IBString &str, int lastError) {}
 
 /**
+ * utilities
+ */
+void IbClient::updateContract(v8::Local<v8::Object> contractObject) {
+  TickerId tickerId = contractObject->Get(v8::String::NewFromUtf8(isolate_, "cancelId"))->Uint32Value();
+  Contract* contract = &(contracts[tickerId - 1]); // tickerId is 1 base
+  v8::String::Utf8Value symbol(contractObject->Get(v8::String::NewFromUtf8(isolate_, "symbol")));
+  v8::String::Utf8Value secType(contractObject->Get(v8::String::NewFromUtf8(isolate_, "secType")));
+  v8::String::Utf8Value exchange(contractObject->Get(v8::String::NewFromUtf8(isolate_, "exchange")));
+  v8::String::Utf8Value primaryExchange(contractObject->Get(v8::String::NewFromUtf8(isolate_, "primaryExchange")));
+  v8::String::Utf8Value currency(contractObject->Get(v8::String::NewFromUtf8(isolate_, "currency")));
+  v8::String::Utf8Value expiry(contractObject->Get(v8::String::NewFromUtf8(isolate_, "expiry")));
+  contract->symbol = IBString(*symbol);
+  contract->secType = IBString(*secType);
+  contract->exchange = IBString(*exchange);
+  contract->primaryExchange = IBString(*primaryExchange);
+  contract->currency = IBString(*currency);
+  contract->expiry = IBString(*expiry);
+  if (contractObject->Has(v8::String::NewFromUtf8(isolate_, "right"))) {
+    v8::String::Utf8Value right(contractObject->Get(v8::String::NewFromUtf8(isolate_, "right")));
+    contract->right = IBString(*right);
+  }
+  if (contractObject->Has(v8::String::NewFromUtf8(isolate_, "strike"))) {
+    double strike = contractObject->Get(v8::String::NewFromUtf8(isolate_, "strike"))->NumberValue();
+    contract->strike = strike;
+  }
+}
+
+/**
  * v8
  */
 void IbClient::Init(v8::Local<v8::Object> exports) {
@@ -251,6 +279,7 @@ void IbClient::Init(v8::Local<v8::Object> exports) {
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
   // Prototype
+  NODE_SET_PROTOTYPE_METHOD(tpl, "updateContract", UpdateContract);
   NODE_SET_PROTOTYPE_METHOD(tpl, "processMessages", ProcessMessages);
   NODE_SET_PROTOTYPE_METHOD(tpl, "connect", Connect);
   NODE_SET_PROTOTYPE_METHOD(tpl, "disconnect", Disconnect);
@@ -283,28 +312,8 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     obj->realtimeBar_.Reset(isolate, v8::Local<v8::Function>::Cast(args[7]));
     obj->connectionClosed_.Reset(isolate, v8::Local<v8::Function>::Cast(args[8]));
     for (uint32_t i = 0; i < contractLength; i++) {
-      Contract* contract = &(obj->contracts[i]);
       v8::Local<v8::Object> contractObject = contractArray->Get(i)->ToObject(isolate);
-      v8::String::Utf8Value symbol(contractObject->Get(v8::String::NewFromUtf8(isolate, "symbol")));
-      v8::String::Utf8Value secType(contractObject->Get(v8::String::NewFromUtf8(isolate, "secType")));
-      v8::String::Utf8Value exchange(contractObject->Get(v8::String::NewFromUtf8(isolate, "exchange")));
-      v8::String::Utf8Value primaryExchange(contractObject->Get(v8::String::NewFromUtf8(isolate, "primaryExchange")));
-      v8::String::Utf8Value currency(contractObject->Get(v8::String::NewFromUtf8(isolate, "currency")));
-      v8::String::Utf8Value expiry(contractObject->Get(v8::String::NewFromUtf8(isolate, "expiry")));
-      contract->symbol = IBString(*symbol);
-      contract->secType = IBString(*secType);
-      contract->exchange = IBString(*exchange);
-      contract->primaryExchange = IBString(*primaryExchange);
-      contract->currency = IBString(*currency);
-      contract->expiry = IBString(*expiry);
-      if (contractObject->Has(v8::String::NewFromUtf8(isolate, "right"))) {
-        v8::String::Utf8Value right(contractObject->Get(v8::String::NewFromUtf8(isolate, "right")));
-        contract->right = IBString(*right);
-      }
-      if (contractObject->Has(v8::String::NewFromUtf8(isolate, "strike"))) {
-        double strike = contractObject->Get(v8::String::NewFromUtf8(isolate, "strike"))->NumberValue();
-        contract->strike = strike;
-      }
+      obj->updateContract(contractObject);
     }
     obj->Wrap(args.This());
     args.GetReturnValue().Set(args.This());
@@ -317,6 +326,12 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Local<v8::Object> result = cons->NewInstance(context, argc, argv).ToLocalChecked();
     args.GetReturnValue().Set(result);
   }
+}
+
+void IbClient::UpdateContract(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
+  v8::Local<v8::Object> contractObject = args[0]->ToObject(obj->isolate_);
+  obj->updateContract(contractObject);
 }
 
 void IbClient::ProcessMessages(const v8::FunctionCallbackInfo<v8::Value>& args) {

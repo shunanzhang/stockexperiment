@@ -36,6 +36,9 @@ public:
   void realtimeBar(TickerId reqId, long time, double open, double high, double low, double close, long volume, double wap, int count);
   void connectionClosed();
 
+  // utilities
+  void updateContract(v8::Local<v8::Object> contractObject);
+
   // placeholders
   void tickSize(TickerId tickerId, TickType field, int size);
   void tickOptionComputation(TickerId tickerId, TickType tickType, double impliedVol, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice);
@@ -96,6 +99,7 @@ private:
   v8::Isolate* isolate_;
   int32_t hourOffset_;
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void UpdateContract(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void ProcessMessages(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void Connect(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void Disconnect(const v8::FunctionCallbackInfo<v8::Value>& args);

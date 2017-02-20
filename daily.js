@@ -7,6 +7,7 @@ var SELL = TradeController.SELL;
 var HOLD = TradeController.HOLD;
 var CALL = TradeController.CALL;
 var PUT = TradeController.PUT;
+var Company = require('./company');
 var Option = require('./option');
 var max = Math.max;
 var min = Math.min;
@@ -24,7 +25,9 @@ var STOP_AMOUNT = 4.0; // TODO
 
 var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
-var companies = [new Option('ES', CALL, 2350)];
+var underlying = new Company('ES');
+var companies = [underlying];
+//var companies = [new Option('ES', CALL, 2350)];
 
 // Interactive Broker requires that you use orderId for every new order
 // inputted. The orderId is incremented everytime you submit an order.
@@ -43,7 +46,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
     }
   }
   ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, auxPrice, company.expiry);
-  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, auxPrice, company.expiry, company.tickTime);
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, company.secType, action, quantity, orderType, lmtPrice, auxPrice, company.expiry, company.tickTime);
 };
 
 var handleValidOrderId = function(oId) {
@@ -96,7 +99,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
         return;
       }
       company.lastDayLock = true;
-      log(company.symbol, company.right, company.strike, 'last day close', price);
+      log(company.symbol, company.secType, company.right, company.strike, 'last day close', price);
       log(company);
     } else if (canAutoExecute) {
       var action = actions[company.orderId];
@@ -112,7 +115,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
             company.tickTime = tickTime;
           }
         }
-        log('Bid:', company.symbol, company.right, company.strike, price);
+        log('Bid:', company.symbol, company.secType, company.right, company.strike, price);
       } else if (field === 2) { // ask price
         var ask = company.ask;
         company.ask = price;
@@ -123,7 +126,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
             company.tickTime = tickTime;
           }
         }
-        log('Ask:', company.symbol, company.right, company.strike, price);
+        log('Ask:', company.symbol, company.secType, company.right, company.strike, price);
       }
     }
   }
@@ -159,7 +162,7 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
         company.lLots[oId] = null;
         company.lLotsLength -= 1;
       }
-      log('[Cancel lots]', company.symbol, company.lLotsLength, company.sLotsLength);
+      log('[Cancel lots]', company.symbol, company.secType, company.lLotsLength, company.sLotsLength);
     }
   }
   log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
@@ -190,7 +193,7 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
             company.lLotsLength -= 1;
           }
         }
-        log('[Delete lots]', symbol, company.lLotsLength, company.sLotsLength);
+        log('[Delete lots]', symbol, company.secType, company.lLotsLength, company.sLotsLength);
       } else if (orderStatus !== 'Inactive') {
         if (action === BUY) {
           if (!sLots[oId]) {
@@ -203,11 +206,11 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
             company.lLotsLength += 1;
           }
         }
-        log('[Append lots]', symbol, company.lLotsLength, company.sLotsLength);
+        log('[Append lots]', symbol, company.secType, company.lLotsLength, company.sLotsLength);
       }
     }
   }
-  log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
+  log('OpenOrder:', oId, symbol, company.secType, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
 var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
