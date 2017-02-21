@@ -7,6 +7,7 @@ v8::Persistent<v8::Function> IbClient::constructor;
 
 IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new EPosixClientSocket(this)) {
 // Singleton order object
+ order_.auxPrice = 0.0;
  order_.hidden = false; // false for futures, true for stocks
  order_.tif = "GTC";
  order_.outsideRth = false;
@@ -77,14 +78,13 @@ void IbClient::processMessages() {
   }
 }
 
-void IbClient::placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, double auxPrice, const IBString &expiry) {
+void IbClient::placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, const IBString &expiry) {
   Contract* contract = &(contracts[tickerId - 1]); // tickerId is 1 base
   contract->expiry = expiry;
   order_.action = action;
   order_.totalQuantity = quantity;
   order_.orderType = orderType;
   order_.lmtPrice = lmtPrice;
-  order_.auxPrice = auxPrice;
   m_pClient->placeOrder(orderId, *contract, order_);
 }
 
@@ -368,10 +368,9 @@ void IbClient::PlaceOrder(const v8::FunctionCallbackInfo<v8::Value>& args) {
   long quantity = args[3]->IntegerValue();
   v8::String::Utf8Value orderType(args[4]);
   double lmtPrice = args[5]->NumberValue();
-  double auxPrice = args[6]->NumberValue();
-  v8::String::Utf8Value expiry(args[7]);
+  v8::String::Utf8Value expiry(args[6]);
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
-  obj->placeOrder(orderId, tickerId, IBString(*action), quantity, IBString(*orderType), lmtPrice, auxPrice, IBString(*expiry));
+  obj->placeOrder(orderId, tickerId, IBString(*action), quantity, IBString(*orderType), lmtPrice, IBString(*expiry));
 }
 
 void IbClient::CancelOrder(const v8::FunctionCallbackInfo<v8::Value>& args) {

@@ -19,7 +19,7 @@ public:
   void processMessages();
   bool connect(const char * host, unsigned int port, int clientId = 0);
   void disconnect() const;
-  void placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, double auxPrice, const IBString &expiry);
+  void placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, const IBString &expiry);
   void cancelOrder(OrderId orderId);
 
   void reqMktData(TickerId tickerId, const IBString &genericTicks, bool snapshot);

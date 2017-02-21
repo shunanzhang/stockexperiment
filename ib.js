@@ -41,7 +41,7 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
       actions[oldId] = action;
     }
   }
-  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, 0.0, company.expiry);
+  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
   log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, action, quantity, orderType, lmtPrice, company.expiry, company.tickTime);
 };
 

@@ -21,7 +21,6 @@ var entryOrderIds = {};
 var actions = {};
 
 var CLIENT_ID = 2;
-var STOP_AMOUNT = 4.0; // TODO
 
 var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
@@ -34,7 +33,7 @@ var companies = [underlying];
 // Make sure you keep track of this.
 var orderId = -1;
 
-var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxPrice, entry, modify) {
+var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entry, modify) {
   var oldId = -1;
   if (modify) {
     oldId = company.orderId;
@@ -45,8 +44,8 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, auxP
       actions[oldId] = action;
     }
   }
-  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, auxPrice, company.expiry);
-  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, company.secType, action, quantity, orderType, lmtPrice, auxPrice, company.expiry, company.tickTime);
+  ibClient.placeOrder(oldId, company.cancelId, action, quantity, orderType, lmtPrice, company.expiry);
+  log((modify ? 'Modifying' : 'Placing'), 'order for', company.symbol, company.secType, action, quantity, orderType, lmtPrice, company.expiry, company.tickTime);
 };
 
 var handleValidOrderId = function(oId) {
@@ -111,7 +110,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
         if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid) {
           tickTime = now();
           if (tickTime > prevTickTime) { // wait more than 2 sec
-            placeMyOrder(company, action, company.onePosition, 'LMT', price, 0.0, false, true); // modify order
+            placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
             company.tickTime = tickTime;
           }
         }
@@ -122,7 +121,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
         if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask) {
           tickTime = now();
           if (tickTime > prevTickTime) { // wait more than 2 sec
-            placeMyOrder(company, action, company.onePosition, 'LMT', price, 0.0, false, true); // modify order
+            placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
             company.tickTime = tickTime;
           }
         }
@@ -140,18 +139,6 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       cancelPrevOrder(oId);
     } else if (orderStatus === 'Filled') {
       entryOrderIds[oId] = null;
-      var isSell = actions[oId] === BUY;
-      var action = isSell ? SELL : BUY;
-      var auxPrice = avgFillPrice + (isSell ? - STOP_AMOUNT : STOP_AMOUNT);
-      var tickInverse = company.oneTickInverse;
-      var reducedTickInverse = company.reducedTickInverse;
-      if (auxPrice > 5.0) {
-        auxPrice = round(auxPrice * tickInverse) / tickInverse; // required to place a correct order
-      } else {
-        auxPrice = round(auxPrice * reducedTickInverse) / reducedTickInverse;
-      }
-      auxPrice = max(auxPrice, company.minPrice);
-      placeMyOrder(company, action, filled, 'STP LMT', auxPrice, auxPrice, false, false);
     } else if (orderStatus === 'Cancelled') {
       entryOrderIds[oId] = null;
       // since handleOpenOrder is not called for canceling, cleanup is needed here

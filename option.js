@@ -63,14 +63,11 @@ var Option = module.exports = function(symbol, right, strike) {
   this.primaryExchange = EXCHANGES[symbol];
   this.currency = 'USD';
   var date = momenttz(TIMEZONE);
+  var dayOfWeek = date.day();
   var dayOfWeekToRoll = ROLL_DAY_OF_WEEKS[symbol] || 4; // default Thursday
-  var diff = (dayOfWeekToRoll - date.day() + 7) % 7;
-  if (diff === 0) {
-    this.expiry = date.format('YYYYMMDD');
-    this.newExpiry = date.add(7, 'day').format('YYYYMMDD');
-  } else {
-    this.newExpiry = this.expiry = date.add(diff, 'day').format('YYYYMMDD');
-  }
+  var diffToFriday = (5 - dayOfWeek + 7) % 7; // diff to next coming up Friday
+  this.expiry = date.add(diffToFriday + 7 * (dayOfWeek > dayOfWeekToRoll), 'day').format('YYYYMMDD');
+  this.newExpiry = date.add(diffToFriday + 7 * (dayOfWeek >= dayOfWeekToRoll), 'day').format('YYYYMMDD');
   this.cancelId = ++cancelId;
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id
