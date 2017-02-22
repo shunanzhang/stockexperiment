@@ -330,7 +330,11 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     obj->connectionClosed_.Reset(isolate, v8::Local<v8::Function>::Cast(args[8]));
     obj->position_.Reset(isolate, v8::Local<v8::Function>::Cast(args[9]));
     for (uint32_t i = 0; i < contractLength; i++) {
-      v8::Local<v8::Object> contractObject = contractArray->Get(i)->ToObject(isolate);
+      v8::Local<v8::Value> contractValue = contractArray->Get(i);
+      if (contractValue->IsUndefined() || contractValue->IsNull()) {
+        continue;
+      }
+      v8::Local<v8::Object> contractObject = contractValue->ToObject(isolate);
       obj->updateContract(contractObject);
     }
     obj->Wrap(args.This());

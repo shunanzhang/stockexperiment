@@ -12,6 +12,8 @@ var Option = require('./option');
 var max = Math.max;
 var min = Math.min;
 var round = Math.round;
+var ceil = Math.ceil;
+var floor = Math.floor;
 var now = Date.now;
 var log = console.log;
 
@@ -21,17 +23,67 @@ var entryOrderIds = {};
 var actions = {};
 
 var CLIENT_ID = 2;
+var LMT = 'LMT';
 
 var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
-var underlying = new Company('ES');
-var companies = [underlying];
-//var companies = [new Option('ES', CALL, 2350)];
+var base = new Company('ES');
+var prevCall = null;
+var prevPut = null;
+var nextCall = null;
+var nextPut = null;
 
 // Interactive Broker requires that you use orderId for every new order
 // inputted. The orderId is incremented everytime you submit an order.
 // Make sure you keep track of this.
 var orderId = -1;
+
+var getCallStrike = function(strikeIntervalInverse) {
+  return ceil((base.ask + 0.001) * strikeIntervalInverse) / strikeIntervalInverse;
+};
+
+var getPutStrike = function(strikeIntervalInverse, strikeInterval) {
+  return floor(base.ask * strikeIntervalInverse) / strikeIntervalInverse - 4 * strikeInterval;
+};
+
+var roundPremium = function(bid, ask, oneTickInverse, reduceThreshold, reducedTickInverse, minPrice) {
+  var premium = (bid + ask) / 2.0;
+  var tickInverse = (premium > reduceThreshold) ? oneTickInverse : reducedTickInverse;
+  premium = round(premium * tickInverse) / tickInverse;
+  return max(premium, minPrice);
+};
+
+var reqPositionsCalled = false;
+var checkPrice = function(cancelId) {
+  var lmtPrice = 0.0;
+  if (cancelId === base.cancelId) {
+    if (!reqPositionsCalled && base.ask) {
+      reqPositionsCalled = true;
+      ibClient.reqPositions();
+    }
+  } else if (cancelId === prevCall.cancelId) {
+    if (prevCall.bid && prevCall.ask) {
+      // TODO check previously submitted closing order
+      lmtPrice = roundPremium(prevCall.bid, prevCall.ask, prevCall.oneTickInverse, prevCall.reduceThreshold, prevCall.reducedTickInverse, prevCall.minPrice);
+      placeMyOrder(prevCall, SELL, prevCall.onePosition, LMT, lmtPrice, true, false);
+    }
+  } else if (cancelId === prevPut.cancelId) {
+    if (prevPut.bid && prevPut.ask) {
+      // TODO check previously submitted closing order
+      lmtPrice = roundPremium(prevPut.bid, prevPut.ask, prevPut.oneTickInverse, prevPut.reduceThreshold, prevPut.reducedTickInverse, prevPut.minPrice);
+      placeMyOrder(prevPut, SELL, prevPut.onePosition, LMT, lmtPrice, true, false);
+    }
+  }
+};
+
+var registerCompany = function(company) {
+  if (!cancelIds[company.cancelId]) {
+    cancelIds[company.cancelId] = company;
+    symbols[company.symbol] = company;
+    ibClient.updateContract(company);
+    ibClient.reqMktData(company.cancelId, '', false);
+  }
+};
 
 var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entry, modify) {
   var oldId = -1;
@@ -49,21 +101,11 @@ var placeMyOrder = function(company, action, quantity, orderType, lmtPrice, entr
 };
 
 var handleValidOrderId = function(oId) {
-  var company;
-  for (var i = companies.length; i--;) {
-    company = companies[i];
-    cancelIds[company.cancelId] = company;
-    symbols[company.symbol] = company;
-  }
   orderId = oId;
   log('next order Id is', oId);
+  registerCompany(base);
   ibClient.reqAllOpenOrders();
   //ibClient.reqAutoOpenOrders(true);
-  ibClient.reqPositions();
-  for (i = companies.length; i--;) {
-    company = companies[i];
-    ibClient.reqMktData(company.cancelId, '', false);
-  }
 };
 
 var cancelPrevOrder = function(prevOrderId) {
@@ -92,7 +134,7 @@ var handleRealTimeBar = function(reqId, barOpen, barHigh, barLow, barClose, volu
 
 var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
   var company = cancelIds[tickerId];
-  if (company && price) {
+  if (company && price > 0.0) {
     if (field === 9) { // last day close
       if (company.lastDayLock) {
         // last day close might happen multiple times in a day in case of connection errors
@@ -105,13 +147,15 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
       var action = actions[company.orderId];
       var prevTickTime = company.tickTime + 1699;
       var tickTime = 1478840331260; // some init time in msec
+      var lmtPrice = 0.0;
       if (field === 1) { // bid price
         var bid = company.bid;
         company.bid = price;
         if (company.lastOrderStatus === 'Submitted' && action === BUY && bid < price && bid) {
           tickTime = now();
           if (tickTime > prevTickTime) { // wait more than 2 sec
-            placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
+            lmtPrice = roundPremium(price, company.ask, company.oneTickInverse, company.reduceThreshold, company.reducedTickInverse, company.minPrice);
+            placeMyOrder(company, action, company.onePosition, LMT, lmtPrice, false, true); // modify order
             company.tickTime = tickTime;
           }
         }
@@ -122,12 +166,14 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
         if (company.lastOrderStatus === 'Submitted' && action === SELL && ask > price && ask) {
           tickTime = now();
           if (tickTime > prevTickTime) { // wait more than 2 sec
-            placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
+            lmtPrice = roundPremium(company.bid, price, company.oneTickInverse, company.reduceThreshold, company.reducedTickInverse, company.minPrice);
+            placeMyOrder(company, action, company.onePosition, LMT, lmtPrice, false, true); // modify order
             company.tickTime = tickTime;
           }
         }
         log('Ask:', company.symbol, company.secType, company.right, company.strike, price);
       }
+      checkPrice(tickerId);
     }
   }
 };
@@ -201,9 +247,38 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
   log('OpenOrder:', oId, symbol, company.secType, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-var handlePosition = function(symbol, secType, expiry, right, strike, position, avgCost){};
+var handlePosition = function(symbol, secType, expiry, right, strike, position, avgCost){
+  var newStrike = 0.0;
+  if (right === CALL) {
+    prevCall = new Option('ES', CALL, strike);
+    newStrike = getCallStrike(prevCall.strikeIntervalInverse);
+    if (strike !== newStrike) {
+      registerCompany(prevCall);
+    } else if (position > 0) {
+      prevCall.done = true;
+      nextCall.done = true;
+    }
+  } else if (right === PUT) {
+    prevPut = new Option('ES', PUT, strike);
+    newStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
+    if (strike !== newStrike) {
+      registerCompany(prevPut);
+    } else if (position > 0) {
+      prevPut.done = true;
+      nextPut.done = true;
+    }
+  }
+  checkDone();
+};
 
-var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed, handlePosition);
+var checkDone = function() {
+  if (prevCall.done && prevPut.done && nextCall.done && nextPut.done) {
+    log('Succeeded');
+    process.exit(0);
+  }
+};
+
+var ibClient = new IbClient(new Array(5), hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed, handlePosition);
 
 // Connect to the TWS client or IB Gateway
 var connected = ibClient.connect('127.0.0.1', 7496, CLIENT_ID);

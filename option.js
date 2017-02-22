@@ -23,11 +23,11 @@ var ONE_TICKS = {
   ES: 0.25
 };
 
-var REDUCED_TICKS = {
-  ES: 0.05
+var REDUCE_THRESHOLD = {
+  ES: 5.0
 };
 
-var MIN_PRICES = {
+var REDUCED_TICKS = {
   ES: 0.05
 };
 
@@ -35,11 +35,15 @@ var STRIKE_INTERVALS = {
   ES: 5
 };
 
+var MIN_PRICES = {
+  ES: 0.05
+};
+
 var ROLL_DAY_OF_WEEKS = {
   ES: 4 // Thursday
 };
 
-var cancelId = 0;
+var cancelId = 1;
 
 var Option = module.exports = function(symbol, right, strike) {
   if (! (this instanceof Option)) { // enforcing new
@@ -48,9 +52,11 @@ var Option = module.exports = function(symbol, right, strike) {
   this.symbol = symbol;
   this.onePosition = ONE_POSITIONS[symbol] || 0;
   this.oneTickInverse = (1.0 / (ONE_TICKS[symbol] || 0.01));
+  this.reduceThreshold = REDUCE_THRESHOLD[symbol] || 5.0;
   this.reducedTickInverse = (1.0 / (REDUCED_TICKS[symbol] || 0.01));
-  this.minPrice = MIN_PRICES[symbol] || 0.0;
   this.strikeInterval = STRIKE_INTERVALS[symbol] || 5;
+  this.strikeIntervalInverse = (1.0 / (STRIKE_INTERVALS[symbol] || 5.0));
+  this.minPrice = MIN_PRICES[symbol] || 0.05;
   this.tradeController = new TradeController();
   this.bid = 0.0;
   this.ask = 0.0;
@@ -75,4 +81,5 @@ var Option = module.exports = function(symbol, right, strike) {
   this.lastDayLock = false;
   this.right = right; // CALL or PUT
   this.strike = strike;
+  this.done = false;
 };
