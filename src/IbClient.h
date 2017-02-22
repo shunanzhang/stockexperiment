@@ -26,6 +26,7 @@ public:
   void reqAutoOpenOrders(bool bAutoBind);
   void reqAllOpenOrders();
   void reqRealTimeBars(TickerId tickerId, const IBString &whatToShow, bool useRTH);
+  void reqPositions();
 
   // events
   void tickPrice(TickerId tickerId, TickType field, double price, int canAutoExecute);
@@ -35,6 +36,7 @@ public:
   void error(const int id, const int errorCode, const IBString errorString);
   void realtimeBar(TickerId reqId, long time, double open, double high, double low, double close, long volume, double wap, int count);
   void connectionClosed();
+  void position(const IBString& account, const Contract& contract, int position, double avgCost);
 
   // utilities
   void updateContract(v8::Local<v8::Object> contractObject);
@@ -70,7 +72,6 @@ public:
   void tickSnapshotEnd(int reqId);
   void marketDataType(TickerId reqId, int marketDataType);
   void commissionReport(const CommissionReport& commissionReport);
-  void position(const IBString& account, const Contract& contract, int position, double avgCost);
   void positionEnd();
   void accountSummary(int reqId, const IBString& account, const IBString& tag, const IBString& value, const IBString& curency);
   void accountSummaryEnd(int reqId);
@@ -96,6 +97,7 @@ private:
   v8::Persistent<v8::Function> openOrder_;
   v8::Persistent<v8::Function> realtimeBar_;
   v8::Persistent<v8::Function> connectionClosed_;
+  v8::Persistent<v8::Function> position_;
   v8::Isolate* isolate_;
   int32_t hourOffset_;
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -109,6 +111,7 @@ private:
   static void ReqAutoOpenOrders(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void ReqAllOpenOrders(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void ReqRealTimeBars(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void ReqPositions(const v8::FunctionCallbackInfo<v8::Value>& args);
   static v8::Persistent<v8::Function> constructor;
 };
 

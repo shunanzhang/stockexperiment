@@ -59,6 +59,7 @@ var handleValidOrderId = function(oId) {
   log('next order Id is', oId);
   ibClient.reqAllOpenOrders();
   //ibClient.reqAutoOpenOrders(true);
+  ibClient.reqPositions();
   for (i = companies.length; i--;) {
     company = companies[i];
     ibClient.reqMktData(company.cancelId, '', false);
@@ -200,7 +201,9 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
   log('OpenOrder:', oId, symbol, company.secType, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
+var handlePosition = function(symbol, secType, expiry, right, strike, position, avgCost){};
+
+var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed, handlePosition);
 
 // Connect to the TWS client or IB Gateway
 var connected = ibClient.connect('127.0.0.1', 7496, CLIENT_ID);

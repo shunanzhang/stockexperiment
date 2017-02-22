@@ -111,6 +111,10 @@ void IbClient::reqRealTimeBars(TickerId tickerId, const IBString &whatToShow, bo
   m_pClient->reqRealTimeBars(tickerId, contracts[tickerId - 1], 5, whatToShow, useRTH, realTimeBarsOptions);
 }
 
+void IbClient::reqPositions() {
+  m_pClient->reqPositions();
+}
+
 /**
  * events
  */
@@ -196,6 +200,19 @@ void IbClient::connectionClosed() {
   v8::Local<v8::Function>::New(isolate_, connectionClosed_)->Call(isolate_->GetCurrentContext()->Global(), 0, NULL);
 }
 
+void IbClient::position(const IBString& account, const Contract& contract, int position, double avgCost) {
+  const unsigned argc = 7;
+  v8::Local<v8::Value> arg0 = v8::String::NewFromUtf8(isolate_, contract.symbol.c_str());
+  v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate_, contract.secType.c_str());
+  v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate_, contract.expiry.c_str());
+  v8::Local<v8::Value> arg3 = v8::String::NewFromUtf8(isolate_, contract.right.c_str());
+  v8::Local<v8::Value> arg4 = v8::Number::New(isolate_, contract.strike);
+  v8::Local<v8::Value> arg5 = v8::Int32::New(isolate_, position);
+  v8::Local<v8::Value> arg6 = v8::Number::New(isolate_, avgCost);
+  v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6};
+  v8::Local<v8::Function>::New(isolate_, position_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
+}
+
 /**
  * placeholders
  */
@@ -229,7 +246,6 @@ void IbClient::deltaNeutralValidation(int reqId, const UnderComp& underComp) {}
 void IbClient::tickSnapshotEnd(int reqId) {}
 void IbClient::marketDataType(TickerId reqId, int marketDataType) {}
 void IbClient::commissionReport(const CommissionReport& commissionReport) {}
-void IbClient::position(const IBString& account, const Contract& contract, int position, double avgCost) {}
 void IbClient::positionEnd() {}
 void IbClient::accountSummary(int reqId, const IBString& account, const IBString& tag, const IBString& value, const IBString& curency) {}
 void IbClient::accountSummaryEnd(int reqId) {}
@@ -289,6 +305,7 @@ void IbClient::Init(v8::Local<v8::Object> exports) {
   NODE_SET_PROTOTYPE_METHOD(tpl, "reqAutoOpenOrders", ReqAutoOpenOrders);
   NODE_SET_PROTOTYPE_METHOD(tpl, "reqAllOpenOrders", ReqAllOpenOrders);
   NODE_SET_PROTOTYPE_METHOD(tpl, "reqRealTimeBars", ReqRealTimeBars);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "reqPositions", ReqPositions);
 
   constructor.Reset(isolate, tpl->GetFunction());
   exports->Set(v8::String::NewFromUtf8(isolate, "IbClient"), tpl->GetFunction());
@@ -311,6 +328,7 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     obj->openOrder_.Reset(isolate, v8::Local<v8::Function>::Cast(args[6]));
     obj->realtimeBar_.Reset(isolate, v8::Local<v8::Function>::Cast(args[7]));
     obj->connectionClosed_.Reset(isolate, v8::Local<v8::Function>::Cast(args[8]));
+    obj->position_.Reset(isolate, v8::Local<v8::Function>::Cast(args[9]));
     for (uint32_t i = 0; i < contractLength; i++) {
       v8::Local<v8::Object> contractObject = contractArray->Get(i)->ToObject(isolate);
       obj->updateContract(contractObject);
@@ -319,8 +337,8 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     args.GetReturnValue().Set(args.This());
   } else {
     // Invoked as plain function `MyObject(...)`, turn into construct call.
-    const int argc = 8;
-    v8::Local<v8::Value> argv[argc] = {args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]};
+    const int argc = 10;
+    v8::Local<v8::Value> argv[argc] = {args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]};
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
     v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
     v8::Local<v8::Object> result = cons->NewInstance(context, argc, argv).ToLocalChecked();
@@ -404,4 +422,9 @@ void IbClient::ReqRealTimeBars(const v8::FunctionCallbackInfo<v8::Value>& args) 
   bool useRTH = args[2]->BooleanValue();
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
   obj->reqRealTimeBars(tickerId, IBString(*whatToShow), useRTH);
+}
+
+void IbClient::ReqPositions(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
+  obj->reqPositions();
 }

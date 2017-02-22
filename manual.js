@@ -57,8 +57,9 @@ var handleTickPrice = function() {};
 var handleOpenOrder = function() {};
 var handleRealTimeBar = function() {};
 var handleConnectionClosed = function() {};
+var handlePosition = function() {};
 
-var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
+var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed, handlePosition);
 
 // Connect to the TWS client or IB Gateway
 var connected = ibClient.connect('127.0.0.1', 7496, (process.argv[9] === undefined) ? 1 : parseInt(process.argv[9], 10));
