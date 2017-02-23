@@ -18,7 +18,6 @@ var now = Date.now;
 var log = console.log;
 
 var cancelIds = {};
-var symbols = {};
 var entryOrderIds = {};
 var actions = {};
 
@@ -62,16 +61,28 @@ var checkPrice = function(cancelId) {
       ibClient.reqPositions();
     }
   } else if (cancelId === prevCall.cancelId) {
-    if (prevCall.bid && prevCall.ask) {
-      // TODO check previously submitted closing order
+    if (prevCall.bid && prevCall.ask && !prevCall.pending) {
+      prevCall.pending = true;
       lmtPrice = roundPremium(prevCall.bid, prevCall.ask, prevCall.oneTickInverse, prevCall.reduceThreshold, prevCall.reducedTickInverse, prevCall.minPrice);
       placeMyOrder(prevCall, SELL, prevCall.onePosition, LMT, lmtPrice, true, false);
     }
   } else if (cancelId === prevPut.cancelId) {
-    if (prevPut.bid && prevPut.ask) {
-      // TODO check previously submitted closing order
+    if (prevPut.bid && prevPut.ask && !prevPut.pending) {
+      prevPut.pending = true;
       lmtPrice = roundPremium(prevPut.bid, prevPut.ask, prevPut.oneTickInverse, prevPut.reduceThreshold, prevPut.reducedTickInverse, prevPut.minPrice);
       placeMyOrder(prevPut, SELL, prevPut.onePosition, LMT, lmtPrice, true, false);
+    }
+  } else if (cancelId === nextCall.cancelId) {
+    if (nextCall.bid && nextCall.ask && !nextCall.pending) {
+      nextCall.pending = true;
+      lmtPrice = roundPremium(nextCall.bid, nextCall.ask, nextCall.oneTickInverse, nextCall.reduceThreshold, nextCall.reducedTickInverse, nextCall.minPrice);
+      placeMyOrder(nextCall, BUY, nextCall.onePosition, LMT, lmtPrice, true, false);
+    }
+  } else if (cancelId === nextPut.cancelId) {
+    if (nextPut.bid && nextPut.ask && !nextPut.pending) {
+      nextPut.pending = true;
+      lmtPrice = roundPremium(nextPut.bid, nextPut.ask, nextPut.oneTickInverse, nextPut.reduceThreshold, nextPut.reducedTickInverse, nextPut.minPrice);
+      placeMyOrder(nextPut, BUY, nextPut.onePosition, LMT, lmtPrice, true, false);
     }
   }
 };
@@ -79,7 +90,6 @@ var checkPrice = function(cancelId) {
 var registerCompany = function(company) {
   if (!cancelIds[company.cancelId]) {
     cancelIds[company.cancelId] = company;
-    symbols[company.symbol] = company;
     ibClient.updateContract(company);
     ibClient.reqMktData(company.cancelId, '', false);
   }
@@ -188,84 +198,70 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       entryOrderIds[oId] = null;
     } else if (orderStatus === 'Cancelled') {
       entryOrderIds[oId] = null;
-      // since handleOpenOrder is not called for canceling, cleanup is needed here
-      if (company.sLots[oId]) {
-        company.sLots[oId] = null;
-        company.sLotsLength -= 1;
-      } else if (company.lLots[oId]) {
-        company.lLots[oId] = null;
-        company.lLotsLength -= 1;
-      }
-      log('[Cancel lots]', company.symbol, company.secType, company.lLotsLength, company.sLotsLength);
     }
   }
   log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
 };
 
 var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus, clientId) {
-  var company = entryOrderIds[oId];
-  if (company === undefined) { // if exiting the position
-    company = symbols[symbol];
-    if (company && clientId === CLIENT_ID) {
-      var order = {
-        action: action,
-        totalQuantity: totalQuantity,
-        orderType: orderType,
-        lmtPrice: lmtPrice
-      };
-      var sLots = company.sLots;
-      var lLots = company.lLots;
-      if (orderStatus === 'Filled' || orderStatus === 'Cancelled') { // in reality, Cancelled is never called
-        if (action === BUY) {
-          if (sLots[oId]) {
-            sLots[oId] = null;
-            company.sLotsLength -= 1;
-          }
-        } else if (action === SELL) {
-          if (lLots[oId]) {
-            lLots[oId] = null;
-            company.lLotsLength -= 1;
-          }
-        }
-        log('[Delete lots]', symbol, company.secType, company.lLotsLength, company.sLotsLength);
-      } else if (orderStatus !== 'Inactive') {
-        if (action === BUY) {
-          if (!sLots[oId]) {
-            sLots[oId] = order;
-            company.sLotsLength += 1;
-          }
-        } else if (action === SELL) {
-          if (!lLots[oId]) {
-            lLots[oId] = order;
-            company.lLotsLength += 1;
-          }
-        }
-        log('[Append lots]', symbol, company.secType, company.lLotsLength, company.sLotsLength);
-      }
-    }
-  }
   log('OpenOrder:', oId, symbol, company.secType, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
 };
 
-var handlePosition = function(symbol, secType, expiry, right, strike, position, avgCost){
+var handlePosition = function(symbol, secType, expiry, right, strike, position, avgCost) {
+  if (position < 0 && strike) {
+    log(Date(), '[UnexpectedPosition]', symbol, secType, expiry, right, strike, position, avgCost);
+    process.exit(1);
+  }
   var newStrike = 0.0;
   if (right === CALL) {
-    prevCall = new Option('ES', CALL, strike);
-    newStrike = getCallStrike(prevCall.strikeIntervalInverse);
-    if (strike !== newStrike) {
-      registerCompany(prevCall);
-    } else if (position > 0) {
+    if (nextCall) {
+      if (position > 0) {
+        nextCall.done = true;
+      } else {
+        log(Date(), '[ShouldNotBeHere]', symbol, secType, expiry, right, strike, position, avgCost);
+      }
+    } else if (!prevCall) {
+      if (position > 0) {
+        prevCall = new Option('ES', CALL, strike);
+        newStrike = getCallStrike(prevCall.strikeIntervalInverse);
+        if (strike !== newStrike) { // the target strike price has been changed, close the current and buy new
+          registerCompany(prevCall);
+          nextCall = new Option('ES', CALL, newStrike);
+          registerCompany(nextCall);
+        } else { // nothing to change
+          prevCall.done = true;
+          nextCall = prevCall;
+        }
+      } else {
+        log(Date(), '[ShouldNotBeHere]', symbol, secType, expiry, right, strike, position, avgCost);
+      }
+    } else if (strike === prevCall.strike && position === 0) { // closed the previous position
       prevCall.done = true;
-      nextCall.done = true;
     }
   } else if (right === PUT) {
-    prevPut = new Option('ES', PUT, strike);
-    newStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
-    if (strike !== newStrike) {
-      registerCompany(prevPut);
-    } else if (position > 0) {
+    if (nextPut) {
+      if (position > 0) {
+        nextPut.done = true;
+      } else {
+        log(Date(), '[ShouldNotBeHere]', symbol, secType, expiry, right, strike, position, avgCost);
+      }
+    } else if (!prevPut) {
+      if (position > 0) {
+        prevPut = new Option('ES', PUT, strike);
+        newStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
+        if (strike !== newStrike) { // the target strike price has been changed, close the current and buy new
+          registerCompany(prevPut);
+          nextPut = new Option('ES', PUT, newStrike);
+          registerCompany(nextPut);
+        } else { // nothing to change
+          prevPut.done = true;
+          nextPut = prevPut;
+        }
+      } else {
+        log(Date(), '[ShouldNotBeHere]', symbol, secType, expiry, right, strike, position, avgCost);
+      }
+    } else if (strike === prevPut.strike && position === 0) { // closed the previous position
       prevPut.done = true;
-      nextPut.done = true;
     }
   }
   checkDone();

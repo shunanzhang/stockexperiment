@@ -60,10 +60,6 @@ var Option = module.exports = function(symbol, right, strike) {
   this.tradeController = new TradeController();
   this.bid = 0.0;
   this.ask = 0.0;
-  this.lLots = {};
-  this.sLots = {};
-  this.lLotsLength = 0;
-  this.sLotsLength = 0;
   this.secType = SEC_TYPES[symbol] || 'STK';
   this.exchange = DESTINATIONS[symbol] || 'SMART';
   this.primaryExchange = EXCHANGES[symbol];
@@ -82,4 +78,5 @@ var Option = module.exports = function(symbol, right, strike) {
   this.right = right; // CALL or PUT
   this.strike = strike;
   this.done = false;
+  this.pending = false;
 };
