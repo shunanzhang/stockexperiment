@@ -87,6 +87,24 @@ var checkPrice = function(cancelId) {
   }
 };
 
+var ifNoPosition = function() {
+  if (!prevCall && !prevPut && !nextCall && !nextPut) {
+    var newStrike = 0.0;
+
+    prevCall = new Option('ES', CALL, 0.0);
+    prevCall.done = true;
+    newStrike = getCallStrike(prevCall.strikeIntervalInverse);
+    nextCall = new Option('ES', CALL, newStrike);
+    registerCompany(nextCall);
+
+    prevPut = new Option('ES', PUT, 0.0);
+    prevPut.done = true;
+    newStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
+    nextPut = new Option('ES', PUT, newStrike);
+    registerCompany(nextPut);
+  }
+};
+
 var registerCompany = function(company) {
   if (!cancelIds[company.cancelId]) {
     cancelIds[company.cancelId] = company;
@@ -116,6 +134,7 @@ var handleValidOrderId = function(oId) {
   registerCompany(base);
   ibClient.reqAllOpenOrders();
   //ibClient.reqAutoOpenOrders(true);
+  setTimeout(ifNoPosition, 60 * 1000);
 };
 
 var cancelPrevOrder = function(prevOrderId) {
@@ -214,7 +233,7 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
   }
   var newStrike = 0.0;
   if (right === CALL) {
-    if (nextCall) {
+    if (nextCall && strike === nextCall.strike) {
       if (position > 0) {
         nextCall.done = true;
       } else {
@@ -239,7 +258,7 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
       prevCall.done = true;
     }
   } else if (right === PUT) {
-    if (nextPut) {
+    if (nextPut && strike === nextPut.strike) {
       if (position > 0) {
         nextPut.done = true;
       } else {
