@@ -4,13 +4,11 @@ var TradeController = Addon.TradeController;
 var IbClient = Addon.IbClient;
 var BUY = TradeController.BUY;
 var SELL = TradeController.SELL;
-var HOLD = TradeController.HOLD;
 var CALL = TradeController.CALL;
 var PUT = TradeController.PUT;
 var Company = require('./company');
 var Option = require('./option');
 var max = Math.max;
-var min = Math.min;
 var round = Math.round;
 var ceil = Math.ceil;
 var floor = Math.floor;
@@ -55,30 +53,30 @@ var roundPremium = function(bid, ask, oneTickInverse, reduceThreshold, reducedTi
 var reqPositionsCalled = false;
 var checkPrice = function(cancelId) {
   var lmtPrice = 0.0;
-  if (cancelId === base.cancelId) {
+  if (base && cancelId === base.cancelId) {
     if (!reqPositionsCalled && base.ask) {
       reqPositionsCalled = true;
       ibClient.reqPositions();
     }
-  } else if (cancelId === prevCall.cancelId) {
+  } else if (prevCall && cancelId === prevCall.cancelId) {
     if (prevCall.bid && prevCall.ask && !prevCall.pending) {
       prevCall.pending = true;
       lmtPrice = roundPremium(prevCall.bid, prevCall.ask, prevCall.oneTickInverse, prevCall.reduceThreshold, prevCall.reducedTickInverse, prevCall.minPrice);
       placeMyOrder(prevCall, SELL, prevCall.onePosition, LMT, lmtPrice, true, false);
     }
-  } else if (cancelId === prevPut.cancelId) {
+  } else if (prevPut && cancelId === prevPut.cancelId) {
     if (prevPut.bid && prevPut.ask && !prevPut.pending) {
       prevPut.pending = true;
       lmtPrice = roundPremium(prevPut.bid, prevPut.ask, prevPut.oneTickInverse, prevPut.reduceThreshold, prevPut.reducedTickInverse, prevPut.minPrice);
       placeMyOrder(prevPut, SELL, prevPut.onePosition, LMT, lmtPrice, true, false);
     }
-  } else if (cancelId === nextCall.cancelId) {
+  } else if (nextCall && cancelId === nextCall.cancelId) {
     if (nextCall.bid && nextCall.ask && !nextCall.pending) {
       nextCall.pending = true;
       lmtPrice = roundPremium(nextCall.bid, nextCall.ask, nextCall.oneTickInverse, nextCall.reduceThreshold, nextCall.reducedTickInverse, nextCall.minPrice);
       placeMyOrder(nextCall, BUY, nextCall.onePosition, LMT, lmtPrice, true, false);
     }
-  } else if (cancelId === nextPut.cancelId) {
+  } else if (nextPut && cancelId === nextPut.cancelId) {
     if (nextPut.bid && nextPut.ask && !nextPut.pending) {
       nextPut.pending = true;
       lmtPrice = roundPremium(nextPut.bid, nextPut.ask, nextPut.oneTickInverse, nextPut.reduceThreshold, nextPut.reducedTickInverse, nextPut.minPrice);
@@ -89,18 +87,16 @@ var checkPrice = function(cancelId) {
 
 var ifNoPosition = function() {
   if (!prevCall && !prevPut && !nextCall && !nextPut) {
-    var newStrike = 0.0;
-
-    prevCall = new Option('ES', CALL, 0.0);
+    prevCall = new Option('ES', CALL, 0.0, true);
     prevCall.done = true;
-    newStrike = getCallStrike(prevCall.strikeIntervalInverse);
-    nextCall = new Option('ES', CALL, newStrike);
+    var callStrike = getCallStrike(prevCall.strikeIntervalInverse);
+    nextCall = new Option('ES', CALL, callStrike, false);
     registerCompany(nextCall);
 
-    prevPut = new Option('ES', PUT, 0.0);
+    prevPut = new Option('ES', PUT, 0.0, true);
     prevPut.done = true;
-    newStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
-    nextPut = new Option('ES', PUT, newStrike);
+    var putStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
+    nextPut = new Option('ES', PUT, putStrike, false);
     registerCompany(nextPut);
   }
 };
@@ -132,8 +128,6 @@ var handleValidOrderId = function(oId) {
   orderId = oId;
   log('next order Id is', oId);
   registerCompany(base);
-  ibClient.reqAllOpenOrders();
-  //ibClient.reqAutoOpenOrders(true);
   setTimeout(ifNoPosition, 60 * 1000);
 };
 
@@ -222,16 +216,13 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
   log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
 };
 
-var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus, clientId) {
-  log('OpenOrder:', oId, symbol, company.secType, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
-};
+var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus, clientId) {};
 
 var handlePosition = function(symbol, secType, expiry, right, strike, position, avgCost) {
   if (position < 0 && strike) {
     log(Date(), '[UnexpectedPosition]', symbol, secType, expiry, right, strike, position, avgCost);
     process.exit(1);
   }
-  var newStrike = 0.0;
   if (right === CALL) {
     if (nextCall && strike === nextCall.strike) {
       if (position > 0) {
@@ -241,15 +232,15 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
       }
     } else if (!prevCall) {
       if (position > 0) {
-        prevCall = new Option('ES', CALL, strike);
-        newStrike = getCallStrike(prevCall.strikeIntervalInverse);
-        if (strike !== newStrike) { // the target strike price has been changed, close the current and buy new
+        prevCall = new Option('ES', CALL, strike, true);
+        var callStrike = getCallStrike(prevCall.strikeIntervalInverse);
+        nextCall = new Option('ES', CALL, callStrike, false);
+        if (strike !== callStrike || prevCall.expiry !== nextCall.expiry) { // the target strike price has been changed, close the current and buy new
           registerCompany(prevCall);
-          nextCall = new Option('ES', CALL, newStrike);
           registerCompany(nextCall);
         } else { // nothing to change
           prevCall.done = true;
-          nextCall = prevCall;
+          nextCall.done = true;
         }
       } else {
         log(Date(), '[ShouldNotBeHere]', symbol, secType, expiry, right, strike, position, avgCost);
@@ -266,15 +257,15 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
       }
     } else if (!prevPut) {
       if (position > 0) {
-        prevPut = new Option('ES', PUT, strike);
-        newStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
-        if (strike !== newStrike) { // the target strike price has been changed, close the current and buy new
+        prevPut = new Option('ES', PUT, strike, true);
+        var putStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
+        nextPut = new Option('ES', PUT, putStrike, false);
+        if (strike !== putStrike || prevPut.expiry !== nextPut.expiry) { // the target strike price has been changed, close the current and buy new
           registerCompany(prevPut);
-          nextPut = new Option('ES', PUT, newStrike);
           registerCompany(nextPut);
         } else { // nothing to change
           prevPut.done = true;
-          nextPut = prevPut;
+          nextPut.done = true;
         }
       } else {
         log(Date(), '[ShouldNotBeHere]', symbol, secType, expiry, right, strike, position, avgCost);

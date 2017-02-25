@@ -45,7 +45,7 @@ var ROLL_DAY_OF_WEEKS = {
 
 var cancelId = 1;
 
-var Option = module.exports = function(symbol, right, strike) {
+var Option = module.exports = function(symbol, right, strike, prev) {
   if (! (this instanceof Option)) { // enforcing new
     return new Option(symbol);
   }
@@ -68,8 +68,11 @@ var Option = module.exports = function(symbol, right, strike) {
   var dayOfWeek = date.day();
   var dayOfWeekToRoll = ROLL_DAY_OF_WEEKS[symbol] || 4; // default Thursday
   var diffToFriday = (5 - dayOfWeek + 7) % 7; // diff to next coming up Friday
-  this.expiry = date.add(diffToFriday + 7 * (dayOfWeek > dayOfWeekToRoll), 'day').format('YYYYMMDD');
-  this.newExpiry = date.add(diffToFriday + 7 * (dayOfWeek >= dayOfWeekToRoll), 'day').format('YYYYMMDD');
+  if (prev) {
+    this.expiry = date.add(diffToFriday + 7 * (dayOfWeek > dayOfWeekToRoll), 'day').format('YYYYMMDD');
+  } else {
+    this.expiry = date.add(diffToFriday + 7 * (dayOfWeek >= dayOfWeekToRoll), 'day').format('YYYYMMDD');
+  }
   this.cancelId = ++cancelId;
   this.lastOrderStatus = 'Filled';
   this.orderId = -1; // last order id
