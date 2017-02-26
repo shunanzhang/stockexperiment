@@ -39,8 +39,8 @@ var getCallStrike = function(strikeIntervalInverse) {
   return ceil((base.ask + 0.001) * strikeIntervalInverse) / strikeIntervalInverse;
 };
 
-var getPutStrike = function(strikeIntervalInverse, strikeInterval) {
-  return floor(base.ask * strikeIntervalInverse) / strikeIntervalInverse - 4 * strikeInterval;
+var getPutStrike = function(strikeIntervalInverse) {
+  return (floor(base.ask * strikeIntervalInverse) - 4) / strikeIntervalInverse;
 };
 
 var roundPremium = function(bid, ask, oneTickInverse, reduceThreshold, reducedTickInverse, minPrice) {
@@ -95,7 +95,7 @@ var ifNoPosition = function() {
 
     prevPut = new Option('ES', PUT, 0.0, true);
     prevPut.done = true;
-    var putStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
+    var putStrike = getPutStrike(prevPut.strikeIntervalInverse);
     nextPut = new Option('ES', PUT, putStrike, false);
     registerCompany(nextPut);
   }
@@ -258,7 +258,7 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
     } else if (!prevPut) {
       if (position > 0) {
         prevPut = new Option('ES', PUT, strike, true);
-        var putStrike = getPutStrike(prevPut.strikeIntervalInverse, prevPut.strikeInterval);
+        var putStrike = getPutStrike(prevPut.strikeIntervalInverse);
         nextPut = new Option('ES', PUT, putStrike, false);
         if (strike !== putStrike || prevPut.expiry !== nextPut.expiry) { // the target strike price has been changed, close the current and buy new
           registerCompany(prevPut);
@@ -278,7 +278,7 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
 };
 
 var checkDone = function() {
-  if (prevCall.done && prevPut.done && nextCall.done && nextPut.done) {
+  if (prevCall && prevPut && nextCall && nextPut && prevCall.done && prevPut.done && nextCall.done && nextPut.done) {
     log('Succeeded');
     process.exit(0);
   }

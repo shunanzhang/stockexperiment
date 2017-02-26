@@ -259,7 +259,7 @@ void IbClient::winError(const IBString &str, int lastError) {}
  * utilities
  */
 void IbClient::updateContract(v8::Local<v8::Object> contractObject) {
-  TickerId tickerId = contractObject->Get(v8::String::NewFromUtf8(isolate_, "cancelId"))->Uint32Value();
+  TickerId tickerId = contractObject->Get(v8::String::NewFromUtf8(isolate_, "cancelId"))->IntegerValue();
   Contract* contract = &(contracts[tickerId - 1]); // tickerId is 1 base
   v8::String::Utf8Value symbol(contractObject->Get(v8::String::NewFromUtf8(isolate_, "symbol")));
   v8::String::Utf8Value secType(contractObject->Get(v8::String::NewFromUtf8(isolate_, "secType")));

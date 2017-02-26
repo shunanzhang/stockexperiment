@@ -32,7 +32,7 @@ var REDUCED_TICKS = {
 };
 
 var STRIKE_INTERVALS = {
-  ES: 5
+  ES: 5.0
 };
 
 var MIN_PRICES = {
@@ -54,7 +54,6 @@ var Option = module.exports = function(symbol, right, strike, prev) {
   this.oneTickInverse = (1.0 / (ONE_TICKS[symbol] || 0.01));
   this.reduceThreshold = REDUCE_THRESHOLD[symbol] || 5.0;
   this.reducedTickInverse = (1.0 / (REDUCED_TICKS[symbol] || 0.01));
-  this.strikeInterval = STRIKE_INTERVALS[symbol] || 5;
   this.strikeIntervalInverse = (1.0 / (STRIKE_INTERVALS[symbol] || 5.0));
   this.minPrice = MIN_PRICES[symbol] || 0.05;
   this.tradeController = new TradeController();
