@@ -19,6 +19,7 @@ var cancelIds = {};
 var entryOrderIds = {};
 var actions = {};
 
+var CLOSE_ONLY = process.argv[2] || false;
 var CLIENT_ID = 2;
 var LMT = 'LMT';
 
@@ -86,7 +87,10 @@ var checkPrice = function(cancelId) {
 };
 
 var ifNoPosition = function() {
-  if (!prevCall && !prevPut && !nextCall && !nextPut) {
+  if (CLOSE_ONLY) {
+    log('No position');
+    process.exit(0);
+  } else if (!prevCall && !prevPut && !nextCall && !nextPut) {
     prevCall = new Option('ES', CALL, 0.0, true);
     prevCall.done = true;
     var callStrike = getCallStrike(prevCall.strikeIntervalInverse);
@@ -237,7 +241,11 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
         nextCall = new Option('ES', CALL, callStrike, false);
         if (strike !== callStrike || prevCall.expiry !== nextCall.expiry) { // the target strike price has been changed, close the current and buy new
           registerCompany(prevCall);
-          registerCompany(nextCall);
+          if (CLOSE_ONLY) {
+            nextCall.done = true;
+          } else {
+            registerCompany(nextCall);
+          }
         } else { // nothing to change
           prevCall.done = true;
           nextCall.done = true;
@@ -262,7 +270,11 @@ var handlePosition = function(symbol, secType, expiry, right, strike, position, 
         nextPut = new Option('ES', PUT, putStrike, false);
         if (strike !== putStrike || prevPut.expiry !== nextPut.expiry) { // the target strike price has been changed, close the current and buy new
           registerCompany(prevPut);
-          registerCompany(nextPut);
+          if (CLOSE_ONLY) {
+            nextPut.done = true;
+          } else {
+            registerCompany(nextPut);
+          }
         } else { // nothing to change
           prevPut.done = true;
           nextPut.done = true;
