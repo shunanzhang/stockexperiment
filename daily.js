@@ -19,7 +19,7 @@ var cancelIds = {};
 var entryOrderIds = {};
 var actions = {};
 
-var CLOSE_ONLY = process.argv[2] || false;
+var CLOSE_ONLY = (process.argv[2] || false) === 'true';
 var CLIENT_ID = 2;
 var LMT = 'LMT';
 
