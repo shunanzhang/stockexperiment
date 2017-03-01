@@ -58,6 +58,7 @@ var checkPrice = function(cancelId) {
     if (!reqPositionsCalled && base.ask) {
       reqPositionsCalled = true;
       ibClient.reqPositions();
+      setTimeout(ifNoPosition, 60 * 1000);
     }
   } else if (prevCall && cancelId === prevCall.cancelId) {
     if (prevCall.bid && prevCall.ask && !prevCall.pending) {
@@ -132,7 +133,6 @@ var handleValidOrderId = function(oId) {
   orderId = oId;
   log('next order Id is', oId);
   registerCompany(base);
-  setTimeout(ifNoPosition, 60 * 1000);
 };
 
 var cancelPrevOrder = function(prevOrderId) {
