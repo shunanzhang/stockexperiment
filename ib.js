@@ -353,10 +353,14 @@ var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, order
         var oldExpiryPosition = company.oldExpiryPosition;
         var exLot = null;
         if (oldExpiry === newExpiry && newExpiry !== expiry) { // right before expiry, aggresively roll
-          modifyExpiry(company, oId, order);
-          company.expiry = expiry;
-          placeMyOrder(company, action, totalQuantity, 'MKT', 0.0, true, false);
-          company.tickTime = now();
+          var aggresiveLock = company.aggresiveLock;
+          if (!aggresiveLock[oId]) {
+            aggresiveLock[oId] = true;
+            modifyExpiry(company, oId, order);
+            company.expiry = expiry;
+            placeMyOrder(company, action, totalQuantity, 'MKT', 0.0, true, false);
+            company.tickTime = now();
+          }
         } else if (action === BUY) {
           if (!sLots[oId]) {
             sLots[oId] = order;
