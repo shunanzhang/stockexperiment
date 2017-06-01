@@ -7,7 +7,6 @@ var MIN_VALUE = Number.MIN_VALUE;
 
 var EXCHANGES = {
   SPY: 'ARCA',
-  SSO: 'ARCA',
   STZ: 'NYSE',
   ES: 'GLOBEX',
   ZN: 'ECBOT'
@@ -15,7 +14,6 @@ var EXCHANGES = {
 
 var DESTINATIONS = {
   SPY: 'SMART',
-  SSO: 'SMART',
   STZ: 'SMART',
   ES: 'GLOBEX',
   ZN: 'ECBOT'
@@ -23,7 +21,6 @@ var DESTINATIONS = {
 
 var SEC_TYPES = {
   SPY: 'STK',
-  SSO: 'STK',
   STZ: 'STK',
   ES: 'FUT',
   ZN: 'FUT'
