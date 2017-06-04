@@ -25,6 +25,7 @@ const double TradeController::OFFSET_NEG = 0.999; // 1.0 - OFFSET
 Persistent<Function> TradeController::constructor;
 
 TradeController::TradeController() {
+  sma_ = new Sma(30);
   reset();
 }
 
@@ -42,7 +43,7 @@ void TradeController::reset() {
   below_ = false;
   i_ = 0;
   d_ = 0.0;
-  sma_ = new Sma(30);
+  sma_->reset();
 }
 
 const char* TradeController::trade(double close, double high, double low, double open, bool forceHold) {

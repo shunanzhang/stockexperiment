@@ -28,6 +28,14 @@ Sma::Sma(uint32_t length) : length_(length) {
   maxI_ |= maxI_ >> 16;
 
   data_ = new double[maxI_ + 1];
+  reset();
+}
+
+Sma::~Sma() {
+  delete[] data_;
+}
+
+void Sma::reset() {
   for (uint32_t j = 0; j <= maxI_; j++) {
     data_[j] = 0.0;
   }
@@ -36,10 +44,6 @@ Sma::Sma(uint32_t length) : length_(length) {
   up_ = false;
   down_ = false;
   i_ = 0;
-}
-
-Sma::~Sma() {
-  delete[] data_;
 }
 
 void Sma::push(double value) {

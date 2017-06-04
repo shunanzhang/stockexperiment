@@ -254,7 +254,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
   }
 };
 
-var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld) {
+var handleOrderStatus = function(oId, orderStatus, filled, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld) {
   var company = entryOrderIds[oId];
   if (company) {
     company.lastOrderStatus = orderStatus;
@@ -290,7 +290,7 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
           lmtPrice = company.bid; // cannot buy at too high lmtPrice, the order gets rejected otherwise
         }
       }
-      placeMyOrder(company, action, filled, 'LMT', lmtPrice, false, false);
+      placeMyOrder(company, action, (filled | 0), 'LMT', lmtPrice, false, false);
     }
   } else {
     company = cancelOrderIds[oId];
@@ -317,7 +317,7 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       log('[Cancel lots]', company.symbol, company.oldExpiryPosition, company.lLotsLength, company.sLotsLength);
     }
   }
-  log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
+  log('OrderStatus:', oId, orderStatus, filled, avgFillPrice, lastFillPrice, clientId, whyHeld);
 };
 
 var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {

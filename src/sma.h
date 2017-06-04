@@ -12,6 +12,7 @@ class Sma: public node::ObjectWrap {
 
   explicit Sma(uint32_t length = 0);
   ~Sma();
+  void reset();
   void push(double value);
   double ave_;
   bool up_;

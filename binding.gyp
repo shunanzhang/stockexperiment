@@ -7,24 +7,21 @@
         "src/sma.cc",
         "src/tradeController.cc",
         "src/IbClient.cc",
-        "IBJts/source/PosixClient/src/EPosixClientSocket.cpp",
-        "IBJts/source/PosixClient/src/EClientSocketBase.cpp",
       ],
       "defines": [
-        "IB_USE_STD_STRING"
       ],
       "include_dirs": [
-        "IBJts/source/PosixClient/Shared",
-        "IBJts/source/PosixClient/src",
+        "IBJts/source/CppClient/client",
       ],
-      "cflags":  ['-c -O3 -ffast-math -fexpensive-optimizations -DNDEBUG -march=native'],
-      "cflags_cc": ['-c -O3 -ffast-math -fexpensive-optimizations -DNDEBUG -march=native'],
+      "cflags":  ['-c -O3 -ffast-math -fexpensive-optimizations -DNDEBUG -march=native -std=c++11'],
+      "cflags_cc": ['-c -O3 -ffast-math -fexpensive-optimizations -DNDEBUG -march=native -std=c++11'],
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
       'conditions': [
         ['OS=="mac"', {
           'xcode_settings': {
-            'GCC_ENABLE_CPP_EXCEPTIONS': 'YES'
+            'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
+            'OTHER_CPLUSPLUSFLAGS': ['-std=c++11'],
           },
         }],
       ]

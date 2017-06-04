@@ -28,14 +28,14 @@ console.time('sma');
 for (i = 1000000; i--;) {
   var r = rand();
   sma.push(r);
-  //sma2.push(r);
+  sma2.push(r);
   //sma.ave;
   //sma.up;
   //sma.down;
 }
-//assert.deepEqual(sma.ave, sma2.ave);
-//assert.deepEqual(sma.up, sma2.down);
-//assert.deepEqual(sma.up, sma2.down);
+assert.deepEqual(sma.ave, sma2.ave);
+assert.deepEqual(sma.down, sma2.down);
+assert.deepEqual(sma.up, sma2.up);
 console.timeEnd('sma');
 
 var tradeController = new addon.TradeController();
@@ -46,8 +46,8 @@ for (i = 1000000; i--;) {
   var high = rand();
   var low = rand();
   var a = tradeController.tradeLogic(close, high, low, false, true);
-  //var b = tradeController2.tradeLogic(close, high, low, 0.0, false, true);
-  //assert.deepEqual(a, b);
+  var b = tradeController2.tradeLogic(close, high, low, 0.0, false, true);
+  assert.deepEqual(a, b);
 }
 console.timeEnd('tradeController');
 console.log(addon.TradeController.BUY);

@@ -25,8 +25,8 @@ var handleServerError = function(id, errorCode, errorString) {
   }
 };
 
-var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld) {
-  log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
+var handleOrderStatus = function(oId, orderStatus, filled, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld) {
+  log('OrderStatus:', oId, orderStatus, filled, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
 };
 
 var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {

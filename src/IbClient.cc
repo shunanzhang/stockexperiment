@@ -1,11 +1,8 @@
 #include "IbClient.h"
 
-#include "EPosixClientSocket.h"
-#include "EPosixClientSocketPlatform.h"
-
 v8::Persistent<v8::Function> IbClient::constructor;
 
-IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new EPosixClientSocket(this)) {
+IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new EClientSocket(this, NULL)), processMsgsDecoder_(m_pClient->EClient::serverVersion(), m_pClient->getWrapper(), m_pClient) {
 // Singleton order object
  order_.auxPrice = 0.0;
  order_.hidden = false; // false for futures, true for stocks
@@ -14,6 +11,7 @@ IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new EPos
  order_.percentOffset = 0; // bug workaround
  contracts = new Contract[contractLength];
  hourOffset_ = hourOffset;
+ msgData = std::vector<char>(IN_BUF_SIZE - INT_SiZE);
 }
 
 IbClient::~IbClient() {
@@ -28,7 +26,7 @@ IbClient::~IbClient() {
   delete[] contracts;
 }
 
-bool IbClient::connect(const char *host, unsigned int port, int clientId) {
+bool IbClient::connect(const char* host, unsigned int port, int clientId) {
   return m_pClient->eConnect(host, port, clientId, /* extraAuth */ false);
 }
 
@@ -67,7 +65,62 @@ void IbClient::processMessages() {
       return;
     }
     if (FD_ISSET(m_pClient->fd(), &readSet)) { // socket is ready for reading
-      m_pClient->onReceive();
+      int size = m_pClient->receive(m_buf, IN_BUF_SIZE);
+      char* start = m_buf;
+      while (size > 0) {
+        if (msgBufStart <= 0) {
+          while (size > 0) {
+            char* fullEnd = start + msgSize;
+            char* tempEnd = m_buf + size;
+            if (fullEnd > tempEnd) {
+              std::copy(start, tempEnd, s_buf + s_buf_start);
+              int copySize = tempEnd - start;
+              s_buf_start += copySize;
+              msgSize -= copySize;
+              size = m_pClient->receive(m_buf, IN_BUF_SIZE);
+              start = m_buf;
+            } else {
+              std::copy(start, fullEnd, s_buf + s_buf_start);
+              msgSize = htonl(*((int*)s_buf));
+              msgData.resize(msgSize);
+              s_buf_start = 0;
+              if (fullEnd == tempEnd) {
+                start = m_buf;
+                size = m_pClient->receive(m_buf, IN_BUF_SIZE);
+              } else {
+                start = fullEnd;
+              }
+              break;
+            }
+          }
+        }
+
+        while (size > 0) {
+          char* fullEnd = start + msgSize;
+          char* tempEnd = m_buf + size;
+          if (fullEnd > tempEnd) {
+            std::copy(start, tempEnd, msgData.data() + msgBufStart);
+            int copySize = tempEnd - start;
+            msgBufStart += copySize;
+            msgSize -= copySize;
+            size = m_pClient->receive(m_buf, IN_BUF_SIZE);
+            start = m_buf;
+          } else {
+            std::copy(start, fullEnd, msgData.data() + msgBufStart);
+            const char* pBegin = msgData.data();
+            processMsgsDecoder_.parseAndProcessMsg(pBegin, pBegin + msgData.size());
+            msgBufStart = 0;
+            msgSize = INT_SiZE;
+            if (fullEnd == tempEnd) {
+              start = m_buf;
+              size = m_pClient->receive(m_buf, IN_BUF_SIZE);
+            } else {
+              start = fullEnd;
+            }
+            break;
+          }
+        }
+      }
     }
     if (m_pClient->fd() < 0) {
       return;
@@ -78,9 +131,9 @@ void IbClient::processMessages() {
   }
 }
 
-void IbClient::placeOrder(OrderId orderId, TickerId tickerId, const IBString &action, long quantity, const IBString &orderType, double lmtPrice, const IBString &expiry) {
+void IbClient::placeOrder(OrderId orderId, TickerId tickerId, const std::string &action, long quantity, const std::string &orderType, double lmtPrice, const std::string &expiry) {
   Contract* contract = &(contracts[tickerId - 1]); // tickerId is 1 base
-  contract->expiry = expiry;
+  contract->lastTradeDateOrContractMonth = expiry;
   order_.action = action;
   order_.totalQuantity = quantity;
   order_.orderType = orderType;
@@ -92,7 +145,7 @@ void IbClient::cancelOrder(OrderId orderId) {
   m_pClient->cancelOrder(orderId);
 }
 
-void IbClient::reqMktData(TickerId tickerId, const IBString &genericTick, bool snapShot) {
+void IbClient::reqMktData(TickerId tickerId, const std::string &genericTick, bool snapShot) {
   TagValueListSPtr mktDataOptions;
   m_pClient->reqMktData(tickerId, contracts[tickerId - 1], genericTick, snapShot, mktDataOptions);
 }
@@ -105,7 +158,7 @@ void IbClient::reqAllOpenOrders() {
   m_pClient->reqAllOpenOrders();
 }
 
-void IbClient::reqRealTimeBars(TickerId tickerId, const IBString &whatToShow, bool useRTH) {
+void IbClient::reqRealTimeBars(TickerId tickerId, const std::string &whatToShow, bool useRTH) {
   TagValueListSPtr realTimeBarsOptions;
   // only 5 sec is supported
   m_pClient->reqRealTimeBars(tickerId, contracts[tickerId - 1], 5, whatToShow, useRTH, realTimeBarsOptions);
@@ -114,19 +167,18 @@ void IbClient::reqRealTimeBars(TickerId tickerId, const IBString &whatToShow, bo
 /**
  * events
  */
-void IbClient::orderStatus(OrderId orderId, const IBString &status, int filled, int remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, const IBString& whyHeld) {
+void IbClient::orderStatus(OrderId orderId, const std::string &status, double filled, double remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, const std::string& whyHeld) {
   const unsigned argc = 10;
   v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, orderId);
   v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate_, status.c_str());
-  v8::Local<v8::Value> arg2 = v8::Int32::New(isolate_, filled);
-  v8::Local<v8::Value> arg3 = v8::Int32::New(isolate_, remaining);
-  v8::Local<v8::Value> arg4 = v8::Number::New(isolate_, avgFillPrice);
-  v8::Local<v8::Value> arg5 = v8::Int32::New(isolate_, permId);
-  v8::Local<v8::Value> arg6 = v8::Int32::New(isolate_, parentId);
-  v8::Local<v8::Value> arg7 = v8::Number::New(isolate_, lastFillPrice);
-  v8::Local<v8::Value> arg8 = v8::Int32::New(isolate_, clientId);
-  v8::Local<v8::Value> arg9 = v8::String::NewFromUtf8(isolate_, whyHeld.c_str());
-  v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9};
+  v8::Local<v8::Value> arg2 = v8::Number::New(isolate_, filled);
+  v8::Local<v8::Value> arg3 = v8::Number::New(isolate_, avgFillPrice);
+  v8::Local<v8::Value> arg4 = v8::Int32::New(isolate_, permId);
+  v8::Local<v8::Value> arg5 = v8::Int32::New(isolate_, parentId);
+  v8::Local<v8::Value> arg6 = v8::Number::New(isolate_, lastFillPrice);
+  v8::Local<v8::Value> arg7 = v8::Int32::New(isolate_, clientId);
+  v8::Local<v8::Value> arg8 = v8::String::NewFromUtf8(isolate_, whyHeld.c_str());
+  v8::Local<v8::Value> argv[argc] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8};
   v8::Local<v8::Function>::New(isolate_, orderStatus_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
@@ -137,7 +189,7 @@ void IbClient::nextValidId(OrderId orderId) {
   v8::Local<v8::Function>::New(isolate_, nextValidId_)->Call(isolate_->GetCurrentContext()->Global(), argc, argv);
 }
 
-void IbClient::error(const int id, const int errorCode, const IBString errorString) {
+void IbClient::error(const int id, const int errorCode, const std::string errorString) {
   const unsigned argc = 3;
   v8::Local<v8::Value> arg0 = v8::Int32::New(isolate_, id);
   v8::Local<v8::Value> arg1 = v8::Int32::New(isolate_, errorCode);
@@ -160,7 +212,7 @@ void IbClient::openOrder(OrderId orderId, const Contract& contract, const Order&
   const unsigned argc = 8;
   v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, orderId);
   v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate_, contract.symbol.c_str());
-  v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate_, contract.expiry.c_str());
+  v8::Local<v8::Value> arg2 = v8::String::NewFromUtf8(isolate_, contract.lastTradeDateOrContractMonth.c_str());
   v8::Local<v8::Value> arg3 = v8::String::NewFromUtf8(isolate_, order.action.c_str());
   v8::Local<v8::Value> arg4 = v8::Integer::New(isolate_, order.totalQuantity);
   v8::Local<v8::Value> arg5 = v8::String::NewFromUtf8(isolate_, order.orderType.c_str());
@@ -201,42 +253,52 @@ void IbClient::connectionClosed() {
 void IbClient::tickSize(TickerId tickerId, TickType field, int size) {}
 void IbClient::tickOptionComputation(TickerId tickerId, TickType tickType, double impliedVol, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {}
 void IbClient::tickGeneric(TickerId tickerId, TickType tickType, double value) {}
-void IbClient::tickString(TickerId tickerId, TickType tickType, const IBString& value) {}
-void IbClient::tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const IBString& formattedBasisPoints, double totalDividends, int holdDays, const IBString& futureExpiry, double dividendImpact, double dividendsToExpiry) {}
-void IbClient::updateAccountValue(const IBString& key, const IBString& val, const IBString& currency, const IBString& accountName) {}
-void IbClient::updatePortfolio(const Contract& contract, int position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, const IBString& accountName){}
-void IbClient::updateAccountTime(const IBString& timeStamp) {}
+void IbClient::tickString(TickerId tickerId, TickType tickType, const std::string& value) {}
+void IbClient::tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const std::string& formattedBasisPoints, double totalDividends, int holdDays, const std::string& futureExpiry, double dividendImpact, double dividendsToExpiry) {}
+void IbClient::updateAccountValue(const std::string& key, const std::string& val, const std::string& currency, const std::string& accountName) {}
+void IbClient::updatePortfolio(const Contract& contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, const std::string& accountName){}
+void IbClient::updateAccountTime(const std::string& timeStamp) {}
 void IbClient::contractDetails(int reqId, const ContractDetails& contractDetails) {}
 void IbClient::bondContractDetails(int reqId, const ContractDetails& contractDetails) {}
 void IbClient::execDetails(int reqId, const Contract& contract, const Execution& execution) {}
 void IbClient::updateMktDepth(TickerId id, int position, int operation, int side, double price, int size) {}
-void IbClient::updateMktDepthL2(TickerId id, int position, IBString marketMaker, int operation, int side, double price, int size) {}
-void IbClient::updateNewsBulletin(int msgId, int msgType, const IBString& newsMessage, const IBString& originExch) {}
-void IbClient::managedAccounts(const IBString& accountsList) {}
-void IbClient::receiveFA(faDataType pFaDataType, const IBString& cxml) {}
-void IbClient::historicalData(TickerId reqId, const IBString& date, double open, double high, double low, double close, int volume, int barCount, double WAP, int hasGaps) {}
-void IbClient::scannerParameters(const IBString &xml) {}
-void IbClient::scannerData(int reqId, int rank, const ContractDetails &contractDetails, const IBString &distance, const IBString &benchmark, const IBString &projection, const IBString &legsStr) {}
+void IbClient::updateMktDepthL2(TickerId id, int position, std::string marketMaker, int operation, int side, double price, int size) {}
+void IbClient::updateNewsBulletin(int msgId, int msgType, const std::string& newsMessage, const std::string& originExch) {}
+void IbClient::managedAccounts(const std::string& accountsList) {}
+void IbClient::receiveFA(faDataType pFaDataType, const std::string& cxml) {}
+void IbClient::historicalData(TickerId reqId, const std::string& date, double open, double high, double low, double close, int volume, int barCount, double WAP, int hasGaps) {}
+void IbClient::scannerParameters(const std::string &xml) {}
+void IbClient::scannerData(int reqId, int rank, const ContractDetails &contractDetails, const std::string &distance, const std::string &benchmark, const std::string &projection, const std::string &legsStr) {}
 void IbClient::scannerDataEnd(int reqId) {}
 void IbClient::currentTime(long time) {}
-void IbClient::fundamentalData(TickerId reqId, const IBString& data) {}
+void IbClient::fundamentalData(TickerId reqId, const std::string& data) {}
 void IbClient::contractDetailsEnd(int reqId) {}
 void IbClient::openOrderEnd() {}
-void IbClient::accountDownloadEnd(const IBString& accountName) {}
+void IbClient::accountDownloadEnd(const std::string& accountName) {}
 void IbClient::execDetailsEnd(int reqId) {}
 void IbClient::deltaNeutralValidation(int reqId, const UnderComp& underComp) {}
 void IbClient::tickSnapshotEnd(int reqId) {}
 void IbClient::marketDataType(TickerId reqId, int marketDataType) {}
 void IbClient::commissionReport(const CommissionReport& commissionReport) {}
-void IbClient::position(const IBString& account, const Contract& contract, int position, double avgCost) {}
+void IbClient::position(const std::string& account, const Contract& contract, double position, double avgCost) {}
 void IbClient::positionEnd() {}
-void IbClient::accountSummary(int reqId, const IBString& account, const IBString& tag, const IBString& value, const IBString& curency) {}
+void IbClient::accountSummary(int reqId, const std::string& account, const std::string& tag, const std::string& value, const std::string& curency) {}
 void IbClient::accountSummaryEnd(int reqId) {}
-void IbClient::verifyMessageAPI(const IBString& apiData) {}
-void IbClient::verifyCompleted(bool isSuccessful, const IBString& errorText) {}
-void IbClient::displayGroupList(int reqId, const IBString& groups) {}
-void IbClient::displayGroupUpdated(int reqId, const IBString& contractInfo) {}
-void IbClient::winError(const IBString &str, int lastError) {}
+void IbClient::verifyMessageAPI(const std::string& apiData) {}
+void IbClient::verifyCompleted(bool isSuccessful, const std::string& errorText) {}
+void IbClient::displayGroupList(int reqId, const std::string& groups) {}
+void IbClient::displayGroupUpdated(int reqId, const std::string& contractInfo) {}
+void IbClient::winError(const std::string &str, int lastError) {}
+void IbClient::verifyAndAuthMessageAPI(const std::string& apiData, const std::string& xyzChallange) {}
+void IbClient::verifyAndAuthCompleted(bool isSuccessful, const std::string& errorText) {}
+void IbClient::connectAck() {}
+void IbClient::positionMulti(int reqId, const std::string& account,const std::string& modelCode, const Contract& contract, double pos, double avgCost) {}
+void IbClient::positionMultiEnd(int reqId) {}
+void IbClient::accountUpdateMulti(int reqId, const std::string& account, const std::string& modelCode, const std::string& key, const std::string& value, const std::string& currency) {}
+void IbClient::accountUpdateMultiEnd(int reqId) {}
+void IbClient::securityDefinitionOptionalParameter(int reqId, const std::string& exchange, int underlyingConId, const std::string& tradingClass, const std::string& multiplier, std::set<std::string> expirations, std::set<double> strikes) {}
+void IbClient::securityDefinitionOptionalParameterEnd(int reqId) {}
+void IbClient::softDollarTiers(int reqId, const std::vector<SoftDollarTier> &tiers) {}
 
 /**
  * v8
@@ -290,12 +352,12 @@ void IbClient::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
       v8::String::Utf8Value primaryExchange(contractObject->Get(v8::String::NewFromUtf8(isolate, "primaryExchange")));
       v8::String::Utf8Value currency(contractObject->Get(v8::String::NewFromUtf8(isolate, "currency")));
       v8::String::Utf8Value expiry(contractObject->Get(v8::String::NewFromUtf8(isolate, "expiry")));
-      contract->symbol = IBString(*symbol);
-      contract->secType = IBString(*secType);
-      contract->exchange = IBString(*exchange);
-      contract->primaryExchange = IBString(*primaryExchange);
-      contract->currency = IBString(*currency);
-      contract->expiry = IBString(*expiry);
+      contract->symbol = std::string(*symbol);
+      contract->secType = std::string(*secType);
+      contract->exchange = std::string(*exchange);
+      contract->primaryExchange = std::string(*primaryExchange);
+      contract->currency = std::string(*currency);
+      contract->lastTradeDateOrContractMonth = std::string(*expiry);
     }
     obj->Wrap(args.This());
     args.GetReturnValue().Set(args.This());
@@ -346,7 +408,7 @@ void IbClient::PlaceOrder(const v8::FunctionCallbackInfo<v8::Value>& args) {
   double lmtPrice = args[5]->NumberValue();
   v8::String::Utf8Value expiry(args[6]);
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
-  obj->placeOrder(orderId, tickerId, IBString(*action), quantity, IBString(*orderType), lmtPrice, IBString(*expiry));
+  obj->placeOrder(orderId, tickerId, std::string(*action), quantity, std::string(*orderType), lmtPrice, std::string(*expiry));
 }
 
 void IbClient::CancelOrder(const v8::FunctionCallbackInfo<v8::Value>& args) {
@@ -360,7 +422,7 @@ void IbClient::ReqMktData(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::String::Utf8Value genericTick(args[1]);
   bool snapShot = args[2]->BooleanValue();
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
-  obj->reqMktData(tickerId, IBString(*genericTick), snapShot);
+  obj->reqMktData(tickerId, std::string(*genericTick), snapShot);
 }
 
 void IbClient::ReqAutoOpenOrders(const v8::FunctionCallbackInfo<v8::Value>& args) {
@@ -379,5 +441,5 @@ void IbClient::ReqRealTimeBars(const v8::FunctionCallbackInfo<v8::Value>& args) 
   v8::String::Utf8Value whatToShow(args[1]);
   bool useRTH = args[2]->BooleanValue();
   IbClient* obj = ObjectWrap::Unwrap<IbClient>(args.Holder());
-  obj->reqRealTimeBars(tickerId, IBString(*whatToShow), useRTH);
+  obj->reqRealTimeBars(tickerId, std::string(*whatToShow), useRTH);
 }
