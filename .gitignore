@@ -8,3 +8,4 @@ IBController.ini
 build
 IBJts
 *.jar
+package-lock.json
