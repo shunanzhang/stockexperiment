@@ -4,11 +4,11 @@
     "private": true,
     "dependencies": {
         "hiredis": ">= 0.5.0",
-        "moment-timezone": ">=0.5.10",
-        "request": ">= 2.79.0",
-        "redis": ">= 2.6.3"
+        "moment-timezone": "^0.5.13",
+        "redis": "^2.7.1",
+        "request": "^2.81.0"
     },
-    "engine": "node >= 6.9.2",
+    "engine": "node >= 6.10.3",
     "scripts": {
         "preinstall": "bash preinstall.sh",
         "install": "node-gyp rebuild"
