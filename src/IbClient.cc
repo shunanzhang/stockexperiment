@@ -27,7 +27,12 @@ IbClient::~IbClient() {
 }
 
 bool IbClient::connect(const char* host, unsigned int port, int clientId) {
+  m_pClient->asyncEConnect(true);
   return m_pClient->eConnect(host, port, clientId, /* extraAuth */ false);
+}
+
+void IbClient::connectAck() {
+  m_pClient->startApi();
 }
 
 void IbClient::disconnect() const {
@@ -68,66 +73,66 @@ void IbClient::processMessages() {
       int size = m_pClient->receive(m_buf, IN_BUF_SIZE);
       char* start = m_buf;
       while (size > 0) {
+        char* fullEnd = start + msgSize;
+        char* tempEnd = m_buf + size;
         if (msgBufStart <= 0) {
-          while (size > 0) {
-            char* fullEnd = start + msgSize;
-            char* tempEnd = m_buf + size;
-            if (fullEnd > tempEnd) {
-              std::copy(start, tempEnd, s_buf + s_buf_start);
-              int copySize = tempEnd - start;
-              s_buf_start += copySize;
-              msgSize -= copySize;
-              size = m_pClient->receive(m_buf, IN_BUF_SIZE);
-              start = m_buf;
+          if (fullEnd > tempEnd) {
+            std::copy(start, tempEnd, s_buf + s_buf_start);
+            int copySize = tempEnd - start;
+            s_buf_start += copySize;
+            msgSize -= copySize;
+            break;
+          } else {
+            if (s_buf_start == 0) {
+              msgSize = htonl(*((int*)start));
             } else {
               std::copy(start, fullEnd, s_buf + s_buf_start);
               msgSize = htonl(*((int*)s_buf));
-              msgData.resize(msgSize);
-              s_buf_start = 0;
-              if (fullEnd == tempEnd) {
-                start = m_buf;
-                size = m_pClient->receive(m_buf, IN_BUF_SIZE);
-              } else {
-                start = fullEnd;
-              }
+            }
+            msgData.resize(msgSize);
+            s_buf_start = 0;
+            if (fullEnd == tempEnd) {
               break;
+            } else {
+              start = fullEnd;
+              fullEnd = start + msgSize;
             }
           }
         }
 
-        while (size > 0) {
-          char* fullEnd = start + msgSize;
-          char* tempEnd = m_buf + size;
-          if (fullEnd > tempEnd) {
-            std::copy(start, tempEnd, msgData.data() + msgBufStart);
-            int copySize = tempEnd - start;
-            msgBufStart += copySize;
-            msgSize -= copySize;
-            size = m_pClient->receive(m_buf, IN_BUF_SIZE);
-            start = m_buf;
+        if (fullEnd > tempEnd) {
+          std::copy(start, tempEnd, msgData.data() + msgBufStart);
+          int copySize = tempEnd - start;
+          msgBufStart += copySize;
+          msgSize -= copySize;
+          break;
+        } else {
+          const char* pBegin;
+          const char* pEnd;
+          if (msgBufStart == 0) {
+            pBegin = start;
+            pEnd = fullEnd;
           } else {
             std::copy(start, fullEnd, msgData.data() + msgBufStart);
-            const char* pBegin = msgData.data();
-            processMsgsDecoder_.parseAndProcessMsg(pBegin, pBegin + msgData.size());
-            msgBufStart = 0;
-            msgSize = INT_SiZE;
-            if (fullEnd == tempEnd) {
-              start = m_buf;
-              size = m_pClient->receive(m_buf, IN_BUF_SIZE);
-            } else {
-              start = fullEnd;
-            }
+            pBegin = msgData.data();
+            pEnd = pBegin + msgData.size();
+          }
+          processMsgsDecoder_.parseAndProcessMsg(pBegin, pEnd);
+          msgBufStart = 0;
+          msgSize = INT_SiZE;
+          if (fullEnd == tempEnd) {
             break;
+          } else {
+            start = fullEnd;
           }
         }
       }
     }
-    if (m_pClient->fd() < 0) {
-      return;
-    }
-    if (FD_ISSET(m_pClient->fd(), &writeSet)) { // socket is ready for writing
-      m_pClient->onSend();
-    }
+    //if (m_pClient->fd() < 0) {
+    //  return;
+    //}
+    //if (FD_ISSET(m_pClient->fd(), &writeSet)) { // socket is ready for writing
+    //}
   }
 }
 
@@ -168,7 +173,7 @@ void IbClient::reqRealTimeBars(TickerId tickerId, const std::string &whatToShow,
  * events
  */
 void IbClient::orderStatus(OrderId orderId, const std::string &status, double filled, double remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, const std::string& whyHeld) {
-  const unsigned argc = 10;
+  const unsigned argc = 9;
   v8::Local<v8::Value> arg0 = v8::Integer::New(isolate_, orderId);
   v8::Local<v8::Value> arg1 = v8::String::NewFromUtf8(isolate_, status.c_str());
   v8::Local<v8::Value> arg2 = v8::Number::New(isolate_, filled);
@@ -254,7 +259,7 @@ void IbClient::tickSize(TickerId tickerId, TickType field, int size) {}
 void IbClient::tickOptionComputation(TickerId tickerId, TickType tickType, double impliedVol, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {}
 void IbClient::tickGeneric(TickerId tickerId, TickType tickType, double value) {}
 void IbClient::tickString(TickerId tickerId, TickType tickType, const std::string& value) {}
-void IbClient::tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const std::string& formattedBasisPoints, double totalDividends, int holdDays, const std::string& futureExpiry, double dividendImpact, double dividendsToExpiry) {}
+void IbClient::tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const std::string& formattedBasisPoints, double totalDividends, int holdDays, const std::string& futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate) {}
 void IbClient::updateAccountValue(const std::string& key, const std::string& val, const std::string& currency, const std::string& accountName) {}
 void IbClient::updatePortfolio(const Contract& contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, const std::string& accountName){}
 void IbClient::updateAccountTime(const std::string& timeStamp) {}
@@ -291,7 +296,6 @@ void IbClient::displayGroupUpdated(int reqId, const std::string& contractInfo) {
 void IbClient::winError(const std::string &str, int lastError) {}
 void IbClient::verifyAndAuthMessageAPI(const std::string& apiData, const std::string& xyzChallange) {}
 void IbClient::verifyAndAuthCompleted(bool isSuccessful, const std::string& errorText) {}
-void IbClient::connectAck() {}
 void IbClient::positionMulti(int reqId, const std::string& account,const std::string& modelCode, const Contract& contract, double pos, double avgCost) {}
 void IbClient::positionMultiEnd(int reqId) {}
 void IbClient::accountUpdateMulti(int reqId, const std::string& account, const std::string& modelCode, const std::string& key, const std::string& value, const std::string& currency) {}

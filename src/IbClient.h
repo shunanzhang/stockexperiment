@@ -8,6 +8,7 @@
 #include "Contract.h"
 #include "Order.h"
 #include "OrderState.h"
+#include "EPosixClientSocketPlatform.h"
 
 #include <node.h>
 #include <node_object_wrap.h>
@@ -47,7 +48,7 @@ public:
   void tickOptionComputation(TickerId tickerId, TickType tickType, double impliedVol, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice);
   void tickGeneric(TickerId tickerId, TickType tickType, double value);
   void tickString(TickerId tickerId, TickType tickType, const std::string& value);
-  void tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const std::string& formattedBasisPoints, double totalDividends, int holdDays, const std::string& futureExpiry, double dividendImpact, double dividendsToExpiry);
+  void tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const std::string& formattedBasisPoints, double totalDividends, int holdDays, const std::string& futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate);
   void updateAccountValue(const std::string& key, const std::string& val, const std::string& currency, const std::string& accountName);
   void updatePortfolio(const Contract& contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, const std::string& accountName);
   void updateAccountTime(const std::string& timeStamp);
