@@ -7,6 +7,7 @@
         "src/sma.cc",
         "src/tradeController.cc",
         "src/IbClient.cc",
+        "<!@(ls -1 IBJts/source/CppClient/client/*.cpp)",
       ],
       "defines": [
       ],

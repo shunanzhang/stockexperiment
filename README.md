@@ -1,5 +1,6 @@
-Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
+Copyright (c) 2015-2017 Kazuyuki Tanimura. All rights reserved.
 
+* IB API 9.72
 * enable socket client
 * turn off API precaution
 * turn off the readonly mode
@@ -27,8 +28,4 @@ Copyright (c) 2015-2016 Kazuyuki Tanimura. All rights reserved.
 - Automatic base up
 
 ### TODO
-- Backtest ES
-  - Get the data from IB API
-  - Emulate TWS API interface
-  - Bootstrapping
-- Build a portfolio and diversity
+- Bootstrapping

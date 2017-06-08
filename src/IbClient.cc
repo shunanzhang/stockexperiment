@@ -11,7 +11,7 @@ IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new ECli
  order_.percentOffset = 0; // bug workaround
  contracts = new Contract[contractLength];
  hourOffset_ = hourOffset;
- msgData = std::vector<char>(IN_BUF_SIZE - INT_SiZE);
+ msgData = std::vector<char>(IN_BUF_SIZE);
 }
 
 IbClient::~IbClient() {
