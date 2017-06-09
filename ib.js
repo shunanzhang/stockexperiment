@@ -17,6 +17,7 @@ var log = console.log;
 var cancelIds = {};
 var symbols = {};
 var entryOrderIds = {};
+var cancelOrderIds = {};
 var actions = {};
 
 var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
@@ -69,6 +70,7 @@ var cancelPrevOrder = function(prevOrderId) {
 };
 
 var modifyExpiry = function(company, oId, order) {
+  cancelOrderIds[oId] = company;
   cancelPrevOrder(oId);
   company.expiry = company.newExpiry;
   placeMyOrder(company, order.action, order.totalQuantity, 'LMT', order.lmtPrice, false, false);
@@ -267,13 +269,13 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
       lmtPrice = round(lmtPrice * tickInverse) / tickInverse; // required to place a correct order
       var oldExpiry = company.oldExpiry;
       var newExpiry = company.newExpiry;
+      var oldExpiryPosition = company.oldExpiryPosition;
       if (oldExpiry !== newExpiry) {
         var exLot = company.popExLot();
         if (exLot) {
           modifyExpiry(company, exLot.oId, exLot.order);
         }
       }
-      var oldExpiryPosition = company.oldExpiryPosition;
       if (isSell ? (oldExpiryPosition > 0) : (oldExpiryPosition < 0)) {
         company.expiry = oldExpiry;
       } else {
@@ -289,8 +291,14 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
         }
       }
       placeMyOrder(company, action, filled, 'LMT', lmtPrice, false, false);
-    } else if (orderStatus === 'Cancelled') {
+    }
+  } else {
+    company = cancelOrderIds[oId];
+  }
+  if (company) {
+    if (orderStatus === 'Cancelled') {
       entryOrderIds[oId] = null;
+      cancelOrderIds[oId] = null;
       // since handleOpenOrder is not called for canceling, cleanup is needed here
       if (company.sLots[oId]) {
         company.sLots[oId] = null;
