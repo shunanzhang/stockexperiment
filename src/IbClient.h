@@ -13,7 +13,7 @@
 #include <node.h>
 #include <node_object_wrap.h>
 
-#define INT_SiZE 4
+#define INT_SIZE 4
 #define IN_BUF_SIZE 8192
 
 class EPosixClientSocket;
@@ -100,11 +100,11 @@ public:
 private:
   EClientSocket* m_pClient;
   char m_buf[IN_BUF_SIZE];
-  char s_buf[INT_SiZE];
-  int s_buf_start = 0;
+  char s_buf[INT_SIZE];
+  int offset;
   std::vector<char> msgData;
-  int msgBufStart = 0;
-  int msgSize = INT_SiZE;
+  int msgSize;
+  bool isMsgSize;
   EDecoder processMsgsDecoder_;
   Order order_; // Singleton order object
   Contract* contracts; // array

@@ -12,6 +12,9 @@ IbClient::IbClient(long contractLength, int32_t hourOffset) : m_pClient(new ECli
  contracts = new Contract[contractLength];
  hourOffset_ = hourOffset;
  msgData = std::vector<char>(IN_BUF_SIZE);
+ offset = 0;
+ msgSize = INT_SIZE;
+ isMsgSize = true;
 }
 
 IbClient::~IbClient() {
@@ -75,51 +78,60 @@ void IbClient::processMessages() {
       while (size > 0) {
         char* fullEnd = start + msgSize;
         char* tempEnd = m_buf + size;
-        if (msgBufStart <= 0) {
+        if (isMsgSize) {
           if (fullEnd > tempEnd) {
-            std::copy(start, tempEnd, s_buf + s_buf_start);
+            std::copy(start, tempEnd, s_buf + offset);
             int copySize = tempEnd - start;
-            s_buf_start += copySize;
+            offset += copySize;
             msgSize -= copySize;
             break;
           } else {
-            if (s_buf_start == 0) {
+            if (offset == 0) {
               msgSize = htonl(*((int*)start));
             } else {
-              std::copy(start, fullEnd, s_buf + s_buf_start);
+              std::copy(start, fullEnd, s_buf + offset);
               msgSize = htonl(*((int*)s_buf));
             }
-            msgData.resize(msgSize);
-            s_buf_start = 0;
+            offset = 0;
+            if (msgSize == 0) { // should not go into this if clause
+              msgSize = INT_SIZE;
+              continue;
+            } // TODO what if msgSize < 0
+            isMsgSize = false;
             if (fullEnd == tempEnd) {
+              msgData.resize(msgSize);
               break;
             } else {
               start = fullEnd;
               fullEnd = start + msgSize;
+              if (fullEnd > tempEnd) {
+                msgData.resize(msgSize);
+              }
             }
           }
         }
 
         if (fullEnd > tempEnd) {
-          std::copy(start, tempEnd, msgData.data() + msgBufStart);
+          std::copy(start, tempEnd, msgData.data() + offset);
           int copySize = tempEnd - start;
-          msgBufStart += copySize;
+          offset += copySize;
           msgSize -= copySize;
           break;
         } else {
           const char* pBegin;
           const char* pEnd;
-          if (msgBufStart == 0) {
+          if (offset == 0) {
             pBegin = start;
             pEnd = fullEnd;
           } else {
-            std::copy(start, fullEnd, msgData.data() + msgBufStart);
+            std::copy(start, fullEnd, msgData.data() + offset);
             pBegin = msgData.data();
             pEnd = pBegin + msgData.size();
           }
           processMsgsDecoder_.parseAndProcessMsg(pBegin, pEnd);
-          msgBufStart = 0;
-          msgSize = INT_SiZE;
+          msgSize = INT_SIZE;
+          offset = 0;
+          isMsgSize = true;
           if (fullEnd == tempEnd) {
             break;
           } else {
