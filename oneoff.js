@@ -154,6 +154,7 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
         }
       }
       placeMyOrder(company, action, filled, 'LMT', lmtPrice, false, false);
+      setTimeout(process.exit, 10 * 1000);
     } else if (orderStatus === 'Cancelled') {
       entryOrderIds[oId] = null;
       // since handleOpenOrder is not called for canceling, cleanup is needed here
