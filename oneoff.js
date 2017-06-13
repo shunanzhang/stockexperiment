@@ -12,6 +12,7 @@ var now = Date.now;
 var log = console.log;
 
 var cancelIds = {};
+var symbols = {};
 var entryOrderIds = {};
 var actions = {};
 
@@ -53,9 +54,11 @@ var handleValidOrderId = function(oId) {
   for (var i = companies.length; i--;) {
     company = companies[i];
     cancelIds[company.cancelId] = company;
+    symbols[company.symbol] = company;
   }
   orderId = oId;
   log('next order Id is', oId);
+  ibClient.reqAllOpenOrders();
   for (i = companies.length; i--;) {
     company = companies[i];
     ibClient.reqMktData(company.cancelId, '', false);
@@ -111,7 +114,11 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
           }
         } else if (!orderPlaced && actionI === BUY) {
           orderPlaced = true;
-          placeMyOrder(company, actionI, quantity, 'LMT', price, true, false);
+          if (company.lLotsLength - company.sLotsLength < 3) {
+            placeMyOrder(company, actionI, quantity, 'LMT', price, true, false);
+          } else {
+            process.exit();
+          }
         }
       } else if (field === 2) { // ask price
         var ask = company.ask;
@@ -124,7 +131,11 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
           }
         } else if (!orderPlaced && actionI === SELL) {
           orderPlaced = true;
-          placeMyOrder(company, actionI, quantity, 'LMT', price, true, false);
+          if (company.lLotsLength - company.sLotsLength > -3) {
+            placeMyOrder(company, actionI, quantity, 'LMT', price, true, false);
+          } else {
+            process.exit();
+          }
         }
       }
     }
@@ -164,7 +175,38 @@ var handleOrderStatus = function(oId, orderStatus, filled, remaining, avgFillPri
   log('OrderStatus:', oId, orderStatus, filled, remaining, avgFillPrice, lastFillPrice, clientId, whyHeld);
 };
 
-var handleOpenOrder = function() {};
+var handleOpenOrder = function(oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus) {
+  var company = entryOrderIds[oId];
+  if (company === undefined) { // if exiting the position
+    company = symbols[symbol];
+    if (company) {
+      var order = {
+        action: action,
+        totalQuantity: totalQuantity,
+        orderType: orderType,
+        lmtPrice: lmtPrice
+      };
+      var sLots = company.sLots;
+      var lLots = company.lLots;
+      if (orderStatus === 'Filled' || orderStatus === 'Cancelled') { // in reality, Cancelled is never called
+      } else if (orderStatus !== 'Inactive') {
+        if (action === BUY) {
+          if (!sLots[oId]) {
+            sLots[oId] = order;
+            company.sLotsLength += 1;
+          }
+        } else if (action === SELL) {
+          if (!lLots[oId]) {
+            lLots[oId] = order;
+            company.lLotsLength += 1;
+          }
+        }
+        log('[Append lots]', symbol, company.lLotsLength, company.sLotsLength);
+      }
+    }
+  }
+  log('OpenOrder:', oId, symbol, expiry, action, totalQuantity, orderType, lmtPrice, orderStatus);
+};
 
 var ibClient = new IbClient(companies, hourOffset, handleOrderStatus, handleValidOrderId, handleServerError, handleTickPrice, handleOpenOrder, handleRealTimeBar, handleConnectionClosed);
 

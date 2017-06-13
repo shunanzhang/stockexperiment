@@ -9,3 +9,5 @@ workdir=/home/ubuntu/stockexperiment
 16 16 * * 1-5 forever stopall
 17 16 * * 1-5 pkill node || true
 00 18 * * * if ! pgrep "Xtightvnc" > /dev/null; then vncserver; fi
+30 19 * * 0-4 cd ${workdir}; node oneoff.js ES BUY 1 0 2>&1 | tee ${workdir}/oneoff.js.log
+30 2 * * 1-5 cd ${workdir}; node oneoff.js ES BUY 1 0 2>&1 | tee ${workdir}/oneoff.js.log
