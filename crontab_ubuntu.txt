@@ -13,7 +13,7 @@ TZ=America/New_York
 00 18 * * * if ! pgrep "Xtightvnc" > /dev/null; then vncserver; fi
 
 TZ=Asia/Tokyo
-30 8 * * 0-4 cd ${workdir}; node oneoff.js ES BUY 1 0 2>&1 | tee ${workdir}/oneoff.js.log
+30 8 * * 1-5 cd ${workdir}; node oneoff.js ES BUY 1 0 2>&1 | tee ${workdir}/oneoff.js.log
 
 TZ=Europe/London
 30 7 * * 1-5 cd ${workdir}; node oneoff.js ES BUY 1 0 2>&1 | tee ${workdir}/oneoff.js.log
