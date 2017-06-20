@@ -24,6 +24,7 @@ var actionI = process.argv[3];
 var quantity = parseInt(process.argv[4], 10);
 var clientId = (process.argv[5] === undefined) ? 1 : parseInt(process.argv[5], 10);
 var orderPlaced = false;
+var AUTO = 'AUTO';
 
 var hourOffset = moment.tz(moment.TIMEZONE).utcOffset() / 60;
 
@@ -103,6 +104,7 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
       var action = actions[company.orderId];
       var prevTickTime = company.tickTime + 1699;
       var tickTime = 1478840331260; // some init time in msec
+      var lotsDiff = company.lLotsLength - company.sLotsLength;
       if (field === 1) { // bid price
         var bid = company.bid;
         company.bid = price;
@@ -112,11 +114,11 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
             placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
             company.tickTime = tickTime;
           }
-        } else if (!orderPlaced && actionI === BUY) {
-          orderPlaced = true;
-          if (company.lLotsLength - company.sLotsLength < 3) {
-            placeMyOrder(company, actionI, quantity, 'LMT', price, true, false);
-          } else {
+        } else if (!orderPlaced && (actionI === BUY || actionI === AUTO)) {
+          if (lotsDiff < 3) {
+            orderPlaced = true;
+            placeMyOrder(company, BUY, quantity, 'LMT', price, true, false);
+          } else if (actionI !== AUTO) {
             process.exit();
           }
         }
@@ -129,11 +131,11 @@ var handleTickPrice = function(tickerId, field, price, canAutoExecute) {
             placeMyOrder(company, action, company.onePosition, 'LMT', price, false, true); // modify order
             company.tickTime = tickTime;
           }
-        } else if (!orderPlaced && actionI === SELL) {
-          orderPlaced = true;
-          if (company.lLotsLength - company.sLotsLength > -3) {
-            placeMyOrder(company, actionI, quantity, 'LMT', price, true, false);
-          } else {
+        } else if (!orderPlaced && (actionI === SELL || actionI === AUTO)) {
+          if ((lotsDiff > -3 && actionI === SELL) || lotsDiff > 2) {
+            orderPlaced = true;
+            placeMyOrder(company, SELL, quantity, 'LMT', price, true, false);
+          } else if (actionI !== AUTO) {
             process.exit();
           }
         }
